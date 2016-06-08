@@ -28,4 +28,7 @@ dependencies {
     compile 'com.android.support:design:23.4.0'
 
     compile 'com.facebook.android:facebook-android-sdk:4.+'
+    compile 'com.google.firebase:firebase-core:9.0.2'
 }
+
+apply plugin: 'com.google.gms.google-services'
