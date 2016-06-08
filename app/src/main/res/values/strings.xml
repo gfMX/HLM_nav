@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Hot Like Me</string>
+    <string name="action_settings">Settings</string>
+
+    <string name="app_description">Hello Hot Users</string>
+
+    <string name="facebook_app_id">805376762931228</string>
+</resources>
