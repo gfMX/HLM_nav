@@ -16,6 +16,8 @@ import com.facebook.login.widget.LoginButton;
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
+    LoginButton loginButton;
+    CallbackManager callbackManager;
 
     public MainActivityFragment() {
     }
@@ -25,14 +27,12 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        LoginButton loginButton;
-        CallbackManager callbackManager;
         callbackManager = CallbackManager.Factory.create();
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("user_friends");
         loginButton.setFragment(this);
-        
+
 
         // Callback registration
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
@@ -54,4 +54,5 @@ public class MainActivityFragment extends Fragment {
 
         return view;
     }
+
 }
