@@ -1,5 +1,6 @@
 package com.mezcaldev.hotlikeme;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
@@ -34,11 +35,14 @@ public class MainActivityFragment extends Fragment {
         loginButton.setFragment(this);
 
 
+
         // Callback registration
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // App code
+                Intent intent = new Intent(getActivity(), Home.class);
+                startActivity(intent);
             }
 
             @Override
