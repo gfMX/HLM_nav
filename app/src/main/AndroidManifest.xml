@@ -37,7 +37,15 @@
             android:authorities="com.facebook.app.FacebookContentProvider805376762931228"
             android:exported="true" />
 
-        <activity android:name=".Home"></activity>
+        <activity android:name=".Home" />
+        <activity
+            android:name=".SettingsActivity"
+            android:label="@string/title_activity_settings"
+            android:parentActivityName=".MainActivity">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value="MainActivity" />
+        </activity>
     </application>
 
 </manifest>
