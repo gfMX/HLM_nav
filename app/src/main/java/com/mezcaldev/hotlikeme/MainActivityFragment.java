@@ -6,6 +6,7 @@ import android.support.v4.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
@@ -41,14 +42,17 @@ public class MainActivityFragment extends Fragment {
                     AccessToken currentAccessToken) {
                 // Set the access token using.
                 // currentAccessToken when it's loaded or set.
-                updateWithToken(currentAccessToken);
+                //updateWithToken(currentAccessToken);
             }
         };
         // If the access token is available already assign it.
         accessToken = AccessToken.getCurrentAccessToken();
         accessTokenTracker.startTracking();
-       // Log.v("Access Token: ", accessToken.getToken());
+        if (accessToken != null){
+            startActivity(new Intent(getActivity(), Home.class));
+        }
 /*
+        //Key Hash
         try {
             PackageInfo info = getActivity().getPackageManager().getPackageInfo(
                     "com.mezcaldev.hotlikeme",  // replace with your unique package name
@@ -70,6 +74,7 @@ public class MainActivityFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
+        updateWithToken(accessToken);
         return view;
     }
 
@@ -86,8 +91,7 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // App code
-                Intent intent = new Intent(getActivity(), Home.class);
-                startActivity(intent);
+                startActivity(new Intent(getActivity(), Home.class));
             }
 
             @Override
@@ -129,8 +133,8 @@ public class MainActivityFragment extends Fragment {
     private void updateWithToken(AccessToken currentAccessToken){
       if (currentAccessToken != null) {
         //LOAD ACTIVITY A!
-          Intent intent = new Intent(getActivity(), Home.class);
-          startActivity(intent);
+          startActivity(new Intent(getActivity(), Home.class));
+          Toast.makeText(getActivity(),"You're already logged in",Toast.LENGTH_SHORT);
       } else {
         //LOAD ACTIVITY B!
 
