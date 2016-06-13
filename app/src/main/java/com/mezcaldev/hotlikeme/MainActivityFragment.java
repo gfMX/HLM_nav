@@ -2,7 +2,9 @@ package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -14,18 +16,33 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthCredential;
+import com.google.firebase.auth.AuthResult;
+import com.google.firebase.auth.FacebookAuthProvider;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.concurrent.Executor;
 
 /**
  * A placeholder fragment containing a simple view.
  */
 public class MainActivityFragment extends Fragment {
 
-    LoginButton loginButton;
-    CallbackManager callbackManager;
-    AccessToken accessToken;
-    AccessTokenTracker accessTokenTracker;
+    private static final String TAG = "FacebookLogin";
+
+    private LoginButton loginButton;
+    private CallbackManager callbackManager;
+    private AccessToken accessToken;
+    private AccessTokenTracker accessTokenTracker;
+
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
 
     public MainActivityFragment() {
     }
@@ -35,6 +52,7 @@ public class MainActivityFragment extends Fragment {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
+        //Facebook Acces Token
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(
@@ -42,39 +60,42 @@ public class MainActivityFragment extends Fragment {
                     AccessToken currentAccessToken) {
                 // Set the access token using.
                 // currentAccessToken when it's loaded or set.
-                //updateWithToken(currentAccessToken);
             }
         };
+
         // If the access token is available already assign it.
         accessToken = AccessToken.getCurrentAccessToken();
         accessTokenTracker.startTracking();
-        if (accessToken != null){
-            startActivity(new Intent(getActivity(), Home.class));
-        }
-/*
-        //Key Hash
-        try {
-            PackageInfo info = getActivity().getPackageManager().getPackageInfo(
-                    "com.mezcaldev.hotlikeme",  // replace with your unique package name
-                    PackageManager.GET_SIGNATURES);
-            for (Signature signature : info.signatures) {
-                MessageDigest md = MessageDigest.getInstance("SHA");
-                md.update(signature.toByteArray());
-                Log.e("KeyHash:", Base64.encodeToString(md.digest(), Base64.DEFAULT));
+
+
+        //Initialize Firebase
+        mAuth = FirebaseAuth.getInstance();
+        //Auth Listener
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null){
+                    //User sign in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+                //Update UI
+                updateUI(user);
             }
-        } catch (PackageManager.NameNotFoundException e) {
+        };
 
-        } catch (NoSuchAlgorithmException e) {
-
-        }
-*/
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
-        updateWithToken(accessToken);
+
+        //updateWithToken(accessToken);
+
         return view;
     }
 
@@ -83,7 +104,7 @@ public class MainActivityFragment extends Fragment {
         callbackManager = CallbackManager.Factory.create();
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
-        loginButton.setReadPermissions("user_friends");
+        loginButton.setReadPermissions("email", "public_profile");
         loginButton.setFragment(this);
 
         // Callback registration
@@ -91,17 +112,23 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // App code
-                startActivity(new Intent(getActivity(), Home.class));
+                Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                Toast.makeText(getActivity(),"Welcome!",Toast.LENGTH_SHORT).show();
+
+                handleFacebookAccessToken(accessToken);
+                //handleFacebookAccessToken(loginResult.getAccessToken());
             }
 
             @Override
             public void onCancel() {
                 // App code
+                Log.d(TAG, "facebook:onCancel");
             }
 
             @Override
             public void onError(FacebookException exception) {
                 // App code
+                Log.d(TAG, "facebook:onError", exception);
             }
         });
     }
@@ -110,6 +137,67 @@ public class MainActivityFragment extends Fragment {
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
+    private void updateWithToken(AccessToken currentAccessToken){
+        if (currentAccessToken != null) {
+            //LOAD ACTIVITY A!
+            startActivity(new Intent(getActivity(), Home.class));
+            Toast.makeText(getActivity(),"You're already logged in",Toast.LENGTH_SHORT).show();
+        } else {
+            //LOAD ACTIVITY B!
+            Toast.makeText(getActivity(),"You're not logged in",Toast.LENGTH_SHORT).show();
+        }
+    }
+    private void handleFacebookAccessToken(AccessToken token) {
+        Log.d(TAG, "handleFacebookAccessToken:" + token);
+
+        AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
+        mAuth.signInWithCredential(credential)
+                .addOnCompleteListener((Executor) this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
+
+                        // If sign in fails, display a message to the user. If sign in succeeds
+                        // the auth state listener will be notified and logic to handle the
+                        // signed in user can be handled in the listener.
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "signInWithCredential", task.getException());
+                            Toast.makeText(getActivity(), "Authentication failed.",
+                                    Toast.LENGTH_SHORT).show();
+                        }
+                        // ...
+                    }
+                });
+    }
+    // Sign out
+    public void signOut(){
+        mAuth.signOut();
+        LoginManager.getInstance().logOut();
+
+        updateUI(null);
+    }
+    //UI Status Updater
+    private void updateUI (FirebaseUser user) {
+        if (user != null){
+
+        } else {
+
+        }
+    }
+
+    @Override
+    public void onStart() {
+        super.onStart();
+        mAuth.addAuthStateListener(mAuthListener);
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
+        }
     }
 
     @Override
@@ -130,14 +218,4 @@ public class MainActivityFragment extends Fragment {
         //AccessTokenTracker.stopTracking();
     }
 
-    private void updateWithToken(AccessToken currentAccessToken){
-      if (currentAccessToken != null) {
-        //LOAD ACTIVITY A!
-          startActivity(new Intent(getActivity(), Home.class));
-          Toast.makeText(getActivity(),"You're already logged in",Toast.LENGTH_SHORT);
-      } else {
-        //LOAD ACTIVITY B!
-
-      }
-    }
 }
