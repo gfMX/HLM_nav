@@ -5,9 +5,6 @@ import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.Toast;
-
-import com.facebook.login.LoginManager;
 
 public class Home extends AppCompatActivity {
 
@@ -32,8 +29,7 @@ public class Home extends AppCompatActivity {
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_fb_logout){
-            LoginManager.getInstance().logOut();
-            Toast.makeText(Home.this, "Facebook session closed",Toast.LENGTH_LONG).show();
+            //Toast.makeText(Home.this, "Facebook session closed",Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, MainActivity.class));
             return true;
         }

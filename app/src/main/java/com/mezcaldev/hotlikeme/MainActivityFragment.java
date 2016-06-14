@@ -145,10 +145,9 @@ public class MainActivityFragment extends Fragment {
             Toast.makeText(getActivity(),"You're already logged in",Toast.LENGTH_SHORT).show();
         } else {
             //LOAD ACTIVITY B!
-            Toast.makeText(getActivity(),"You're not logged in",Toast.LENGTH_SHORT).show();
         }
     }
-    private void handleFacebookAccessToken(AccessToken token) {
+    private void handleFacebookAccessToken(final AccessToken token) {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
