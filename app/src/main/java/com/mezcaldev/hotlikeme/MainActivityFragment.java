@@ -27,8 +27,6 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
-import java.util.concurrent.Executor;
-
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -112,31 +110,33 @@ public class MainActivityFragment extends Fragment {
             @Override
             public void onSuccess(LoginResult loginResult) {
                 // App code
-                Log.d(TAG, "facebook:onSuccess:" + loginResult);
+                Log.d(TAG, "FB: onSuccess:" + loginResult);
                 Toast.makeText(getActivity(),"Welcome!",Toast.LENGTH_SHORT).show();
 
-                handleFacebookAccessToken(accessToken);
-                //handleFacebookAccessToken(loginResult.getAccessToken());
+                //handleFacebookAccessToken(accessToken);
+                handleFacebookAccessToken(loginResult.getAccessToken());
             }
 
             @Override
             public void onCancel() {
                 // App code
-                Log.d(TAG, "facebook:onCancel");
+                Log.d(TAG, "FB: onCancel");
             }
 
             @Override
             public void onError(FacebookException exception) {
                 // App code
-                Log.d(TAG, "facebook:onError", exception);
+                Log.d(TAG, "FB: Error", exception);
             }
         });
     }
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        callbackManager.onActivityResult(requestCode, resultCode, data);
+        //if (data != null) {
+            super.onActivityResult(requestCode, resultCode, data);
+            callbackManager.onActivityResult(requestCode, resultCode, data);
+        //} else {  }
     }
     private void updateWithToken(AccessToken currentAccessToken){
         if (currentAccessToken != null) {
@@ -153,7 +153,7 @@ public class MainActivityFragment extends Fragment {
 
         AuthCredential credential = FacebookAuthProvider.getCredential(token.getToken());
         mAuth.signInWithCredential(credential)
-                .addOnCompleteListener((Executor) this, new OnCompleteListener<AuthResult>() {
+                .addOnCompleteListener(getActivity(), new OnCompleteListener<AuthResult>() {
                     @Override
                     public void onComplete(@NonNull Task<AuthResult> task) {
                         Log.d(TAG, "signInWithCredential:onComplete:" + task.isSuccessful());
@@ -203,19 +203,19 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onResume() {
         super.onResume();
-        //AccessTokenTracker.startTracking();
+        accessTokenTracker.startTracking();
     }
 
     @Override
     public void onPause() {
         super.onPause();
-        //AccessTokenTracker.stopTracking();
+        accessTokenTracker.stopTracking();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
-        //AccessTokenTracker.stopTracking();
+        accessTokenTracker.stopTracking();
     }
 
 }
