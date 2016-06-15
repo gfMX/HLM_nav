@@ -8,6 +8,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.facebook.AccessToken;
@@ -16,6 +18,8 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
@@ -35,12 +39,19 @@ public class MainActivityFragment extends Fragment {
 
     private static final String TAG = "FacebookLogin";
 
+    //Facebook
     private LoginButton loginButton;
     private CallbackManager callbackManager;
     private AccessToken accessToken;
     private AccessTokenTracker accessTokenTracker;
+    private Profile profile;
+    private ProfileTracker profileTracker;
 
+    //UI Elements
     private ProfilePictureView profilePic;
+    private TextView fb_welcome_text;
+    private Button btn_image;
+    private Button btn_settings;
 
     //Firebase
     private FirebaseUser user;
@@ -48,6 +59,7 @@ public class MainActivityFragment extends Fragment {
     private FirebaseAuth.AuthStateListener mAuthListener;
 
     public MainActivityFragment() {
+
     }
 
     @Override
@@ -55,7 +67,7 @@ public class MainActivityFragment extends Fragment {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
-        //Facebook Access Token
+        //Facebook Access Token & Profile:
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(
@@ -63,13 +75,27 @@ public class MainActivityFragment extends Fragment {
                     AccessToken currentAccessToken) {
                 // Set the access token using.
                 // currentAccessToken when it's loaded or set.
+                //If the User is logged in, display the options for the user.
+                updateUI(currentAccessToken);
+                if (currentAccessToken == null){
+                    Toast.makeText(getActivity(),"See you soon!",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(getActivity(),"Welcome back!",Toast.LENGTH_SHORT).show();
+                }
             }
         };
+        /*profileTracker = new ProfileTracker() {
+            @Override
+            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+
+            }
+        };*/
 
         // If the access token is available already assign it.
         accessToken = AccessToken.getCurrentAccessToken();
         accessTokenTracker.startTracking();
-
+        //profile = Profile.getCurrentProfile();
+        //profileTracker.startTracking();
 
         //Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -104,7 +130,11 @@ public class MainActivityFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
 
+        fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
+        btn_image = (Button) view.findViewById(R.id.btn_choose_img);
+        btn_settings = (Button) view.findViewById(R.id.btn_settings);
+
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile");
         loginButton.setFragment(this);
@@ -119,7 +149,6 @@ public class MainActivityFragment extends Fragment {
                 Toast.makeText(getActivity(),"Welcome!",Toast.LENGTH_SHORT).show();
 
                 handleFacebookAccessToken(accessToken);
-                //Udate the UI
                 updateUI(accessToken);
             }
 
@@ -139,11 +168,10 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        //if (data != null) {
             super.onActivityResult(requestCode, resultCode, data);
             callbackManager.onActivityResult(requestCode, resultCode, data);
-        //} else {  }
     }
+
     private void updateWithToken(AccessToken currentAccessToken){
         if (currentAccessToken != null) {
             //LOAD ACTIVITY A!
@@ -153,6 +181,7 @@ public class MainActivityFragment extends Fragment {
             //LOAD ACTIVITY B!
         }
     }
+    
     private void handleFacebookAccessToken(final AccessToken token) {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
 
@@ -180,15 +209,22 @@ public class MainActivityFragment extends Fragment {
         mAuth.signOut();
         LoginManager.getInstance().logOut();
 
-        updateUI(null);
+        //updateUI(null);
     }
     //UI Status Updater
     private void updateUI (AccessToken Token) {
+        //Update UI Elements according to the Given Token
         if (Token != null){
             //profilePic.setPresetSize(ProfilePictureView.LARGE);
             profilePic.setProfileId(Token.getUserId());
+            fb_welcome_text.setText("Welcome!");
+            btn_image.setVisibility(View.VISIBLE);
+            btn_settings.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
+            fb_welcome_text.setText("Welcome to Hot Like Me");
+            btn_image.setVisibility(View.INVISIBLE);
+            btn_settings.setVisibility(View.INVISIBLE);
         }
     }
 
