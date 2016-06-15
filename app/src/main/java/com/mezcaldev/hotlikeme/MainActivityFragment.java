@@ -19,6 +19,7 @@ import com.facebook.FacebookSdk;
 import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
+import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
@@ -39,6 +40,10 @@ public class MainActivityFragment extends Fragment {
     private AccessToken accessToken;
     private AccessTokenTracker accessTokenTracker;
 
+    private ProfilePictureView profilePic;
+
+    //Firebase
+    private FirebaseUser user;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
 
@@ -50,7 +55,7 @@ public class MainActivityFragment extends Fragment {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
-        //Facebook Acces Token
+        //Facebook Access Token
         accessTokenTracker = new AccessTokenTracker() {
             @Override
             protected void onCurrentAccessTokenChanged(
@@ -72,7 +77,7 @@ public class MainActivityFragment extends Fragment {
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                FirebaseUser user = firebaseAuth.getCurrentUser();
+                user = firebaseAuth.getCurrentUser();
                 if (user != null){
                     //User sign in
                     Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
@@ -81,7 +86,7 @@ public class MainActivityFragment extends Fragment {
                     Log.d(TAG, "onAuthStateChanged:signed_out");
                 }
                 //Update UI
-                updateUI(user);
+                updateUI(accessToken);
             }
         };
 
@@ -92,8 +97,6 @@ public class MainActivityFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        //updateWithToken(accessToken);
-
         return view;
     }
 
@@ -101,6 +104,7 @@ public class MainActivityFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
 
+        profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile");
         loginButton.setFragment(this);
@@ -109,12 +113,14 @@ public class MainActivityFragment extends Fragment {
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
             @Override
             public void onSuccess(LoginResult loginResult) {
+                accessToken = loginResult.getAccessToken();
                 // App code
                 Log.d(TAG, "FB: onSuccess:" + loginResult);
                 Toast.makeText(getActivity(),"Welcome!",Toast.LENGTH_SHORT).show();
 
-                //handleFacebookAccessToken(accessToken);
-                handleFacebookAccessToken(loginResult.getAccessToken());
+                handleFacebookAccessToken(accessToken);
+                //Udate the UI
+                updateUI(accessToken);
             }
 
             @Override
@@ -177,11 +183,12 @@ public class MainActivityFragment extends Fragment {
         updateUI(null);
     }
     //UI Status Updater
-    private void updateUI (FirebaseUser user) {
-        if (user != null){
-
+    private void updateUI (AccessToken Token) {
+        if (Token != null){
+            //profilePic.setPresetSize(ProfilePictureView.LARGE);
+            profilePic.setProfileId(Token.getUserId());
         } else {
-
+            profilePic.setProfileId(null);
         }
     }
 
