@@ -31,6 +31,8 @@ import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -59,6 +61,8 @@ public class MainActivityFragment extends Fragment {
     private FirebaseUser user;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
+    private FirebaseDatabase database;
+    private DatabaseReference fireRef;
 
     public MainActivityFragment() {
 
@@ -102,6 +106,7 @@ public class MainActivityFragment extends Fragment {
 
         //Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
+        database = FirebaseDatabase.getInstance();
         //Auth Listener
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -109,10 +114,21 @@ public class MainActivityFragment extends Fragment {
                 user = firebaseAuth.getCurrentUser();
                 if (user != null){
                     //User sign in
-                    Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
+                    Log.d(TAG, "Firebase: Signed In: " + user.getUid());
+
+                    fireRef = database.getReference(user.getUid() + "/name");
+                    fireRef.setValue(user.getDisplayName());
+                    fireRef = database.getReference(user.getUid() + "/photo");
+                    fireRef.setValue(user.getPhotoUrl());
+                    fireRef = database.getReference(user.getUid() + "/alias");
+                    fireRef.setValue("Your display name in here");
+                    /*fireRef.child("uid").setValue(user.getUid());
+                    fireRef.child("name").setValue(user.getDisplayName());
+                    fireRef.child("photo").setValue(user.getPhotoUrl());*/
+
                 } else {
                     // User signed out
-                    Log.d(TAG, "onAuthStateChanged: signed_out");
+                    Log.d(TAG, "Firebase: Signed Out: ");
                 }
                 //Update UI
                 updateUI(accessToken);
