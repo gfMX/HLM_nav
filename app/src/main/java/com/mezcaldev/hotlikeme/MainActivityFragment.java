@@ -50,8 +50,10 @@ public class MainActivityFragment extends Fragment {
     //UI Elements
     private ProfilePictureView profilePic;
     private TextView fb_welcome_text;
+    private TextView text_instruct;
     private Button btn_image;
     private Button btn_settings;
+    private Button btn_start;
 
     //Firebase
     private FirebaseUser user;
@@ -84,18 +86,19 @@ public class MainActivityFragment extends Fragment {
                 }
             }
         };
-        /*profileTracker = new ProfileTracker() {
+        profileTracker = new ProfileTracker() {
             @Override
             protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
 
             }
-        };*/
+        };
 
         // If the access token is available already assign it.
         accessToken = AccessToken.getCurrentAccessToken();
         accessTokenTracker.startTracking();
-        //profile = Profile.getCurrentProfile();
-        //profileTracker.startTracking();
+
+        profile = Profile.getCurrentProfile();
+        profileTracker.startTracking();
 
         //Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
@@ -106,10 +109,10 @@ public class MainActivityFragment extends Fragment {
                 user = firebaseAuth.getCurrentUser();
                 if (user != null){
                     //User sign in
-                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                    Log.d(TAG, "onAuthStateChanged: signed_in:" + user.getUid());
                 } else {
                     // User signed out
-                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                    Log.d(TAG, "onAuthStateChanged: signed_out");
                 }
                 //Update UI
                 updateUI(accessToken);
@@ -132,8 +135,11 @@ public class MainActivityFragment extends Fragment {
 
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
+
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
         btn_settings = (Button) view.findViewById(R.id.btn_settings);
+        btn_start = (Button) view.findViewById(R.id.btn_start);
+        text_instruct = (TextView) view.findViewById(R.id.text_instruct);
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile");
@@ -164,22 +170,34 @@ public class MainActivityFragment extends Fragment {
                 Log.d(TAG, "FB: Error", exception);
             }
         });
+
+        //Button behavior
+        btn_image.setOnClickListener(settingsButtons);
+        btn_settings.setOnClickListener(settingsButtons);
+        btn_start.setOnClickListener(settingsButtons);
+
     }
+    //Buttons for different settings
+    private View.OnClickListener settingsButtons = new View.OnClickListener(){
+      public void onClick (View v){
+          switch (v.getId()){
+              case R.id.btn_choose_img:
+                  Toast.makeText(getActivity(), "Almost there!", Toast.LENGTH_LONG).show();
+                  break;
+              case  R.id.btn_settings:
+                  startActivity(new Intent(getActivity(), SettingsActivity.class));
+                  break;
+              case R.id.btn_start:
+                  startActivity(new Intent(getActivity(), HomeActivity.class));
+                  break;
+          }
+      }
+    };
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
             super.onActivityResult(requestCode, resultCode, data);
             callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
-
-    private void updateWithToken(AccessToken currentAccessToken){
-        if (currentAccessToken != null) {
-            //LOAD ACTIVITY A!
-            startActivity(new Intent(getActivity(), Home.class));
-            Toast.makeText(getActivity(),"You're already logged in",Toast.LENGTH_SHORT).show();
-        } else {
-            //LOAD ACTIVITY B!
-        }
     }
     
     private void handleFacebookAccessToken(final AccessToken token) {
@@ -215,16 +233,24 @@ public class MainActivityFragment extends Fragment {
     private void updateUI (AccessToken Token) {
         //Update UI Elements according to the Given Token
         if (Token != null){
-            //profilePic.setPresetSize(ProfilePictureView.LARGE);
+            if (profile != null) {
+                fb_welcome_text.setText("Welcome " + profile.getFirstName() + "!");
+            } else {
+                fb_welcome_text.setText("Welcome!");
+            }
+            text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
+                    "as a display image for the App, and will be the Image which other users will see.");
             profilePic.setProfileId(Token.getUserId());
-            fb_welcome_text.setText("Welcome!");
             btn_image.setVisibility(View.VISIBLE);
-            btn_settings.setVisibility(View.VISIBLE);
+            btn_settings.setVisibility(View.GONE);
+            btn_start.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
-            fb_welcome_text.setText("Welcome to Hot Like Me");
+            fb_welcome_text.setText("Welcome to Hot Like Me \n Please Log In");
+            text_instruct.setText("");
             btn_image.setVisibility(View.INVISIBLE);
-            btn_settings.setVisibility(View.INVISIBLE);
+            btn_settings.setVisibility(View.GONE);
+            btn_start.setVisibility(View.INVISIBLE);
         }
     }
 
@@ -246,18 +272,21 @@ public class MainActivityFragment extends Fragment {
     public void onResume() {
         super.onResume();
         accessTokenTracker.startTracking();
+        profileTracker.startTracking();
     }
 
     @Override
     public void onPause() {
         super.onPause();
         accessTokenTracker.stopTracking();
+        profileTracker.stopTracking();
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         accessTokenTracker.stopTracking();
+        profileTracker.stopTracking();
     }
 
 }

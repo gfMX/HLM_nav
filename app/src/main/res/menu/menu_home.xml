@@ -3,7 +3,7 @@
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
-    tools:context="com.mezcaldev.hotlikeme.Home">
+    tools:context=".HomeActivity">
     <item
         android:id="@+id/action_fb_logout"
         android:title="@string/action_fb_logout"

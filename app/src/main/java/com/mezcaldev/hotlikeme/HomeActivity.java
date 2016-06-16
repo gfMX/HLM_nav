@@ -6,13 +6,14 @@ import android.support.v7.app.AppCompatActivity;
 import android.view.Menu;
 import android.view.MenuItem;
 
-public class Home extends AppCompatActivity {
+public class HomeActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_home);
     }
+
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         // Inflate the menu; this adds items to the action bar if it is present.
@@ -23,18 +24,18 @@ public class Home extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
+        // automatically handle clicks on the HomeActivity/Up button, so long
         // as you specify a parent activity in AndroidManifest.xml.
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
         if (id == R.id.action_fb_logout){
-            //Toast.makeText(Home.this, "Facebook session closed",Toast.LENGTH_LONG).show();
+            //Toast.makeText(HomeActivity.this, "Facebook session closed",Toast.LENGTH_LONG).show();
             startActivity(new Intent(this, MainActivity.class));
             return true;
         }
         if (id == R.id.action_test_home) {
-            startActivity(new Intent(this, Home.class));
+            startActivity(new Intent(this, HomeActivity.class));
             return true;
         }
         if (id == R.id.action_settings) {

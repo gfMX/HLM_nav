@@ -15,15 +15,19 @@
         android:text="@string/app_description"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:id="@+id/fb_textWelcome" />
+        android:id="@+id/fb_textWelcome"
+        android:textStyle="bold"
+        android:textSize="18dp"
+        android:textAlignment="center" />
 
     <com.facebook.login.widget.ProfilePictureView
         android:id="@+id/fb_image"
         android:visibility="visible"
-        android:layout_width="140dp"
-        android:layout_height="140dp"
+        android:layout_width="165dp"
+        android:layout_height="165dp"
         android:layout_above="@+id/login_button"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="5dp" />
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button"
@@ -51,5 +55,20 @@
         android:id="@+id/btn_settings"
         android:layout_below="@+id/btn_choose_img"
         android:layout_centerHorizontal="true" />
+
+    <Button
+        android:text="@string/btn_start"
+        android:visibility="invisible"
+        android:layout_width="182dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_start"
+        android:layout_below="@+id/btn_settings"
+        android:layout_centerHorizontal="true" />
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/btn_start"
+        android:layout_margin="20dp"
+        android:id="@+id/text_instruct"/>
 
 </RelativeLayout>
