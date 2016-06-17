@@ -1,6 +1,7 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -53,6 +54,7 @@ public class MainActivityFragment extends Fragment {
     private ProfileTracker profileTracker;
 
     //UI Elements
+    private Bitmap pImage;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
@@ -124,6 +126,7 @@ public class MainActivityFragment extends Fragment {
                     //User sign in
                     Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
+                    //Stores references needed by the App on Firebase:
                     fireRef = database.getReference(user.getUid() + "/name");
                     fireRef.setValue(user.getDisplayName());
                     fireRef = database.getReference(user.getUid() + "/photo");
@@ -153,6 +156,7 @@ public class MainActivityFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
 
+        //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
         imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
@@ -265,8 +269,8 @@ public class MainActivityFragment extends Fragment {
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
-                    "as a display image for the App, and will be the Image which other users will see." +
-                    "By default HLM take your FB profile Picture, but you can Change it!");
+                    "as a display image for the App, and will be the Image which other users will see. " +
+                    "By default HLM take your FB profile Picture.");
             profilePic.setProfileId(Token.getUserId());
             btn_image.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.GONE);
