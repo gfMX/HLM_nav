@@ -9,6 +9,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,6 +34,8 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -51,6 +54,7 @@ public class MainActivityFragment extends Fragment {
 
     //UI Elements
     private ProfilePictureView profilePic;
+    private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
     private TextView text_instruct;
     private Button btn_image;
@@ -63,6 +67,8 @@ public class MainActivityFragment extends Fragment {
     private FirebaseAuth.AuthStateListener mAuthListener;
     private FirebaseDatabase database;
     private DatabaseReference fireRef;
+    private FirebaseStorage storage;
+    private StorageReference storageRef;
 
     public MainActivityFragment() {
 
@@ -107,6 +113,8 @@ public class MainActivityFragment extends Fragment {
         //Initialize Firebase
         mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
+        storage = FirebaseStorage.getInstance();
+
         //Auth Listener
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -122,10 +130,6 @@ public class MainActivityFragment extends Fragment {
                     fireRef.setValue(user.getPhotoUrl());
                     fireRef = database.getReference(user.getUid() + "/alias");
                     fireRef.setValue("Your display name in here");
-                    /*fireRef.child("uid").setValue(user.getUid());
-                    fireRef.child("name").setValue(user.getDisplayName());
-                    fireRef.child("photo").setValue(user.getPhotoUrl());*/
-
                 } else {
                     // User signed out
                     Log.d(TAG, "Firebase: Signed Out: ");
@@ -151,11 +155,16 @@ public class MainActivityFragment extends Fragment {
 
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
+        imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
 
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
-        btn_settings = (Button) view.findViewById(R.id.btn_settings);
         btn_start = (Button) view.findViewById(R.id.btn_start);
+        btn_settings = (Button) view.findViewById(R.id.btn_settings);
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
+
+        btn_image.setTransformationMethod(null);
+        btn_start.setTransformationMethod(null);
+        btn_settings.setTransformationMethod(null);
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile");
@@ -254,19 +263,22 @@ public class MainActivityFragment extends Fragment {
             } else {
                 fb_welcome_text.setText("Welcome!");
             }
+            imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
-                    "as a display image for the App, and will be the Image which other users will see.");
+                    "as a display image for the App, and will be the Image which other users will see." +
+                    "By default HLM take your FB profile Picture, but you can Change it!");
             profilePic.setProfileId(Token.getUserId());
             btn_image.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.GONE);
             btn_start.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
+            imageProfileHLM.setVisibility(View.GONE);
             fb_welcome_text.setText("Welcome to Hot Like Me \n Please Log In");
             text_instruct.setText("");
             btn_image.setVisibility(View.INVISIBLE);
             btn_settings.setVisibility(View.GONE);
-            btn_start.setVisibility(View.INVISIBLE);
+            btn_start.setVisibility(View.GONE);
         }
     }
 
