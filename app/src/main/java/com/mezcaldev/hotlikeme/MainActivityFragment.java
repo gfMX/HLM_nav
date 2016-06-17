@@ -116,6 +116,7 @@ public class MainActivityFragment extends Fragment {
         mAuth = FirebaseAuth.getInstance();
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
 
         //Auth Listener
         mAuthListener = new FirebaseAuth.AuthStateListener() {
