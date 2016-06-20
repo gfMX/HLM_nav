@@ -1,7 +1,10 @@
 package com.mezcaldev.hotlikeme;
 
+import android.content.Context;
+import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -20,6 +23,8 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
+import com.facebook.GraphRequest;
+import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
@@ -38,6 +43,15 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import org.json.JSONObject;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.InputStream;
+import java.net.URL;
+
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -52,8 +66,10 @@ public class MainActivityFragment extends Fragment {
     private AccessTokenTracker accessTokenTracker;
     private Profile profile;
     private ProfileTracker profileTracker;
+    private String profilePicUrl;
 
     //UI Elements
+    private String pathProfileImage;
     private Bitmap pImage;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
@@ -71,6 +87,9 @@ public class MainActivityFragment extends Fragment {
     private DatabaseReference fireRef;
     private FirebaseStorage storage;
     private StorageReference storageRef;
+
+    //Other elements
+    private ContextWrapper contextWrapper;
 
     public MainActivityFragment() {
 
@@ -156,6 +175,7 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
+        contextWrapper = new ContextWrapper(getActivity().getApplicationContext());
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -223,12 +243,6 @@ public class MainActivityFragment extends Fragment {
           }
       }
     };
-
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-            super.onActivityResult(requestCode, resultCode, data);
-            callbackManager.onActivityResult(requestCode, resultCode, data);
-    }
     
     private void handleFacebookAccessToken(final AccessToken token) {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
@@ -252,6 +266,8 @@ public class MainActivityFragment extends Fragment {
                     }
                 });
     }
+
+
     // Sign out
     public void signOut(){
         mAuth.signOut();
@@ -264,6 +280,7 @@ public class MainActivityFragment extends Fragment {
         //Update UI Elements according to the Given Token
         if (Token != null){
             if (profile != null) {
+                createBitmap(profile, Token);
                 fb_welcome_text.setText("Welcome " + profile.getFirstName() + "!");
             } else {
                 fb_welcome_text.setText("Welcome!");
@@ -279,6 +296,7 @@ public class MainActivityFragment extends Fragment {
         } else {
             profilePic.setProfileId(null);
             imageProfileHLM.setVisibility(View.GONE);
+            imageProfileHLM.setImageResource(R.drawable.no_user);
             fb_welcome_text.setText("Welcome to Hot Like Me \n Please Log In");
             text_instruct.setText("");
             btn_image.setVisibility(View.INVISIBLE);
@@ -286,7 +304,80 @@ public class MainActivityFragment extends Fragment {
             btn_start.setVisibility(View.GONE);
         }
     }
+    //Create Image as object
+    private void createBitmap (final Profile user, final AccessToken accessToken){
+        GraphRequest request = GraphRequest.newMeRequest(
+                accessToken,
+                new GraphRequest.GraphJSONObjectCallback(){
+                    @Override
+                    public void onCompleted(JSONObject us2, GraphResponse response){
+                        if (user != null) {
+                                (new Thread(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        try {
+                                            URL imgUrl = new URL("https://graph.facebook.com/"
+                                                    + user.getId() + "/picture?type=large");
+                                            Log.d(TAG, "Image URL: " + imgUrl);
+                                            //URLConnection urlConnection = imgUrl.openConnection();
+                                            //urlConnection.setUseCaches(true);
+                                            //urlConnection.connect();
+                                            InputStream inputStream = (InputStream) imgUrl.getContent();
+                                            //BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
+                                            pImage = BitmapFactory.decodeStream(inputStream);
+                                            //bufferedInputStream.close();
+                                            //inputStream.close();
+                                            if (pImage != null) {
+                                                saveToInternalStorage(pImage);
+                                            }
+                                            Log.v(TAG, "Everything Ok in here! We got the Image");
+                                        } catch (Exception e) {
+                                            e.printStackTrace();
+                                        }
+                                    }
+                                })).start();
+                        }
+                    }
+        });
+        request.executeAsync();
+    }
 
+    //Save Image
+    private String saveToInternalStorage(Bitmap bitmapImage){
+        File directory = contextWrapper.getDir("imageDir", Context.MODE_PRIVATE);
+        File imPath=new File(directory,"profile_im.jpg");
+        FileOutputStream fOut;
+
+        try {
+            fOut = new FileOutputStream(imPath);
+            // Use the compress method on the BitMap object to write image to the OutputStream
+            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+            fOut.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return directory.getAbsolutePath();
+    }
+    //Load Image
+    private void loadImageFromStorage(View view, String path)
+    {
+        try {
+            File f=new File(path, "profile_im.jpg");
+            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
+            ImageView img= (ImageView) view.findViewById(R.id.hlm_image);
+            img.setImageBitmap(b);
+        }
+        catch (FileNotFoundException e)
+        {
+            e.printStackTrace();
+        }
+
+    }
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        callbackManager.onActivityResult(requestCode, resultCode, data);
+    }
     @Override
     public void onStart() {
         super.onStart();
