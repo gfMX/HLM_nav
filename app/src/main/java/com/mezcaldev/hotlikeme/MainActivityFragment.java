@@ -5,6 +5,7 @@ import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -32,6 +33,8 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -42,6 +45,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 
 import org.json.JSONObject;
 
@@ -69,8 +73,10 @@ public class MainActivityFragment extends Fragment {
     private String profilePicUrl;
 
     //UI Elements
+    private int flag1 = 0;
     private String pathProfileImage;
     private Bitmap pImage;
+    private Bitmap pImageShow;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
@@ -87,6 +93,7 @@ public class MainActivityFragment extends Fragment {
     private DatabaseReference fireRef;
     private FirebaseStorage storage;
     private StorageReference storageRef;
+    private UploadTask uploadTask;
 
     //Other elements
     private ContextWrapper contextWrapper;
@@ -173,9 +180,11 @@ public class MainActivityFragment extends Fragment {
     }
 
     @Override
-    public void onViewCreated(View view, Bundle savedInstanceState){
+    public void onViewCreated(final View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
         contextWrapper = new ContextWrapper(getActivity().getApplicationContext());
+
+        pathProfileImage = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/";
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -206,6 +215,7 @@ public class MainActivityFragment extends Fragment {
 
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
+                createBitmap(profile, accessToken);
             }
 
             @Override
@@ -276,20 +286,26 @@ public class MainActivityFragment extends Fragment {
         //updateUI(null);
     }
     //UI Status Updater
-    private void updateUI (AccessToken Token) {
+    private void updateUI (AccessToken accessToken) {
         //Update UI Elements according to the Given Token
-        if (Token != null){
+        if (accessToken != null){
             if (profile != null) {
-                createBitmap(profile, Token);
                 fb_welcome_text.setText("Welcome " + profile.getFirstName() + "!");
+                if (flag1 == 0) {
+                    createBitmap(profile, accessToken);
+                    flag1 ++;
+                } else {
+
+                }
             } else {
                 fb_welcome_text.setText("Welcome!");
             }
+            loadImageFromStorage(getView(), pathProfileImage);
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
                     "as a display image for the App, and will be the Image which other users will see. " +
                     "By default HLM take your FB profile Picture.");
-            profilePic.setProfileId(Token.getUserId());
+            profilePic.setProfileId(accessToken.getUserId());
             btn_image.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.GONE);
             btn_start.setVisibility(View.VISIBLE);
@@ -312,7 +328,7 @@ public class MainActivityFragment extends Fragment {
                     @Override
                     public void onCompleted(JSONObject us2, GraphResponse response){
                         if (user != null) {
-                                (new Thread(new Runnable() {
+                            Thread thread = new Thread(new Runnable() {
                                     @Override
                                     public void run() {
                                         try {
@@ -335,7 +351,9 @@ public class MainActivityFragment extends Fragment {
                                             e.printStackTrace();
                                         }
                                     }
-                                })).start();
+                                });
+                            thread.start();
+
                         }
                     }
         });
@@ -356,22 +374,45 @@ public class MainActivityFragment extends Fragment {
         } catch (Exception e) {
             e.printStackTrace();
         }
+        Log.d(TAG,"Image found at: " + directory.getAbsolutePath());
         return directory.getAbsolutePath();
     }
     //Load Image
-    private void loadImageFromStorage(View view, String path)
-    {
+    private void loadImageFromStorage(View view, String path) {
+        String imFileName = "profile_im.jpg";
         try {
-            File f=new File(path, "profile_im.jpg");
+            File f=new File(path, imFileName);
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
             ImageView img= (ImageView) view.findViewById(R.id.hlm_image);
             img.setImageBitmap(b);
+            uploadFBImageToFirebase(path + imFileName);
         }
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
         }
+    }
+    //Upload Image to Firebase
+    private void uploadFBImageToFirebase(String path){
+        Uri file = Uri.fromFile(new File(path));
+        StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + file.getLastPathSegment());
+        uploadTask = upImageRef.putFile(file);
 
+        // Register observers to listen for when the download is done or if it fails
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Log.v(TAG,"Image uploaded to Firebase");
+                Log.v(TAG,"URL: " + downloadUrl);
+            }
+        });
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
