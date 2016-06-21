@@ -346,14 +346,8 @@ public class MainActivityFragment extends Fragment {
                                             URL imgUrl = new URL("https://graph.facebook.com/"
                                                     + user.getId() + "/picture?type=large");
                                             Log.d(TAG, "Image URL: " + imgUrl);
-                                            //URLConnection urlConnection = imgUrl.openConnection();
-                                            //urlConnection.setUseCaches(true);
-                                            //urlConnection.connect();
                                             InputStream inputStream = (InputStream) imgUrl.getContent();
-                                            //BufferedInputStream bufferedInputStream = new BufferedInputStream(inputStream);
                                             pImage = BitmapFactory.decodeStream(inputStream);
-                                            //bufferedInputStream.close();
-                                            //inputStream.close();
                                             if (pImage != null) {
                                                 saveToInternalStorage(pImage, imageProfileFileName);
                                             }
