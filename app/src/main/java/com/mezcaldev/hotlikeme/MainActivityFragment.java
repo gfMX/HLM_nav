@@ -74,6 +74,7 @@ public class MainActivityFragment extends Fragment {
 
     //UI Elements
     private int flag1 = 0;
+    private String imageProfileFileName;
     private String pathProfileImage;
     private Bitmap pImage;
     private Bitmap pImageShow;
@@ -97,6 +98,7 @@ public class MainActivityFragment extends Fragment {
 
     //Other elements
     private ContextWrapper contextWrapper;
+    private File profileImageCheck;
 
     public MainActivityFragment() {
 
@@ -184,7 +186,9 @@ public class MainActivityFragment extends Fragment {
         callbackManager = CallbackManager.Factory.create();
         contextWrapper = new ContextWrapper(getActivity().getApplicationContext());
 
+        imageProfileFileName = "profile_im.jpg";
         pathProfileImage = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/";
+        profileImageCheck = new File(pathProfileImage + imageProfileFileName);
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -201,7 +205,7 @@ public class MainActivityFragment extends Fragment {
         btn_settings.setTransformationMethod(null);
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
-        loginButton.setReadPermissions("email", "public_profile");
+        loginButton.setReadPermissions("email", "public_profile", "user_photos");
         loginButton.setFragment(this);
 
         // Callback registration
@@ -215,7 +219,9 @@ public class MainActivityFragment extends Fragment {
 
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
-                createBitmap(profile, accessToken);
+                if (profileImageCheck.exists() == false) {
+                    createBitmap(profile, accessToken);
+                }
             }
 
             @Override
@@ -291,12 +297,10 @@ public class MainActivityFragment extends Fragment {
         if (accessToken != null){
             if (profile != null) {
                 fb_welcome_text.setText("Welcome " + profile.getFirstName() + "!");
-                if (flag1 == 0) {
+                /*if (flag1 == 0) {
                     createBitmap(profile, accessToken);
                     flag1 ++;
-                } else {
-
-                }
+                }*/
             } else {
                 fb_welcome_text.setText("Welcome!");
             }
@@ -318,6 +322,13 @@ public class MainActivityFragment extends Fragment {
             btn_image.setVisibility(View.INVISIBLE);
             btn_settings.setVisibility(View.GONE);
             btn_start.setVisibility(View.GONE);
+            if (profileImageCheck.exists()) {
+                try {
+                    profileImageCheck.delete();
+                } catch (Exception e){
+                    e.printStackTrace();
+                }
+            }
         }
     }
     //Create Image as object
@@ -363,7 +374,7 @@ public class MainActivityFragment extends Fragment {
     //Save Image
     private String saveToInternalStorage(Bitmap bitmapImage){
         File directory = contextWrapper.getDir("imageDir", Context.MODE_PRIVATE);
-        File imPath=new File(directory,"profile_im.jpg");
+        File imPath=new File(directory,imageProfileFileName);
         FileOutputStream fOut;
 
         try {
@@ -379,13 +390,12 @@ public class MainActivityFragment extends Fragment {
     }
     //Load Image
     private void loadImageFromStorage(View view, String path) {
-        String imFileName = "profile_im.jpg";
         try {
-            File f=new File(path, imFileName);
+            File f=new File(path, imageProfileFileName);
             Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
             ImageView img= (ImageView) view.findViewById(R.id.hlm_image);
             img.setImageBitmap(b);
-            uploadFBImageToFirebase(path + imFileName);
+            uploadFBImageToFirebase(path + imageProfileFileName);
         }
         catch (FileNotFoundException e)
         {
