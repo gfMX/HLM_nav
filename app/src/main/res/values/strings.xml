@@ -3,7 +3,6 @@
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
-    <string name="action_test_home">Home (Developer use)</string>
     <string name="action_settings">Advanced Settings</string>
 
     <string name="app_description">Hello Hot Users</string>

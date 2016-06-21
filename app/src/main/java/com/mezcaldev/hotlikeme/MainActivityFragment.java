@@ -184,7 +184,6 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
-        contextWrapper = new ContextWrapper(getActivity().getApplicationContext());
 
         imageProfileFileName = "profile_im.jpg";
         pathProfileImage = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/";
@@ -249,12 +248,13 @@ public class MainActivityFragment extends Fragment {
           switch (v.getId()){
               case R.id.btn_choose_img:
                   Toast.makeText(getActivity(), "Almost there!", Toast.LENGTH_LONG).show();
+                  //startActivity(new Intent(getActivity(), HomeActivity.class));
                   break;
               case  R.id.btn_settings:
                   startActivity(new Intent(getActivity(), SettingsActivity.class));
                   break;
               case R.id.btn_start:
-                  startActivity(new Intent(getActivity(), HomeActivity.class));
+                  //startActivity(new Intent(getActivity(), HomeActivity.class));
                   break;
           }
       }
@@ -304,7 +304,7 @@ public class MainActivityFragment extends Fragment {
             } else {
                 fb_welcome_text.setText("Welcome!");
             }
-            loadImageFromStorage(getView(), pathProfileImage);
+            loadImageFromStorage(getView(), pathProfileImage, imageProfileFileName);
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
                     "as a display image for the App, and will be the Image which other users will see. " +
@@ -355,7 +355,7 @@ public class MainActivityFragment extends Fragment {
                                             //bufferedInputStream.close();
                                             //inputStream.close();
                                             if (pImage != null) {
-                                                saveToInternalStorage(pImage);
+                                                saveToInternalStorage(pImage, imageProfileFileName);
                                             }
                                             Log.v(TAG, "Everything Ok in here! We got the Image");
                                         } catch (Exception e) {
@@ -372,9 +372,10 @@ public class MainActivityFragment extends Fragment {
     }
 
     //Save Image
-    private String saveToInternalStorage(Bitmap bitmapImage){
-        File directory = contextWrapper.getDir("imageDir", Context.MODE_PRIVATE);
-        File imPath=new File(directory,imageProfileFileName);
+    private String saveToInternalStorage(Bitmap bitmapImage, String imageName){
+        File directory = new ContextWrapper(getActivity().getApplicationContext()).getDir("imageDir",
+                Context.MODE_PRIVATE);
+        File imPath=new File(directory,imageName);
         FileOutputStream fOut;
 
         try {
@@ -389,13 +390,13 @@ public class MainActivityFragment extends Fragment {
         return directory.getAbsolutePath();
     }
     //Load Image
-    private void loadImageFromStorage(View view, String path) {
+    private void loadImageFromStorage(View view, String path, String imageName) {
         try {
-            File f=new File(path, imageProfileFileName);
-            Bitmap b = BitmapFactory.decodeStream(new FileInputStream(f));
-            ImageView img= (ImageView) view.findViewById(R.id.hlm_image);
-            img.setImageBitmap(b);
-            uploadFBImageToFirebase(path + imageProfileFileName);
+            File f=new File(path, imageName);
+            Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
+            ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
+            img.setImageBitmap(bitmap);
+            uploadFBImageToFirebase(path + imageName);
         }
         catch (FileNotFoundException e)
         {
