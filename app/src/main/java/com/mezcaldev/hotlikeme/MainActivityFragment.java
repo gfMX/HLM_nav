@@ -24,8 +24,6 @@ import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
 import com.facebook.login.LoginManager;
@@ -47,8 +45,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
-import org.json.JSONObject;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -65,19 +61,17 @@ public class MainActivityFragment extends Fragment {
 
     //Facebook
     private LoginButton loginButton;
-    private CallbackManager callbackManager;
-    private AccessToken accessToken;
-    private AccessTokenTracker accessTokenTracker;
-    private Profile profile;
-    private ProfileTracker profileTracker;
-    private String profilePicUrl;
+    CallbackManager callbackManager;
+    static AccessToken accessToken;
+    static AccessTokenTracker accessTokenTracker;
+    static Profile profile;
+    static ProfileTracker profileTracker;
 
     //UI Elements
     private int flag1 = 0;
     private String imageProfileFileName;
     private String pathProfileImage;
     private Bitmap pImage;
-    private Bitmap pImageShow;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
@@ -87,18 +81,17 @@ public class MainActivityFragment extends Fragment {
     private Button btn_start;
 
     //Firebase
-    private FirebaseUser user;
-    private FirebaseAuth mAuth;
-    private FirebaseAuth.AuthStateListener mAuthListener;
-    private FirebaseDatabase database;
-    private DatabaseReference fireRef;
-    private FirebaseStorage storage;
-    private StorageReference storageRef;
-    private UploadTask uploadTask;
+    static FirebaseUser user;
+    static FirebaseAuth mAuth;
+    static FirebaseAuth.AuthStateListener mAuthListener;
+    static FirebaseDatabase database;
+    static DatabaseReference fireRef;
+    static FirebaseStorage storage;
+    static StorageReference storageRef;
+    static UploadTask uploadTask;
 
     //Other elements
-    private ContextWrapper contextWrapper;
-    private File profileImageCheck;
+    File profileImageCheck;
 
     public MainActivityFragment() {
 
@@ -158,8 +151,6 @@ public class MainActivityFragment extends Fragment {
                     //Stores references needed by the App on Firebase:
                     fireRef = database.getReference(user.getUid() + "/name");
                     fireRef.setValue(user.getDisplayName());
-                    fireRef = database.getReference(user.getUid() + "/photo");
-                    fireRef.setValue(user.getPhotoUrl());
                     fireRef = database.getReference(user.getUid() + "/alias");
                     fireRef.setValue("Your display name in here");
                 } else {
@@ -219,7 +210,7 @@ public class MainActivityFragment extends Fragment {
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
                 if (profileImageCheck.exists() == false) {
-                    createBitmap(profile, accessToken);
+                    createBitmap(profile);
                 }
             }
 
@@ -247,13 +238,18 @@ public class MainActivityFragment extends Fragment {
       public void onClick (View v){
           switch (v.getId()){
               case R.id.btn_choose_img:
-                  Toast.makeText(getActivity(), "Almost there!", Toast.LENGTH_LONG).show();
-                  //startActivity(new Intent(getActivity(), HomeActivity.class));
+                  Toast.makeText(getActivity(), "Please choose your Profile Pic!",
+                          Toast.LENGTH_LONG).show();
+                  startActivity(new Intent(getActivity(), ImageBrowser.class));
                   break;
               case  R.id.btn_settings:
+                  Toast.makeText(getActivity(), "Bla, bla bla...",
+                          Toast.LENGTH_LONG).show();
                   startActivity(new Intent(getActivity(), SettingsActivity.class));
                   break;
               case R.id.btn_start:
+                  Toast.makeText(getActivity(), "Bla, bla bla...",
+                          Toast.LENGTH_LONG).show();
                   //startActivity(new Intent(getActivity(), HomeActivity.class));
                   break;
           }
@@ -297,14 +293,12 @@ public class MainActivityFragment extends Fragment {
         if (accessToken != null){
             if (profile != null) {
                 fb_welcome_text.setText("Welcome " + profile.getFirstName() + "!");
-                /*if (flag1 == 0) {
-                    createBitmap(profile, accessToken);
-                    flag1 ++;
-                }*/
             } else {
                 fb_welcome_text.setText("Welcome!");
             }
-            loadImageFromStorage(getView(), pathProfileImage, imageProfileFileName);
+            if (profileImageCheck.exists()) {
+                loadImageFromStorage(getView(), pathProfileImage, imageProfileFileName);
+            }
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
                     "as a display image for the App, and will be the Image which other users will see. " +
@@ -332,37 +326,28 @@ public class MainActivityFragment extends Fragment {
         }
     }
     //Create Image as object
-    private void createBitmap (final Profile user, final AccessToken accessToken){
-        GraphRequest request = GraphRequest.newMeRequest(
-                accessToken,
-                new GraphRequest.GraphJSONObjectCallback(){
-                    @Override
-                    public void onCompleted(JSONObject us2, GraphResponse response){
-                        if (user != null) {
-                            Thread thread = new Thread(new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        try {
-                                            URL imgUrl = new URL("https://graph.facebook.com/"
-                                                    + user.getId() + "/picture?type=large");
-                                            Log.d(TAG, "Image URL: " + imgUrl);
-                                            InputStream inputStream = (InputStream) imgUrl.getContent();
-                                            pImage = BitmapFactory.decodeStream(inputStream);
-                                            if (pImage != null) {
-                                                saveToInternalStorage(pImage, imageProfileFileName);
-                                            }
-                                            Log.v(TAG, "Everything Ok in here! We got the Image");
-                                        } catch (Exception e) {
-                                            e.printStackTrace();
-                                        }
-                                    }
-                                });
-                            thread.start();
-
+    private void createBitmap (final Profile user){
+        if (user != null) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+                        URL imgUrl = new URL("https://graph.facebook.com/"
+                                + user.getId() + "/picture?type=large");
+                        Log.d(TAG, "Image URL: " + imgUrl);
+                        InputStream inputStream = (InputStream) imgUrl.getContent();
+                        pImage = BitmapFactory.decodeStream(inputStream);
+                        if (pImage != null) {
+                            saveToInternalStorage(pImage, imageProfileFileName);
                         }
+                        Log.v(TAG, "Everything Ok in here! We got the Image");
+                    } catch (Exception e) {
+                        e.printStackTrace();
                     }
-        });
-        request.executeAsync();
+                }
+            });
+            thread.start();
+        }
     }
 
     //Save Image
@@ -390,6 +375,7 @@ public class MainActivityFragment extends Fragment {
             Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
             ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
             img.setImageBitmap(bitmap);
+
             uploadFBImageToFirebase(path + imageName);
         }
         catch (FileNotFoundException e)
