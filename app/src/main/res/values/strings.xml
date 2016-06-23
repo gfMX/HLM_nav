@@ -3,7 +3,7 @@
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
-    <string name="action_settings">Advanced Settings</string>
+    <string name="action_settings">Other Settings</string>
 
     <string name="app_description">Hello Hot Users</string>
     <string name="app_welcome">Welcome to the app! You have successfully log in</string>

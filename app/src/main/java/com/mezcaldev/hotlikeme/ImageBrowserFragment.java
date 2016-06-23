@@ -1,5 +1,6 @@
 package com.mezcaldev.hotlikeme;
 
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -13,10 +14,14 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 
+import org.json.JSONObject;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class ImageBrowserFragment extends Fragment {
+
+    private AccessToken accessToken = AccessToken.getCurrentAccessToken();
 
     private static final String TAG = "FacebookLogin";
 
@@ -38,21 +43,42 @@ public class ImageBrowserFragment extends Fragment {
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstances){
-        getFbAlbums();
+        getFbPhotos fbPhotos = new getFbPhotos();
+        fbPhotos.execute();
     }
 
-    private void getFbAlbums(){
-        new GraphRequest(
-                AccessToken.getCurrentAccessToken(),
-                "/me/albums",
-                null,
-                HttpMethod.GET,
-                new GraphRequest.Callback() {
-                    public void onCompleted(GraphResponse response) {
-                        /* handle the result */
-                        Log.i(TAG, "Results: "+response.toString());
-                    }
-                }
-        ).executeAsync();
+    private class getFbPhotos extends AsyncTask <Void, Void, Void>{
+        @Override
+        protected void onPreExecute(){
+
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+            GraphRequest request = GraphRequest.newMeRequest(
+                    accessToken,
+                    new GraphRequest.GraphJSONObjectCallback() {
+                        @Override
+                        public void onCompleted(
+                                JSONObject jsonObject,
+                                GraphResponse response) {
+                            // Application code
+                            Log.i(TAG, "Results: " + jsonObject.toString());
+                        }
+                    });
+            Bundle parameters = new Bundle();
+            parameters.putString("fields", "picture");
+            request.setParameters(parameters);
+            request.executeAsync();
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result){
+
+        }
+
+    }
+    public void setPhotoGallery (JSONObject photosObject){
+
     }
 }
