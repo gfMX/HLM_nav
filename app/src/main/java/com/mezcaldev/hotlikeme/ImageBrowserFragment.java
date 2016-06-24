@@ -26,6 +26,7 @@ public class ImageBrowserFragment extends Fragment {
     private static final String TAG = "FacebookLogin";
     private AccessToken accessToken = AccessToken.getCurrentAccessToken();
     private JSONObject jsonPhotos;
+    private JSONArray nPhotosArray;
 
     public ImageBrowserFragment() {
 
@@ -83,8 +84,11 @@ public class ImageBrowserFragment extends Fragment {
     }
     public void photoSelection (JSONObject photosObject){
         try {
-            JSONArray jsonPhotoId = photosObject.getJSONArray("id");
-            JSONArray jsonPhotoUrl = photosObject.getJSONArray("url");
+            nPhotosArray = photosObject.getJSONArray("data");
+            for (int i = 0; i < nPhotosArray.length(); i++) {
+                JSONArray jsonPhotoId = photosObject.getJSONArray("id");
+                JSONArray jsonPhotoUrl = photosObject.getJSONArray("url");
+            }
         } catch (JSONException e){
             e.printStackTrace();
         }
