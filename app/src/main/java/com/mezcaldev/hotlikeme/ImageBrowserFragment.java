@@ -19,16 +19,16 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.net.URL;
+
 /**
  * A placeholder fragment containing a simple view.
  */
 public class ImageBrowserFragment extends Fragment {
 
     private static final String TAG = "FacebookLogin";
-    private AccessToken accessToken = AccessToken.getCurrentAccessToken();
+    private AccessToken accessToken;
     private String fieldsParams = "picture";
-    private JSONArray nPhotosArray;
-    private JSONArray nPhotosId;
 
     public ImageBrowserFragment() {
 
@@ -38,6 +38,9 @@ public class ImageBrowserFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
+
+        accessToken = AccessToken.getCurrentAccessToken();
+        Log.i(TAG, "Acces Token"+ accessToken.toString());
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -59,22 +62,22 @@ public class ImageBrowserFragment extends Fragment {
         }
         @Override
         protected Void doInBackground(Void... params) {
-            GraphRequest request = GraphRequest.newMeRequest(
+            GraphRequest request = GraphRequest.newGraphPathRequest(
                     accessToken,
-                    new GraphRequest.GraphJSONObjectCallback() {
+                    "/me/photos",
+                    new GraphRequest.Callback() {
                         @Override
-                        public void onCompleted(
-                                JSONObject jsonObject,
-                                GraphResponse response) {
+                        public void onCompleted(GraphResponse response) {
                             // Application code
-                            Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
-                            Log.i(TAG, "Results (JSONObject): " + jsonObject.toString()); //Query Results
+                                Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
+                                //Log.i(TAG, "Results (JSONObject): " + jsonObject.toString()); //Query Results
 
-                            JSONArray photoArray = response.getJSONArray();
+                                JSONObject photoOb = response.getJSONObject();
 
-                            photoSelection(jsonObject);
+                                photoSelection(photoOb);
                         }
-                    });
+                    }
+            );
             Bundle parameters = new Bundle();
             parameters.putString("fields", fieldsParams);
             request.setParameters(parameters);
@@ -89,21 +92,16 @@ public class ImageBrowserFragment extends Fragment {
 
     }
     public void photoSelection (JSONObject photoObject){
-        Log.i(TAG,"Object Length: " + photoObject.length());
         try {
             if (photoObject != null) {
+                JSONArray jsonArray1 = photoObject.getJSONArray("data");
+                Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
 
-                //Log.i(TAG,"Array Length: " + photoObject.length());
-                Log.i(TAG, "Parsing ID: " + photoObject.get("id"));
-                //Log.i(TAG, "Parsing Picture: " + photoObject.getJSONObject("picture"));
-                //Log.i(TAG, "Parsing Data: " + photoObject.getJSONObject("picture").getJSONObject("data"));
-                Log.i(TAG, "Parsing URL: " + photoObject.getJSONObject("picture").getJSONObject("data").get("url"));
-
-                for (int i = 0; i < photoObject.length(); i++) {
-                    //JSONObject object1 = pArray.getJSONObject(i);
-                    //JSONObject object2 = (JSONObject) object1.get("picture");
-                    //System.out.println("Object1: " + object1.toString());
-                    //JSONArray  object3 = object2.getJSONArray("data");
+                for (int i = 0; i < jsonArray1.length(); i++) {
+                    JSONObject object1 = jsonArray1.getJSONObject(i);
+                    String object2 = object1.get("picture").toString();
+                    String object3 = object1.get("id").toString();
+                    Log.i(TAG,"Object: " + object2 + " Id: " + object3);
                 }
             } else {
                 Log.i(TAG, "Nothing to do here!");
