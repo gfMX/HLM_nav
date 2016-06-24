@@ -2,6 +2,7 @@ package com.mezcaldev.hotlikeme;
 
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -25,8 +26,9 @@ public class ImageBrowserFragment extends Fragment {
 
     private static final String TAG = "FacebookLogin";
     private AccessToken accessToken = AccessToken.getCurrentAccessToken();
-    private JSONObject jsonPhotos;
+    private String fieldsParams = "picture";
     private JSONArray nPhotosArray;
+    private JSONArray nPhotosId;
 
     public ImageBrowserFragment() {
 
@@ -65,12 +67,16 @@ public class ImageBrowserFragment extends Fragment {
                                 JSONObject jsonObject,
                                 GraphResponse response) {
                             // Application code
-                            Log.i(TAG, "Results: " + jsonObject.toString());
-                            jsonPhotos = jsonObject;
+                            Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
+                            Log.i(TAG, "Results (JSONObject): " + jsonObject.toString()); //Query Results
+
+                            JSONArray photoArray = response.getJSONArray();
+
+                            photoSelection(jsonObject);
                         }
                     });
             Bundle parameters = new Bundle();
-            parameters.putString("fields", "picture");
+            parameters.putString("fields", fieldsParams);
             request.setParameters(parameters);
             request.executeAsync();
 
@@ -78,16 +84,29 @@ public class ImageBrowserFragment extends Fragment {
         }
         @Override
         protected void onPostExecute(Void result){
-            photoSelection(jsonPhotos);
+
         }
 
     }
-    public void photoSelection (JSONObject photosObject){
+    public void photoSelection (JSONObject photoObject){
+        Log.i(TAG,"Object Length: " + photoObject.length());
         try {
-            nPhotosArray = photosObject.getJSONArray("data");
-            for (int i = 0; i < nPhotosArray.length(); i++) {
-                JSONArray jsonPhotoId = photosObject.getJSONArray("id");
-                JSONArray jsonPhotoUrl = photosObject.getJSONArray("url");
+            if (photoObject != null) {
+
+                //Log.i(TAG,"Array Length: " + photoObject.length());
+                Log.i(TAG, "Parsing ID: " + photoObject.get("id"));
+                //Log.i(TAG, "Parsing Picture: " + photoObject.getJSONObject("picture"));
+                //Log.i(TAG, "Parsing Data: " + photoObject.getJSONObject("picture").getJSONObject("data"));
+                Log.i(TAG, "Parsing URL: " + photoObject.getJSONObject("picture").getJSONObject("data").get("url"));
+
+                for (int i = 0; i < photoObject.length(); i++) {
+                    //JSONObject object1 = pArray.getJSONObject(i);
+                    //JSONObject object2 = (JSONObject) object1.get("picture");
+                    //System.out.println("Object1: " + object1.toString());
+                    //JSONArray  object3 = object2.getJSONArray("data");
+                }
+            } else {
+                Log.i(TAG, "Nothing to do here!");
             }
         } catch (JSONException e){
             e.printStackTrace();
