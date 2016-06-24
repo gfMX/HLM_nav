@@ -14,6 +14,8 @@ import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.HttpMethod;
 
+import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 /**
@@ -21,9 +23,9 @@ import org.json.JSONObject;
  */
 public class ImageBrowserFragment extends Fragment {
 
-    private AccessToken accessToken = AccessToken.getCurrentAccessToken();
-
     private static final String TAG = "FacebookLogin";
+    private AccessToken accessToken = AccessToken.getCurrentAccessToken();
+    private JSONObject jsonPhotos;
 
     public ImageBrowserFragment() {
 
@@ -63,6 +65,7 @@ public class ImageBrowserFragment extends Fragment {
                                 GraphResponse response) {
                             // Application code
                             Log.i(TAG, "Results: " + jsonObject.toString());
+                            jsonPhotos = jsonObject;
                         }
                     });
             Bundle parameters = new Bundle();
@@ -74,11 +77,17 @@ public class ImageBrowserFragment extends Fragment {
         }
         @Override
         protected void onPostExecute(Void result){
-
+            photoSelection(jsonPhotos);
         }
 
     }
-    public void setPhotoGallery (JSONObject photosObject){
+    public void photoSelection (JSONObject photosObject){
+        try {
+            JSONArray jsonPhotoId = photosObject.getJSONArray("id");
+            JSONArray jsonPhotoUrl = photosObject.getJSONArray("url");
+        } catch (JSONException e){
+            e.printStackTrace();
+        }
 
     }
 }
