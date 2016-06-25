@@ -70,10 +70,8 @@ public class ImageBrowserFragment extends Fragment {
                         public void onCompleted(GraphResponse response) {
                             // Application code
                                 Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
-                                //Log.i(TAG, "Results (JSONObject): " + jsonObject.toString()); //Query Results
 
                                 JSONObject photoOb = response.getJSONObject();
-
                                 photoSelection(photoOb);
                         }
                     }
@@ -101,7 +99,7 @@ public class ImageBrowserFragment extends Fragment {
                     JSONObject object1 = jsonArray1.getJSONObject(i);
                     String object2 = object1.get("picture").toString();
                     String object3 = object1.get("id").toString();
-                    Log.i(TAG,"Object: " + object2 + " Id: " + object3);
+                    //Log.i(TAG,"Object: " + object2 + " Id: " + object3);
                 }
             } else {
                 Log.i(TAG, "Nothing to do here!");

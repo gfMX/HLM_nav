@@ -10,8 +10,16 @@
     tools:showIn="@layout/activity_image_browser">
 
 
-    <ScrollView
-        android:layout_width="match_parent"
+    <GridView
+        android:id="@+id/gridView"
+        android:drawSelectorOnTop="true"
+        android:gravity="center"
+        android:stretchMode="columnWidth"
+        android:layout_width="wrap_content"
         android:layout_height="match_parent"
-        android:id="@+id/scrollView" />
+        android:layout_margin="5dp"
+        android:columnWidth="100dp"
+        android:numColumns="auto_fit"
+        android:horizontalSpacing="2dp"
+        android:verticalSpacing="2dp" />
 </LinearLayout>
