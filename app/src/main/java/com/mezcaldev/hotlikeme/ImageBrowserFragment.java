@@ -32,7 +32,7 @@ public class ImageBrowserFragment extends Fragment {
 
     private GridView gridView;
     static List<String> imUrls = new ArrayList<>();
-    static String[] imIds;
+    static List<String> imIds = new ArrayList<>();
 
     public ImageBrowserFragment() {
 
@@ -76,7 +76,7 @@ public class ImageBrowserFragment extends Fragment {
                         @Override
                         public void onCompleted(GraphResponse response) {
                             // Application code
-                                Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
+                                //Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
 
                                 JSONObject photoOb = response.getJSONObject();
                                 photoSelection(photoOb);
@@ -99,6 +99,10 @@ public class ImageBrowserFragment extends Fragment {
     public void photoSelection (JSONObject photoObject){
         try {
             if (photoObject != null) {
+                //Cleaning Arrays before proceed
+                imUrls.clear();
+                imIds.clear();
+
                 JSONArray jsonArray1 = photoObject.getJSONArray("data");
                 Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
 
@@ -107,7 +111,7 @@ public class ImageBrowserFragment extends Fragment {
                     String object2 = object1.get("picture").toString();
                     String object3 = object1.get("id").toString();
                     imUrls.add(object2);
-                    //imIds[i] = object3;
+                    imIds.add(object3);
 
                     //Log.i(TAG,"Object: " + object2 + " Id: " + object3);
                     //Log.i(TAG, "New elements: " + imUrls.get(i));
