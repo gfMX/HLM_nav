@@ -26,7 +26,6 @@ import com.facebook.FacebookException;
 import com.facebook.FacebookSdk;
 import com.facebook.Profile;
 import com.facebook.ProfileTracker;
-import com.facebook.login.LoginManager;
 import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.facebook.login.widget.ProfilePictureView;
@@ -248,7 +247,7 @@ public class MainActivityFragment extends Fragment {
                   startActivity(new Intent(getActivity(), SettingsActivity.class));
                   break;
               case R.id.btn_start:
-                  Toast.makeText(getActivity(), "Bla, bla bla...",
+                  Toast.makeText(getActivity(), "Almost there!",
                           Toast.LENGTH_LONG).show();
                   //startActivity(new Intent(getActivity(), HomeActivity.class));
                   break;
@@ -279,14 +278,6 @@ public class MainActivityFragment extends Fragment {
                 });
     }
 
-
-    // Sign out
-    public void signOut(){
-        mAuth.signOut();
-        LoginManager.getInstance().logOut();
-
-        //updateUI(null);
-    }
     //UI Status Updater
     private void updateUI (AccessToken accessToken) {
         //Update UI Elements according to the Given Token
