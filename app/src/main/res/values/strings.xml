@@ -1,5 +1,6 @@
 <resources>
     <string name="app_name">Hot Like Me</string>
+    <string name="image_selected_title">Image Selected</string>
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
@@ -74,5 +75,8 @@
 
     <string name="pref_title_vibrate">Vibrate</string>
     <string name="title_activity_image_browser">Image Browser</string>
+
+    <!-- TODO: Remove or change this placeholder text -->
+    <string name="hello_blank_fragment">Hello blank fragment</string>
 
 </resources>

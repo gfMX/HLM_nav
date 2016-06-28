@@ -1,0 +1,29 @@
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".imageSelected">
+
+    <ImageView
+        android:id="@+id/fb_prof_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:minHeight="250dp"
+        android:paddingBottom="35dp"
+        android:layout_gravity="center_vertical"/>
+
+    <Button
+        android:text="Cancel"
+        android:id="@+id/btn_cancel_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="right|bottom" />
+
+    <Button
+        android:text="OK"
+        android:id="@+id/btn_ok_image"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="left|bottom" />
+
+</FrameLayout>
