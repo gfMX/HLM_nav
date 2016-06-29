@@ -68,8 +68,8 @@ public class MainActivityFragment extends Fragment {
 
     //UI Elements
     private int flag1 = 0;
-    private String imageProfileFileName;
-    private String pathProfileImage;
+    static String imageProfileFileName;
+    static String pathProfileImage;
     private Bitmap pImage;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
