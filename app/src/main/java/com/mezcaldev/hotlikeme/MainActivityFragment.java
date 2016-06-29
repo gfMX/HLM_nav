@@ -208,7 +208,7 @@ public class MainActivityFragment extends Fragment {
 
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
-                if (profileImageCheck.exists() == false) {
+                if (!profileImageCheck.exists()) {
                     createBitmap(profile);
                 }
             }

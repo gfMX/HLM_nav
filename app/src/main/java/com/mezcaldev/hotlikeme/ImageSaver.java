@@ -24,6 +24,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.InputStream;
 import java.net.URL;
+import java.util.List;
 
 /**
  * Created by developer on 17/06/16.
@@ -36,7 +37,7 @@ public class imageSaver {
 
     }
     //Create Image as object
-    private void i_createBitmap (final Profile user, final String imageProfileFileName, final Context context){
+    private void iCreateBitmap (final Profile user, final String imageProfileFileName, final Context context){
         if (user != null) {
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -61,7 +62,7 @@ public class imageSaver {
     }
 
     //Save Image
-    public String i_saveToInternalStorage(Bitmap bitmapImage, String imageName, Context context){
+    public String iSaveToInternalStorage(Bitmap bitmapImage, String imageName, Context context){
         File directory = new ContextWrapper(context).getDir("imageDir",
                 Context.MODE_PRIVATE);
         File imPath=new File(directory,imageName);
@@ -79,7 +80,7 @@ public class imageSaver {
         return directory.getAbsolutePath();
     }
     //Load Image
-    public void i_loadImageFromStorage(View view, String path, String imageName) {
+    public void iLoadImageFromStorage(View view, String path, String imageName) {
         try {
             File f=new File(path, imageName);
             Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
@@ -94,12 +95,38 @@ public class imageSaver {
         }
     }
     //Upload Image to Firebase
-    public void i_uploadFBImageToFirebase(String path, FirebaseUser user){
+    public void iUploadFBImageToFirebase(String path, FirebaseUser user){
         FirebaseStorage  storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
         UploadTask uploadTask;
 
         Uri file = Uri.fromFile(new File(path));
+        StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + file.getLastPathSegment());
+        uploadTask = upImageRef.putFile(file);
+
+        // Register observers to listen for when the download is done or if it fails
+        uploadTask.addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle unsuccessful uploads
+            }
+        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                Log.v(TAG,"Image uploaded to Firebase");
+                Log.v(TAG,"URL: " + downloadUrl);
+            }
+        });
+    }
+    public void iUploadImagesToFirebase(List<String> path, FirebaseUser user){
+
+        FirebaseStorage  storage = FirebaseStorage.getInstance();
+        StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
+        UploadTask uploadTask;
+
+        Uri file = Uri.fromFile(new File(path.get(1)));
         StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + file.getLastPathSegment());
         uploadTask = upImageRef.putFile(file);
 

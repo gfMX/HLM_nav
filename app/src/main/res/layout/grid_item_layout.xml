@@ -3,4 +3,4 @@
     android:id="@+id/im_image"
     android:layout_width="120dp"
     android:layout_height="120dp"
-    android:paddingBottom="10dp"/>
+    android:padding="5dp"/>

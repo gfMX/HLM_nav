@@ -2,7 +2,6 @@ package com.mezcaldev.hotlikeme;
 
 
 import android.app.DialogFragment;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -16,7 +15,6 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.facebook.Profile;
 
 import java.io.InputStream;
 import java.net.URL;
@@ -86,7 +84,7 @@ public class imageSelected extends DialogFragment {
                         Bitmap pImage = BitmapFactory.decodeStream(inputStream);
                         if (pImage != null) {
                             imageSaver saveImage = new imageSaver();
-                            saveImage.i_saveToInternalStorage(
+                            saveImage.iSaveToInternalStorage(
                                     pImage,
                                     imageProfileFileName,
                                     getActivity().getApplicationContext()

@@ -1,6 +1,7 @@
 package com.mezcaldev.hotlikeme;
 
 import android.app.DialogFragment;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -32,11 +33,13 @@ public class ImageBrowserFragment extends Fragment {
     private static final String TAG = "FacebookLogin";
     private AccessToken accessToken;
     private String fieldsParams = "picture,images";
+    private String limitParams = "120";
 
     private GridView gridView;
     static List<String> imUrls = new ArrayList<>();
     static List<String> imImages = new ArrayList<>();
     static List<String> imIds = new ArrayList<>();
+    private List<Integer> imIdsSelected = new ArrayList<>();
 
     public ImageBrowserFragment() {
 
@@ -61,8 +64,6 @@ public class ImageBrowserFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstances){
         getFbPhotos fbPhotos = new getFbPhotos();
         fbPhotos.execute();
-
-
     }
 
 
@@ -89,7 +90,7 @@ public class ImageBrowserFragment extends Fragment {
             );
             Bundle parameters = new Bundle();
             parameters.putString("fields", fieldsParams);
-            parameters.putString("limit", "30");
+            parameters.putString("limit", limitParams);
             request.setParameters(parameters);
             request.executeAsync();
 
@@ -108,6 +109,7 @@ public class ImageBrowserFragment extends Fragment {
                 imUrls.clear();
                 imImages.clear();
                 imIds.clear();
+                imIdsSelected.clear();
 
                 JSONArray jsonArray1 = photoObject.getJSONArray("data");
                 Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
@@ -133,10 +135,17 @@ public class ImageBrowserFragment extends Fragment {
                 gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
                     public void onItemClick(AdapterView<?> parent, View v, int position, long id){
-                        Log.i(TAG, "Click");
                         Uri imageUri = Uri.parse(imImages.get(position));
-                        Log.i(TAG, "Uri Obtained: " + imageUri.toString());
-                        showSelectedImage(imageUri);
+                        //Log.i(TAG, "Uri Obtained: " + imageUri.toString());
+                        //showSelectedImage(imageUri);
+                        if (!imIdsSelected.contains(position)) {
+                            imIdsSelected.add(position);
+                            v.setBackgroundColor(Color.GRAY);
+                        } else {
+                            imIdsSelected.remove(imIdsSelected.indexOf(position));
+                            v.setBackgroundColor(Color.TRANSPARENT);
+                        }
+                        Log.i(TAG, "Images selected: " + imIdsSelected.toString());
                     }
                 });
             } else {
