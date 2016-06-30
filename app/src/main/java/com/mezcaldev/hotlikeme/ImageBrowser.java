@@ -6,13 +6,25 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class ImageBrowser extends AppCompatActivity {
+
+    static String TAG_b = "Log: ";
+
+    static FirebaseUser fireUser;
+    static FirebaseAuth firebaseAuth;
+
+    static List<String> uploadUrls = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -21,13 +33,27 @@ public class ImageBrowser extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        fireUser = MainActivityFragment.user;
+        Log.i(TAG_b, "User: " + fireUser);
+
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Uploading selected Images", Snackbar.LENGTH_LONG).setAction("Action", null).show();
+                uploadUrls = ImageBrowserFragment.imUrlsSelected;
+                if (uploadUrls != null) {
+                    Snackbar.make(view, "Uploading selected Images", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null)
+                            .show();
+                    imageSaver uploadImages = new imageSaver();
+                    uploadImages.iUploadImagesToFirebase(uploadUrls, fireUser);
+                } else{
+                    Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null)
+                            .show();
+                }
             }
         });
     }

@@ -15,15 +15,20 @@ import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
+import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.util.List;
 
 /**
@@ -86,8 +91,6 @@ public class imageSaver {
             Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
             ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
             img.setImageBitmap(bitmap);
-
-            //i_uploadFBImageToFirebase(path + imageName);
         }
         catch (FileNotFoundException e)
         {
@@ -105,7 +108,13 @@ public class imageSaver {
         uploadTask = upImageRef.putFile(file);
 
         // Register observers to listen for when the download is done or if it fails
-        uploadTask.addOnFailureListener(new OnFailureListener() {
+        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+            @Override
+            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                System.out.println("Upload is " + progress + "% done");
+            }
+        }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
@@ -120,30 +129,58 @@ public class imageSaver {
             }
         });
     }
-    public void iUploadImagesToFirebase(List<String> path, FirebaseUser user){
-
-        FirebaseStorage  storage = FirebaseStorage.getInstance();
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
-        UploadTask uploadTask;
-
-        Uri file = Uri.fromFile(new File(path.get(1)));
-        StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + file.getLastPathSegment());
-        uploadTask = upImageRef.putFile(file);
-
-        // Register observers to listen for when the download is done or if it fails
-        uploadTask.addOnFailureListener(new OnFailureListener() {
+    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user){
+        Thread thread = new Thread(new Runnable() {
             @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                Log.v(TAG,"Image uploaded to Firebase");
-                Log.v(TAG,"URL: " + downloadUrl);
+            public void run() {
+                String fileName = "image1.jpg";
+                FirebaseStorage  storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
+                StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + fileName);
+                UploadTask uploadTask;
+
+                //Uri file = Uri.fromFile(new File(path.get(0)));
+                try {
+                    URL image = new URL(path.get(0));
+                    Log.i(TAG,"New URL: " + image);
+                    try {
+                        InputStream inputStream = (InputStream) image.getContent();
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                        byte[] data = byteArrayOutputStream.toByteArray();
+
+                        //final InputStream stream = new FileInputStream(new File(file.toString()));
+                        //uploadTask = upImageRef.putStream(stream);
+                        uploadTask = upImageRef.putBytes(data);
+                        // Listen for state changes, errors, and completion of the upload.
+                        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                System.out.println("Upload is " + progress + "% done");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle unsuccessful uploads
+                            }
+                        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } catch (MalformedURLException mu){
+                    mu.printStackTrace();
+                }
             }
         });
+        thread.start();
     }
 }

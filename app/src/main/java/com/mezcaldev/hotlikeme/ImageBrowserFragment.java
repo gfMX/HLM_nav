@@ -134,9 +134,11 @@ public class ImageBrowserFragment extends Fragment {
                 gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
                     public void onItemClick(AdapterView<?> parent, View v, int position, long id){
+
                         Uri imageUri = Uri.parse(imImages.get(position));
                         //Log.i(TAG, "Uri Obtained: " + imageUri.toString());
                         //showSelectedImage(imageUri);
+
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
                             imUrlsSelected.add(imImages.get(position));
