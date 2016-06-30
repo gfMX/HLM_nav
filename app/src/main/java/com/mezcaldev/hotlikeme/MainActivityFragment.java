@@ -377,7 +377,7 @@ public class MainActivityFragment extends Fragment {
     //Upload Image to Firebase
     private void uploadFBImageToFirebase(String path){
         Uri file = Uri.fromFile(new File(path));
-        StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + file.getLastPathSegment());
+        StorageReference upImageRef = storageRef.child(user.getUid() + "/profile_pic/" + file.getLastPathSegment());
         uploadTask = upImageRef.putFile(file);
 
         // Register observers to listen for when the download is done or if it fails
