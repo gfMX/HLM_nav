@@ -25,9 +25,6 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class ImageBrowserFragment extends Fragment {
 
     private static final String TAG = "FacebookLogin";
@@ -39,7 +36,8 @@ public class ImageBrowserFragment extends Fragment {
     static List<String> imUrls = new ArrayList<>();
     static List<String> imImages = new ArrayList<>();
     static List<String> imIds = new ArrayList<>();
-    private List<Integer> imIdsSelected = new ArrayList<>();
+    static List<Integer> imIdsSelected = new ArrayList<>();
+    static List<String> imUrlsSelected = new ArrayList<>();
 
     public ImageBrowserFragment() {
 
@@ -110,6 +108,7 @@ public class ImageBrowserFragment extends Fragment {
                 imImages.clear();
                 imIds.clear();
                 imIdsSelected.clear();
+                imUrlsSelected.clear();
 
                 JSONArray jsonArray1 = photoObject.getJSONArray("data");
                 Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
@@ -140,12 +139,21 @@ public class ImageBrowserFragment extends Fragment {
                         //showSelectedImage(imageUri);
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
+                            imUrlsSelected.add(imImages.get(position));
                             v.setBackgroundColor(Color.GRAY);
+
+                            Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
+                                   + imUrlsSelected.get(imIdsSelected.indexOf(position)));
                         } else {
+                            Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
+                            + imUrlsSelected.get(imIdsSelected.indexOf(position)));
+
+                            imUrlsSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
+
                             v.setBackgroundColor(Color.TRANSPARENT);
                         }
-                        Log.i(TAG, "Images selected: " + imIdsSelected.toString());
+                        //Log.i(TAG, "Images selected: " + imIdsSelected.toString());
                     }
                 });
             } else {
