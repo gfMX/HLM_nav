@@ -237,7 +237,7 @@ public class MainActivityFragment extends Fragment {
       public void onClick (View v){
           switch (v.getId()){
               case R.id.btn_choose_img:
-                  Toast.makeText(getActivity(), "Please choose your Profile Pic!",
+                  Toast.makeText(getActivity(), "Please choose a few Images for Hot Like Me!",
                           Toast.LENGTH_LONG).show();
                   startActivity(new Intent(getActivity(), ImageBrowser.class));
                   break;
