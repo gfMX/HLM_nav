@@ -1,9 +1,6 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -29,8 +26,6 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -41,11 +36,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
-import com.google.firebase.storage.UploadTask;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -63,10 +55,8 @@ public class MainActivityFragment extends Fragment {
     static ProfileTracker profileTracker;
 
     //UI Elements
-    private int flag1 = 0;
     static String imageProfileFileName = "profile_im.jpg";
     static String pathProfileImage = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/";
-    private Bitmap pImage;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
@@ -83,9 +73,9 @@ public class MainActivityFragment extends Fragment {
     static DatabaseReference fireRef;
     static FirebaseStorage storage;
     static StorageReference storageRef;
-    static UploadTask uploadTask;
 
     //Other elements
+    ImageSaver imageSaver = new ImageSaver();
     File profileImageCheck;
 
     public MainActivityFragment() {
@@ -145,7 +135,6 @@ public class MainActivityFragment extends Fragment {
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
                 if (!profileImageCheck.exists()) {
-                    ImageSaver imageSaver = new ImageSaver();
                     imageSaver.iCreateBitmap(profile,
                             imageProfileFileName,
                             getActivity().getApplicationContext());
@@ -170,6 +159,10 @@ public class MainActivityFragment extends Fragment {
         btn_settings.setOnClickListener(settingsButtons);
         btn_start.setOnClickListener(settingsButtons);
 
+        //Image Profile Behavior
+        imageProfileHLM.isClickable();
+        imageProfileHLM.setOnClickListener(settingsButtons);
+
     }
     //Buttons for different settings
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
@@ -189,6 +182,11 @@ public class MainActivityFragment extends Fragment {
                   Toast.makeText(getActivity(), "Almost there!",
                           Toast.LENGTH_LONG).show();
                   //startActivity(new Intent(getActivity(), HomeActivity.class));
+                  break;
+              case R.id.hlm_image:
+                  Toast.makeText(getActivity(), "Bla, bla bla... Change your profile Pic",
+                          Toast.LENGTH_LONG).show();
+                  startActivity(new Intent(getActivity(), ImageBrowser.class));
                   break;
           }
       }
@@ -302,7 +300,8 @@ public class MainActivityFragment extends Fragment {
                 fb_welcome_text.setText("Welcome!");
             }
             if (profileImageCheck.exists()) {
-                loadImageFromStorage(getView(), pathProfileImage, imageProfileFileName);
+                imageSaver.iLoadImageFromStorage(getView(),pathProfileImage,imageProfileFileName);
+                imageSaver.iUploadFBImageToFirebase(pathProfileImage + imageProfileFileName, user);
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
@@ -329,43 +328,6 @@ public class MainActivityFragment extends Fragment {
                 }
             }
         }
-    }
-    //Load Image
-    private void loadImageFromStorage(View view, String path, String imageName) {
-        try {
-            File f=new File(path, imageName);
-            Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
-            ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
-            img.setImageBitmap(bitmap);
-
-            uploadFBImageToFirebase(path + imageName);
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-        }
-    }
-    //Upload Image to Firebase
-    private void uploadFBImageToFirebase(String path){
-        Uri file = Uri.fromFile(new File(path));
-        StorageReference upImageRef = storageRef.child(user.getUid() + "/profile_pic/" + file.getLastPathSegment());
-        uploadTask = upImageRef.putFile(file);
-
-        // Register observers to listen for when the download is done or if it fails
-        uploadTask.addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-            }
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                Log.v(TAG,"Image uploaded to Firebase");
-                Log.v(TAG,"URL: " + downloadUrl);
-            }
-        });
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
