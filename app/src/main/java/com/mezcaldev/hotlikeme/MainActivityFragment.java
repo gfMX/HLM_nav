@@ -304,9 +304,9 @@ public class MainActivityFragment extends Fragment {
                 imageSaver.iUploadFBImageToFirebase(pathProfileImage + imageProfileFileName, user);
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
-            text_instruct.setText("Please choose your Hot Like Me image. This image will be used " +
-                    "as a display image for the App, and will be the Image which other users will see. " +
-                    "By default HLM take your FB profile Picture.");
+            text_instruct.setText("Please choose some images for Hot Like Me with th button 'Your Images'." +
+                    "After that, click on your image profile to change it for one of your choice." +
+                    "\nBy default (first session) HLM take your FB profile Picture.");
             profilePic.setProfileId(accessToken.getUserId());
             btn_image.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.GONE);

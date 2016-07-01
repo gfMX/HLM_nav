@@ -1,11 +1,13 @@
 package com.mezcaldev.hotlikeme;
 
+import android.app.NotificationManager;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
 import android.widget.ImageView;
@@ -89,8 +91,6 @@ public class ImageSaver {
             Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
             ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
             img.setImageBitmap(bitmap);
-
-            //iUploadFBImageToFirebase(path * imageName, );
         }
         catch (FileNotFoundException e)
         {
@@ -129,21 +129,29 @@ public class ImageSaver {
             }
         });
     }
-    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user){
+    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user, final Context context){
+        final NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(context.getApplicationContext())
+                        .setSmallIcon(R.drawable.ic_sync_black_24dp)
+                        .setContentTitle("Uploading Image to HLM")
+                        .setContentText("We're uploading the Image to HLM");
+        final NotificationManager notificationManager = (NotificationManager)
+                context.getSystemService(Context.NOTIFICATION_SERVICE);
+
         for (int i = 0; i<path.size(); i++) {
-            final int o = i;
+            final int od = i;
+
             Thread thread = new Thread(new Runnable() {
                 @Override
                 public void run() {
-                    String fileName = "image" + o + ".jpg";
+                    String fileName = "image" + od + ".jpg";
                     FirebaseStorage storage = FirebaseStorage.getInstance();
                     StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
                     StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + fileName);
                     UploadTask uploadTask;
 
-                    //Uri file = Uri.fromFile(new File(path.get(0)));
                     try {
-                        URL image = new URL(path.get(o));
+                        URL image = new URL(path.get(od));
                         Log.i(TAG, "New URL: " + image);
                         try {
                             InputStream inputStream = (InputStream) image.getContent();
@@ -153,14 +161,16 @@ public class ImageSaver {
                             bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
                             byte[] data = byteArrayOutputStream.toByteArray();
 
-                            //final InputStream stream = new FileInputStream(new File(file.toString()));
-                            //uploadTask = upImageRef.putStream(stream);
                             uploadTask = upImageRef.putBytes(data);
                             // Listen for state changes, errors, and completion of the upload.
                             uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                                 @Override
                                 public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                                     double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+
+                                    mBuilder.setProgress(100, (int) progress, false);
+                                    notificationManager.notify(1, mBuilder.build());
+
                                     System.out.println("Upload is " + progress + "% done");
                                 }
                             }).addOnFailureListener(new OnFailureListener() {
@@ -173,11 +183,15 @@ public class ImageSaver {
                                 public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                     // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                                     Uri downloadUrl = taskSnapshot.getDownloadUrl();
+
+                                    mBuilder.setContentText("Images uploaded").setProgress(0,0,false);
+                                    notificationManager.notify(1, mBuilder.build());
                                 }
                             });
                         } catch (IOException e) {
                             e.printStackTrace();
                         }
+                        //
                     } catch (MalformedURLException mu) {
                         mu.printStackTrace();
                     }

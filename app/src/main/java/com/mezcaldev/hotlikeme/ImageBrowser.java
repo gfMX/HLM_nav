@@ -2,6 +2,7 @@ package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
@@ -46,7 +47,15 @@ public class ImageBrowser extends AppCompatActivity {
                             .setAction("Action", null)
                             .show();
                     ImageSaver uploadImages = new ImageSaver();
-                    uploadImages.iUploadImagesToFirebase(uploadUrls, fireUser);
+                    uploadImages.iUploadImagesToFirebase(uploadUrls, fireUser, getApplicationContext());
+                    final Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            startActivity(new Intent(getApplication(), MainActivity.class));
+                        }
+                    }, 1000);
+
                 } else{
                     Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
