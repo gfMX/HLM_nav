@@ -46,8 +46,13 @@ public class ImageBrowser extends AppCompatActivity {
                     Snackbar.make(view, "Uploading selected Images", Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
                             .show();
+
                     ImageSaver uploadImages = new ImageSaver();
-                    uploadImages.iUploadImagesToFirebase(uploadUrls, fireUser, getApplicationContext());
+                    uploadImages.iUploadImagesToFirebase(uploadUrls,
+                            fireUser,
+                            getApplicationContext(),
+                            uploadUrls.size());
+
                     final Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
                         @Override

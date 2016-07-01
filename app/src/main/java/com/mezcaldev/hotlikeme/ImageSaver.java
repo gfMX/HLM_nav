@@ -129,7 +129,7 @@ public class ImageSaver {
             }
         });
     }
-    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user, final Context context){
+    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user, final Context context, final int nUploads){
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext())
                         .setSmallIcon(R.drawable.ic_sync_black_24dp)
@@ -138,67 +138,67 @@ public class ImageSaver {
         final NotificationManager notificationManager = (NotificationManager)
                 context.getSystemService(Context.NOTIFICATION_SERVICE);
 
-        for (int i = 0; i<path.size(); i++) {
-            final int od = i;
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                String fileName = "image" + (nUploads-1) + ".jpg";
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
+                StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + fileName);
+                UploadTask uploadTask;
 
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String fileName = "image" + od + ".jpg";
-                    FirebaseStorage storage = FirebaseStorage.getInstance();
-                    StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
-                    StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + fileName);
-                    UploadTask uploadTask;
-
+                try {
+                    URL image = new URL(path.get(nUploads-1));
+                    Log.i(TAG, "New URL: " + image);
                     try {
-                        URL image = new URL(path.get(od));
-                        Log.i(TAG, "New URL: " + image);
-                        try {
-                            InputStream inputStream = (InputStream) image.getContent();
-                            Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        InputStream inputStream = (InputStream) image.getContent();
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
-                            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
-                            byte[] data = byteArrayOutputStream.toByteArray();
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream);
+                        byte[] data = byteArrayOutputStream.toByteArray();
 
-                            uploadTask = upImageRef.putBytes(data);
-                            // Listen for state changes, errors, and completion of the upload.
-                            uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                                    double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                        uploadTask = upImageRef.putBytes(data);
+                        // Listen for state changes, errors, and completion of the upload.
+                        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
 
-                                    mBuilder.setProgress(100, (int) progress, false);
-                                    notificationManager.notify(1, mBuilder.build());
+                                mBuilder.setProgress(100, (int) progress, false);
+                                notificationManager.notify(1, mBuilder.build());
 
-                                    System.out.println("Upload is " + progress + "% done");
+                                System.out.println("Upload is " + progress + "% done");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle unsuccessful uploads
+                            }
+                        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+
+                                mBuilder.setContentText("Images uploaded").setProgress(0,0,false);
+                                notificationManager.notify(1, mBuilder.build());
+                                if (nUploads>1){
+                                    int newUploads = nUploads - 1;
+                                    iUploadImagesToFirebase(path, user, context, newUploads);
+                                } else {
+                                    Log.i(TAG, "All done!");
                                 }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Handle unsuccessful uploads
-                                }
-                            }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-                                @Override
-                                public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                    // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                    Uri downloadUrl = taskSnapshot.getDownloadUrl();
-
-                                    mBuilder.setContentText("Images uploaded").setProgress(0,0,false);
-                                    notificationManager.notify(1, mBuilder.build());
-                                }
-                            });
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
-                        //
-                    } catch (MalformedURLException mu) {
-                        mu.printStackTrace();
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
+                } catch (MalformedURLException mu) {
+                    mu.printStackTrace();
                 }
-            });
-            thread.start();
-        }
-        Log.i(TAG, "All Images uploaded!");
+            }
+        });
+        thread.start();
     }
 }
