@@ -28,21 +28,20 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.net.URLEncoder;
 import java.util.List;
 
 /**
  * Created by developer on 17/06/16.
  */
-public class imageSaver {
+public class ImageSaver {
 
     private final String TAG = "Image record: ";
 
-    public imageSaver() {
+    public ImageSaver() {
 
     }
     //Create Image as object
-    private void iCreateBitmap (final Profile user, final String imageProfileFileName, final Context context){
+    public void iCreateBitmap (final Profile user, final String imageProfileFileName, final Context context){
         if (user != null) {
             Thread thread = new Thread(new Runnable() {
                 @Override
@@ -54,7 +53,7 @@ public class imageSaver {
                         InputStream inputStream = (InputStream) imgUrl.getContent();
                         Bitmap pImage = BitmapFactory.decodeStream(inputStream);
                         if (pImage != null) {
-                            //i_saveToInternalStorage(pImage, imageProfileFileName, context);
+                            iSaveToInternalStorage(pImage, imageProfileFileName, context);
                         }
                         Log.v(TAG, "Everything Ok in here! We got the Image");
                     } catch (Exception e) {
@@ -68,8 +67,7 @@ public class imageSaver {
 
     //Save Image
     public String iSaveToInternalStorage(Bitmap bitmapImage, String imageName, Context context){
-        File directory = new ContextWrapper(context).getDir("imageDir",
-                Context.MODE_PRIVATE);
+        File directory = new ContextWrapper(context).getDir("imageDir", Context.MODE_PRIVATE);
         File imPath=new File(directory,imageName);
         FileOutputStream fOut;
 
@@ -91,6 +89,8 @@ public class imageSaver {
             Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
             ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
             img.setImageBitmap(bitmap);
+
+            //iUploadFBImageToFirebase(path * imageName, );
         }
         catch (FileNotFoundException e)
         {
@@ -150,7 +150,7 @@ public class imageSaver {
                             Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
                             ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                            bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
                             byte[] data = byteArrayOutputStream.toByteArray();
 
                             //final InputStream stream = new FileInputStream(new File(file.toString()));

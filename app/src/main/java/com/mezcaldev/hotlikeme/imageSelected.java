@@ -83,7 +83,7 @@ public class imageSelected extends DialogFragment {
                         InputStream inputStream = (InputStream) imgUrl.getContent();
                         Bitmap pImage = BitmapFactory.decodeStream(inputStream);
                         if (pImage != null) {
-                            imageSaver saveImage = new imageSaver();
+                            ImageSaver saveImage = new ImageSaver();
                             saveImage.iSaveToInternalStorage(
                                     pImage,
                                     imageProfileFileName,

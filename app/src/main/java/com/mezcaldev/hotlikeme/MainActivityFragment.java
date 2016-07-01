@@ -1,11 +1,10 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Context;
-import android.content.ContextWrapper;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -47,9 +46,6 @@ import com.google.firebase.storage.UploadTask;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.InputStream;
-import java.net.URL;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -68,8 +64,8 @@ public class MainActivityFragment extends Fragment {
 
     //UI Elements
     private int flag1 = 0;
-    static String imageProfileFileName;
-    static String pathProfileImage;
+    static String imageProfileFileName = "profile_im.jpg";
+    static String pathProfileImage = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/";
     private Bitmap pImage;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
@@ -101,66 +97,8 @@ public class MainActivityFragment extends Fragment {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
-        //Facebook Access Token & Profile:
-        accessTokenTracker = new AccessTokenTracker() {
-            @Override
-            protected void onCurrentAccessTokenChanged(
-                    AccessToken oldAccessToken,
-                    AccessToken currentAccessToken) {
-                // Set the access token using.
-                // currentAccessToken when it's loaded or set.
-                //If the User is logged in, display the options for the user.
-                updateUI(currentAccessToken);
-                if (currentAccessToken == null){
-                    Toast.makeText(getActivity(),"See you soon!",Toast.LENGTH_SHORT).show();
-                } else {
-                    Toast.makeText(getActivity(),"Welcome back!",Toast.LENGTH_SHORT).show();
-                }
-            }
-        };
-        profileTracker = new ProfileTracker() {
-            @Override
-            protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
-
-            }
-        };
-
-        // If the access token is available already assign it.
-        accessToken = AccessToken.getCurrentAccessToken();
-        accessTokenTracker.startTracking();
-
-        profile = Profile.getCurrentProfile();
-        profileTracker.startTracking();
-
-        //Initialize Firebase
-        mAuth = FirebaseAuth.getInstance();
-        database = FirebaseDatabase.getInstance();
-        storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
-
-        //Auth Listener
-        mAuthListener = new FirebaseAuth.AuthStateListener() {
-            @Override
-            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
-                user = firebaseAuth.getCurrentUser();
-                if (user != null){
-                    //User sign in
-                    Log.d(TAG, "Firebase: Signed In: " + user.getUid());
-
-                    //Stores references needed by the App on Firebase:
-                    fireRef = database.getReference(user.getUid() + "/name");
-                    fireRef.setValue(user.getDisplayName());
-                    fireRef = database.getReference(user.getUid() + "/alias");
-                    fireRef.setValue("Your display name in here");
-                } else {
-                    // User signed out
-                    Log.d(TAG, "Firebase: Signed Out: ");
-                }
-                //Update UI
-                updateUI(accessToken);
-            }
-        };
-
+        getUserAccess userAccess = new getUserAccess();
+        userAccess.execute();
     }
 
     @Override
@@ -175,8 +113,6 @@ public class MainActivityFragment extends Fragment {
     public void onViewCreated(final View view, Bundle savedInstanceState){
         callbackManager = CallbackManager.Factory.create();
 
-        imageProfileFileName = "profile_im.jpg";
-        pathProfileImage = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/";
         profileImageCheck = new File(pathProfileImage + imageProfileFileName);
 
         //View references for UI elements
@@ -209,7 +145,10 @@ public class MainActivityFragment extends Fragment {
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
                 if (!profileImageCheck.exists()) {
-                    createBitmap(profile);
+                    ImageSaver imageSaver = new ImageSaver();
+                    imageSaver.iCreateBitmap(profile,
+                            imageProfileFileName,
+                            getActivity().getApplicationContext());
                 }
             }
 
@@ -254,7 +193,82 @@ public class MainActivityFragment extends Fragment {
           }
       }
     };
-    
+
+    private class getUserAccess extends AsyncTask <Void, Void, Void>{
+        @Override
+        protected void onPreExecute(){
+
+        }
+        @Override
+        protected Void doInBackground(Void...params){
+            //Facebook Access Token & Profile:
+            accessTokenTracker = new AccessTokenTracker() {
+                @Override
+                protected void onCurrentAccessTokenChanged(
+                        AccessToken oldAccessToken,
+                        AccessToken currentAccessToken) {
+                    // Set the access token using.
+                    // currentAccessToken when it's loaded or set.
+                    //If the User is logged in, display the options for the user.
+                    updateUI(currentAccessToken);
+                    if (currentAccessToken == null){
+                        Toast.makeText(getActivity(),"See you soon!",Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getActivity(),"Welcome back!",Toast.LENGTH_SHORT).show();
+                    }
+                }
+            };
+            profileTracker = new ProfileTracker() {
+                @Override
+                protected void onCurrentProfileChanged(Profile oldProfile, Profile currentProfile) {
+
+                }
+            };
+
+            // If the access token is available already assign it.
+            accessToken = AccessToken.getCurrentAccessToken();
+            accessTokenTracker.startTracking();
+
+            profile = Profile.getCurrentProfile();
+            profileTracker.startTracking();
+
+            //Initialize Firebase
+            mAuth = FirebaseAuth.getInstance();
+            database = FirebaseDatabase.getInstance();
+            storage = FirebaseStorage.getInstance();
+            storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
+
+            //Auth Listener
+            mAuthListener = new FirebaseAuth.AuthStateListener() {
+                @Override
+                public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                    user = firebaseAuth.getCurrentUser();
+                    if (user != null){
+                        //User sign in
+                        Log.d(TAG, "Firebase: Signed In: " + user.getUid());
+
+                        //Stores references needed by the App on Firebase:
+                        fireRef = database.getReference(user.getUid() + "/name");
+                        fireRef.setValue(user.getDisplayName());
+                        fireRef = database.getReference(user.getUid() + "/alias");
+                        fireRef.setValue("Your display name in here");
+                    } else {
+                        // User signed out
+                        Log.d(TAG, "Firebase: Signed Out: ");
+                    }
+                    //Update UI
+                    updateUI(accessToken);
+                }
+            };
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result){
+
+        }
+    }
+
     private void handleFacebookAccessToken(final AccessToken token) {
         Log.d(TAG, "handleFacebookAccessToken:" + token);
 
@@ -315,49 +329,6 @@ public class MainActivityFragment extends Fragment {
                 }
             }
         }
-    }
-    //Create Image as object
-    private void createBitmap (final Profile user){
-        if (user != null) {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        URL imgUrl = new URL("https://graph.facebook.com/"
-                                + user.getId() + "/picture?type=large");
-                        Log.d(TAG, "Image URL: " + imgUrl);
-                        InputStream inputStream = (InputStream) imgUrl.getContent();
-                        pImage = BitmapFactory.decodeStream(inputStream);
-                        if (pImage != null) {
-                            saveToInternalStorage(pImage, imageProfileFileName);
-                        }
-                        Log.v(TAG, "Everything Ok in here! We got the Image");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            thread.start();
-        }
-    }
-
-    //Save Image
-    private String saveToInternalStorage(Bitmap bitmapImage, String imageName){
-        File directory = new ContextWrapper(getActivity().getApplicationContext()).getDir("imageDir",
-                Context.MODE_PRIVATE);
-        File imPath=new File(directory,imageName);
-        FileOutputStream fOut;
-
-        try {
-            fOut = new FileOutputStream(imPath);
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fOut);
-            fOut.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Log.d(TAG,"Image found at: " + directory.getAbsolutePath());
-        return directory.getAbsolutePath();
     }
     //Load Image
     private void loadImageFromStorage(View view, String path, String imageName) {

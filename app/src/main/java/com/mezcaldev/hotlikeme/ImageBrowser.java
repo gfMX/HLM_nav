@@ -11,7 +11,6 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import java.util.ArrayList;
@@ -22,7 +21,6 @@ public class ImageBrowser extends AppCompatActivity {
     static String TAG_b = "Log: ";
 
     static FirebaseUser fireUser;
-    static FirebaseAuth firebaseAuth;
 
     static List<String> uploadUrls = new ArrayList<>();
 
@@ -47,7 +45,7 @@ public class ImageBrowser extends AppCompatActivity {
                     Snackbar.make(view, "Uploading selected Images", Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
                             .show();
-                    imageSaver uploadImages = new imageSaver();
+                    ImageSaver uploadImages = new ImageSaver();
                     uploadImages.iUploadImagesToFirebase(uploadUrls, fireUser);
                 } else{
                     Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
