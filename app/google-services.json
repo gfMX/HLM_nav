@@ -1,27 +1,27 @@
 {
   "project_info": {
-    "project_number": "625573698725",
-    "firebase_url": "https://hot-like-me.firebaseio.com",
-    "project_id": "hot-like-me",
-    "storage_bucket": "hot-like-me.appspot.com"
+    "project_number": "165252639756",
+    "firebase_url": "https://project-6344486298585531617.firebaseio.com",
+    "project_id": "project-6344486298585531617",
+    "storage_bucket": "project-6344486298585531617.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:625573698725:android:22ab1dd4a7da5c14",
+        "mobilesdk_app_id": "1:165252639756:android:22ab1dd4a7da5c14",
         "android_client_info": {
           "package_name": "com.mezcaldev.hotlikeme"
         }
       },
       "oauth_client": [
         {
-          "client_id": "625573698725-dcm5nshll9ssb95dr01mjd8ol3dq6c26.apps.googleusercontent.com",
+          "client_id": "165252639756-8dkbosdr8a6n908j0arph559ej46piqn.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyC4WoURByVdM3N70UKV__cxOJNaR1i67yo"
+          "current_key": "AIzaSyDc96s_Ox4sIeyyDI-j6m1AB4WX5IaX4iA"
         }
       ],
       "services": {

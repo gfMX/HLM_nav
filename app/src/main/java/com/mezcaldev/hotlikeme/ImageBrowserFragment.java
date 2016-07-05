@@ -1,6 +1,7 @@
 package com.mezcaldev.hotlikeme;
 
 import android.app.DialogFragment;
+import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -27,17 +28,22 @@ import java.util.List;
 
 public class ImageBrowserFragment extends Fragment {
 
-    private static final String TAG = "FacebookLogin";
+    //Facebook parameters
+    private static final String TAG = "Image Browser: ";
     private AccessToken accessToken;
     private String fieldsParams = "picture,images";
     private String limitParams = "120";
 
+    //Internal parameters
     private GridView gridView;
     static List<String> imUrls = new ArrayList<>();
     static List<String> imImages = new ArrayList<>();
     static List<String> imIds = new ArrayList<>();
-    static List<Integer> imIdsSelected = new ArrayList<>();
-    static List<String> imUrlsSelected = new ArrayList<>();
+    static List<Integer> imIdsSelected = new ArrayList<>();     //Actual Position
+    static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
+    static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
+
+    String browseImages;
 
     public ImageBrowserFragment() {
 
@@ -56,15 +62,28 @@ public class ImageBrowserFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_image_browser, container, false);
 
+        Intent intent =getActivity().getIntent();
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
+            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
+            Log.i(TAG, "Extra: " + browseImages);
+        } else {
+            Log.i(TAG, "No Extras");
+        }
+
         return view;
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstances){
-        getFbPhotos fbPhotos = new getFbPhotos();
-        fbPhotos.execute();
+        Log.i(TAG, "Browse Images Current Value: " + browseImages);
+        if(browseImages.equals("Facebook")) {
+            getFbPhotos fbPhotos = new getFbPhotos();
+            fbPhotos.execute();
+        } else {
+            Log.i(TAG, "Section for Firebase Browser");
+        }
     }
 
-
+    //Functions to browse and upload Facebook Photos
     private class getFbPhotos extends AsyncTask <Void, Void, Void>{
         @Override
         protected void onPreExecute(){
@@ -82,7 +101,7 @@ public class ImageBrowserFragment extends Fragment {
                                 //Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
 
                                 JSONObject photoOb = response.getJSONObject();
-                                photoSelection(photoOb);
+                                photoSelectionFace(photoOb);
                         }
                     }
             );
@@ -100,7 +119,7 @@ public class ImageBrowserFragment extends Fragment {
         }
 
     }
-    public void photoSelection (JSONObject photoObject){
+    public void photoSelectionFace (JSONObject photoObject){
         try {
             if (photoObject != null) {
                 //Cleaning Arrays before proceed
@@ -109,6 +128,7 @@ public class ImageBrowserFragment extends Fragment {
                 imIds.clear();
                 imIdsSelected.clear();
                 imUrlsSelected.clear();
+                imThumbSelected.clear();
 
                 JSONArray jsonArray1 = photoObject.getJSONArray("data");
                 Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
@@ -139,19 +159,24 @@ public class ImageBrowserFragment extends Fragment {
                         //Log.i(TAG, "Uri Obtained: " + imageUri.toString());
                         //showSelectedImage(imageUri);
 
+                        int itemPosition = imIdsSelected.indexOf(position);
+
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
                             imUrlsSelected.add(imImages.get(position));
                             v.setBackgroundColor(Color.GRAY);
+                            imThumbSelected.add(imUrls.get(position));
 
                             Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                   + imUrlsSelected.get(imIdsSelected.indexOf(position)));
+                                   + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
                         } else {
                             Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
                             + imUrlsSelected.get(imIdsSelected.indexOf(position)));
 
                             imUrlsSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
+                            imThumbSelected.remove(imIdsSelected.indexOf(position));
 
                             v.setBackgroundColor(Color.TRANSPARENT);
                         }
@@ -165,6 +190,27 @@ public class ImageBrowserFragment extends Fragment {
             e.printStackTrace();
         }
 
+    }
+
+    //Functions to Browse and select Firebase Photos
+    private class getFirePhotos extends AsyncTask<Void, Void, Void>{
+        @Override
+        protected void onPreExecute (){
+
+        }
+        @Override
+        protected Void doInBackground(Void... params) {
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result){
+
+        }
+    }
+    public void photoSelectionFire (JSONObject photoObject){
+        gridView = (GridView) getActivity().findViewById(R.id.gridView);
+        gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
     }
     private void showSelectedImage(Uri urImage){
         DialogFragment newFragment = imageSelected.newInstance(urImage);

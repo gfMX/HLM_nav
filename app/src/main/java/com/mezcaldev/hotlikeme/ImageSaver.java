@@ -10,12 +10,13 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 import android.view.View;
-import android.widget.ImageView;
 
 import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -100,7 +101,7 @@ public class ImageSaver {
     //Upload Image to Firebase
     public void iUploadFBImageToFirebase(String path, FirebaseUser user){
         FirebaseStorage  storage = FirebaseStorage.getInstance();
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
+        StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         UploadTask uploadTask;
 
         Uri file = Uri.fromFile(new File(path));
@@ -129,7 +130,7 @@ public class ImageSaver {
             }
         });
     }
-    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user, final Context context, final int nUploads){
+    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user, final Context context, final int nUploads, final String bPath){
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext())
                         .setSmallIcon(R.drawable.ic_sync_black_24dp)
@@ -143,9 +144,12 @@ public class ImageSaver {
             public void run() {
                 String fileName = "image" + (nUploads-1) + ".jpg";
                 FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
-                StorageReference upImageRef = storageRef.child(user.getUid() + "/images/" + fileName);
+                StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+                final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
                 UploadTask uploadTask;
+
+                FirebaseDatabase database = FirebaseDatabase.getInstance();;
+                final DatabaseReference databaseReference = database.getReference(user.getUid() + bPath + (nUploads-1));
 
                 try {
                     URL image = new URL(path.get(nUploads-1));
@@ -180,12 +184,13 @@ public class ImageSaver {
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                databaseReference.setValue(upImageRef.getPath());
 
                                 mBuilder.setContentText("Images uploaded").setProgress(0,0,false);
                                 notificationManager.notify(1, mBuilder.build());
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
-                                    iUploadImagesToFirebase(path, user, context, newUploads);
+                                    iUploadImagesToFirebase(path, user, context, newUploads, bPath);
                                 } else {
                                     Log.i(TAG, "All done!");
                                 }

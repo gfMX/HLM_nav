@@ -24,6 +24,7 @@ public class ImageBrowser extends AppCompatActivity {
     static FirebaseUser fireUser;
 
     static List<String> uploadUrls = new ArrayList<>();
+    static List<String> uploadTiny = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -42,7 +43,9 @@ public class ImageBrowser extends AppCompatActivity {
             @Override
             public void onClick(View view) {
                 uploadUrls = ImageBrowserFragment.imUrlsSelected;
-                if (uploadUrls != null) {
+                uploadTiny = ImageBrowserFragment.imThumbSelected;
+
+                if (uploadUrls != null && uploadTiny != null) {
                     Snackbar.make(view, "Uploading selected Images", Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
                             .show();
@@ -51,7 +54,14 @@ public class ImageBrowser extends AppCompatActivity {
                     uploadImages.iUploadImagesToFirebase(uploadUrls,
                             fireUser,
                             getApplicationContext(),
-                            uploadUrls.size());
+                            uploadUrls.size(),
+                            "/images/");
+                    ImageSaver uploadThumbs = new ImageSaver();
+                    uploadThumbs.iUploadImagesToFirebase(uploadTiny,
+                            fireUser,
+                            getApplicationContext(),
+                            uploadTiny.size(),
+                            "/images/thumb_");
 
                     final Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -59,7 +69,7 @@ public class ImageBrowser extends AppCompatActivity {
                         public void run() {
                             startActivity(new Intent(getApplication(), MainActivity.class));
                         }
-                    }, 1000);
+                    }, 1250);
 
                 } else{
                     Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)

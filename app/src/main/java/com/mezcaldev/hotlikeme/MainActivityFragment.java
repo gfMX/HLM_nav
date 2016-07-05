@@ -58,7 +58,7 @@ public class MainActivityFragment extends Fragment {
 
     //UI Elements
     static String imageProfileFileName = "profile_im.jpg";
-    static String pathProfileImage;  // = "/data/data/com.mezcaldev.hotlikeme/app_imageDir/"; //Manual path changed.
+    static String pathProfileImage;
     private ProfilePictureView profilePic;
     private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
@@ -76,6 +76,7 @@ public class MainActivityFragment extends Fragment {
     static StorageReference storageRef;
 
     //Other elements
+    String strValue;
     ImageSaver imageSaver = new ImageSaver();
     File profileImageCheck;
 
@@ -97,7 +98,7 @@ public class MainActivityFragment extends Fragment {
         //Initialize Firebase
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
-        storageRef = storage.getReferenceFromUrl("gs://hot-like-me.appspot.com");
+        storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         mAuth = FirebaseAuth.getInstance();
 
         //Gaining Tokens in Background:
@@ -183,7 +184,12 @@ public class MainActivityFragment extends Fragment {
               case R.id.btn_choose_img:
                   Toast.makeText(getActivity(), "Please choose a few Images for Hot Like Me!",
                           Toast.LENGTH_LONG).show();
-                  startActivity(new Intent(getActivity(), ImageBrowser.class));
+
+                  strValue = "Facebook";
+
+                  Intent ib = new Intent(getActivity(), ImageBrowser.class);
+                  ib.putExtra(Intent.EXTRA_TEXT, strValue);
+                  startActivity(ib);
                   break;
               case R.id.btn_start:
                   Toast.makeText(getActivity(), "Almost there!",
@@ -193,7 +199,11 @@ public class MainActivityFragment extends Fragment {
               case R.id.hlm_image:
                   Toast.makeText(getActivity(), "Bla, bla bla... Change your profile Pic",
                           Toast.LENGTH_LONG).show();
-                  startActivity(new Intent(getActivity(), ImageBrowser.class));
+                  strValue = "Firebase";
+
+                  Intent ic = new Intent(getActivity(), ImageBrowser.class);
+                  ic.putExtra(Intent.EXTRA_TEXT, strValue);
+                  startActivity(ic);
                   break;
           }
       }
