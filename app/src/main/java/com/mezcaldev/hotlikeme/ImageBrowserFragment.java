@@ -168,15 +168,16 @@ public class ImageBrowserFragment extends Fragment {
                             imThumbSelected.add(imUrls.get(position));
 
                             Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                   + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
                                     + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
                         } else {
                             Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
-                            + imUrlsSelected.get(imIdsSelected.indexOf(position)));
+                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
 
                             imUrlsSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
-                            imThumbSelected.remove(imIdsSelected.indexOf(position));
+                            imThumbSelected.remove(imIdsSelected.indexOf(position)); //Check, not working!
 
                             v.setBackgroundColor(Color.TRANSPARENT);
                         }
