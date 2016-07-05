@@ -81,20 +81,20 @@ public class ImageSaver {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        Log.d(TAG,"Image found at: " + directory.getAbsolutePath());
+        Log.i(TAG,"Image found at: " + directory.getAbsolutePath());
         return directory.getAbsolutePath();
     }
     //Load Image
-    public void iLoadImageFromStorage(View view, String path, String imageName) {
+    public Bitmap iLoadImageFromStorage(View view, String path, String imageName) {
         try {
             File f=new File(path, imageName);
             Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
-            ImageView img = (ImageView) view.findViewById(R.id.hlm_image);
-            img.setImageBitmap(bitmap);
+            return bitmap;
         }
         catch (FileNotFoundException e)
         {
             e.printStackTrace();
+            return null;
         }
     }
     //Upload Image to Firebase
