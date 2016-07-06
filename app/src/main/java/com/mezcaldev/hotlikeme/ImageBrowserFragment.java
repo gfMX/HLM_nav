@@ -6,6 +6,7 @@ import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,6 +19,17 @@ import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -31,8 +43,18 @@ public class ImageBrowserFragment extends Fragment {
     //Facebook parameters
     private static final String TAG = "Image Browser: ";
     private AccessToken accessToken;
-    private String fieldsParams = "picture,images";
-    private String limitParams = "120";
+    String fieldsParams = "picture,images";
+    String limitParams = "120";
+
+    //Firebase//Initialize Firebase
+    FirebaseUser firebaseUser;
+    FirebaseDatabase database;
+    FirebaseStorage storage;
+    StorageReference storageRef;
+    DatabaseReference fireRef;
+    FirebaseAuth mAuth;
+    String firebaseImageStorage1;
+    String firebaseImageStorage2;
 
     //Internal parameters
     private GridView gridView;
@@ -54,6 +76,13 @@ public class ImageBrowserFragment extends Fragment {
         super.onCreate(savedInstanceState);
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
+        database = FirebaseDatabase.getInstance();
+        storage = FirebaseStorage.getInstance();
+        storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+        mAuth = FirebaseAuth.getInstance();
+        firebaseUser = MainActivityFragment.user;
+        fireRef = database.getReference();
+
         accessToken = AccessToken.getCurrentAccessToken();
         Log.i(TAG, "AccessToken"+ accessToken.toString());
     }
@@ -65,7 +94,7 @@ public class ImageBrowserFragment extends Fragment {
         Intent intent =getActivity().getIntent();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
             browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
-            Log.i(TAG, "Extra: " + browseImages);
+            Log.i(TAG, "Browsing: " + browseImages);
         } else {
             Log.i(TAG, "No Extras");
         }
@@ -75,11 +104,15 @@ public class ImageBrowserFragment extends Fragment {
     @Override
     public void onViewCreated(View view, Bundle savedInstances){
         Log.i(TAG, "Browse Images Current Value: " + browseImages);
+
         if(browseImages.equals("Facebook")) {
+            Log.i(TAG, "Section for Facebook Image Browser");
             getFbPhotos fbPhotos = new getFbPhotos();
             fbPhotos.execute();
         } else {
             Log.i(TAG, "Section for Firebase Browser");
+            getFirePhotos firePhotos = new getFirePhotos();
+            firePhotos.execute();
         }
     }
 
@@ -117,7 +150,6 @@ public class ImageBrowserFragment extends Fragment {
         protected void onPostExecute(Void result){
 
         }
-
     }
     public void photoSelectionFace (JSONObject photoObject){
         try {
@@ -159,25 +191,29 @@ public class ImageBrowserFragment extends Fragment {
                         //Log.i(TAG, "Uri Obtained: " + imageUri.toString());
                         //showSelectedImage(imageUri);
 
-                        int itemPosition = imIdsSelected.indexOf(position);
+                        int itemPosition;
 
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
+
                             imUrlsSelected.add(imImages.get(position));
                             v.setBackgroundColor(Color.GRAY);
                             imThumbSelected.add(imUrls.get(position));
 
-                            Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
+                            itemPosition = imIdsSelected.indexOf(position);
+                            Log.i(TAG,"Index: " + itemPosition + " URL: "
+                                    + imUrlsSelected.get(itemPosition)
+                                    + " Thumb: " + imThumbSelected.get(itemPosition));
                         } else {
-                            Log.i(TAG,"Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
+                            itemPosition = imIdsSelected.indexOf(position);
 
-                            imUrlsSelected.remove(imIdsSelected.indexOf(position));
-                            imIdsSelected.remove(imIdsSelected.indexOf(position));
-                            imThumbSelected.remove(imIdsSelected.indexOf(position)); //Check, not working!
+                            Log.i(TAG,"Index: " + itemPosition + " URL: "
+                                    + imUrlsSelected.get(itemPosition)
+                                    + " Thumb: " + imThumbSelected.get(itemPosition));
+
+                            imUrlsSelected.remove(itemPosition);
+                            imThumbSelected.remove(itemPosition);
+                            imIdsSelected.remove(itemPosition);
 
                             v.setBackgroundColor(Color.TRANSPARENT);
                         }
@@ -190,7 +226,6 @@ public class ImageBrowserFragment extends Fragment {
         } catch (JSONException e){
             e.printStackTrace();
         }
-
     }
 
     //Functions to Browse and select Firebase Photos
@@ -202,6 +237,59 @@ public class ImageBrowserFragment extends Fragment {
         @Override
         protected Void doInBackground(Void... params) {
 
+            String userId = firebaseUser.getUid();
+            String imagesUploaded = database.getReference(userId).child("thumbs").toString();
+            Log.i(TAG, "Query: " + imagesUploaded);
+
+            database.getReference(userId).addValueEventListener(
+                    new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            //Log.i(TAG, "Snapshot: " + dataSnapshot.getValue());
+                            //Log.i(TAG,"Total images: " + dataSnapshot.child("thumbs").getChildrenCount());
+
+                            for (int i = 0; i <= dataSnapshot.getChildrenCount(); i++) {
+                                //Log.i(TAG,"Dah: " + dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue());
+                                firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
+                                firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+
+                                storageRef.child(firebaseImageStorage1).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        Log.i(TAG, "Uri thumbnail: " + uri);
+                                        imUrls.add(uri.toString());
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Handle any errors
+                                        Log.w(TAG, "Something went wrong.");
+                                    }
+                                });
+                                storageRef.child(firebaseImageStorage2).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                                    @Override
+                                    public void onSuccess(Uri uri) {
+                                        Log.i(TAG, "Uri Image: " + uri);
+                                        imImages.add(uri.toString());
+                                    }
+                                }).addOnFailureListener(new OnFailureListener() {
+                                    @Override
+                                    public void onFailure(@NonNull Exception exception) {
+                                        // Handle any errors
+                                        Log.w(TAG, "Something went wrong.");
+                                    }
+                                });
+
+                            }
+                        }
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+                            Log.w(TAG, "Cancelled: ",databaseError.toException());
+                        }
+
+                    }
+            );
+
             return null;
         }
         @Override
@@ -209,9 +297,20 @@ public class ImageBrowserFragment extends Fragment {
 
         }
     }
-    public void photoSelectionFire (JSONObject photoObject){
+    private void uriInflate (Uri uri){
+
+    }
+    public void photoSelectionFire (){
+
         gridView = (GridView) getActivity().findViewById(R.id.gridView);
         gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+
+                Uri imageUri = Uri.parse(imImages.get(position));
+                showSelectedImage(imageUri);
+            }
+        });
     }
     private void showSelectedImage(Uri urImage){
         DialogFragment newFragment = imageSelected.newInstance(urImage);

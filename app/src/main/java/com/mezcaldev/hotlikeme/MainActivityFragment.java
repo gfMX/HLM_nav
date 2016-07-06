@@ -99,6 +99,7 @@ public class MainActivityFragment extends Fragment {
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+        fireRef = database.getReference();
         mAuth = FirebaseAuth.getInstance();
 
         //Gaining Tokens in Background:

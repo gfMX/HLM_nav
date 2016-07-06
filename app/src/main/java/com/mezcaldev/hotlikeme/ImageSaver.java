@@ -134,8 +134,8 @@ public class ImageSaver {
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext())
                         .setSmallIcon(R.drawable.ic_sync_black_24dp)
-                        .setContentTitle("Uploading Image to HLM")
-                        .setContentText("We're uploading the Image to HLM");
+                        .setContentTitle("Uploading to HotLikeMe")
+                        .setContentText("Images left: " + nUploads);
         final NotificationManager notificationManager = (NotificationManager)
                 context.getSystemService(Context.NOTIFICATION_SERVICE);
 
@@ -150,11 +150,13 @@ public class ImageSaver {
 
                 FirebaseDatabase database = FirebaseDatabase.getInstance();;
                 final DatabaseReference databaseReference = database.getReference(user.getUid() + bPath + (nUploads-1));
+                final DatabaseReference databaseReference2 = database.getReference(user.getUid() + "/thumbs/" + (nUploads-1));
 
                 try {
                     URL image = new URL(path.get(nUploads-1));
                     Log.i(TAG, "New URL: " + image);
                     try {
+
                         InputStream inputStream = (InputStream) image.getContent();
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
@@ -163,15 +165,16 @@ public class ImageSaver {
                         byte[] data = byteArrayOutputStream.toByteArray();
 
                         uploadTask = upImageRef.putBytes(data);
+
                         // Listen for state changes, errors, and completion of the upload.
                         uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                                 double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-
-                                mBuilder.setProgress(100, (int) progress, false);
-                                notificationManager.notify(1, mBuilder.build());
-
+                                if (bPath.equals(ImageBrowser.pathImages)) {
+                                    mBuilder.setProgress(100, (int) progress, false);
+                                    notificationManager.notify(1, mBuilder.build());
+                                }
                                 System.out.println("Upload is " + progress + "% done");
                             }
                         }).addOnFailureListener(new OnFailureListener() {
@@ -184,10 +187,22 @@ public class ImageSaver {
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                                databaseReference.setValue(upImageRef.getPath());
+                                if (bPath.equals(ImageBrowser.pathImages)) {
+                                    databaseReference.setValue(upImageRef.getPath());
 
-                                mBuilder.setContentText("Images uploaded").setProgress(0,0,false);
-                                notificationManager.notify(1, mBuilder.build());
+                                    String textNotification;
+                                    if (nUploads>1){
+                                        textNotification = "Image uploaded";
+                                    } else{
+                                        textNotification = "All images Uploaded!";
+                                    }
+
+                                    mBuilder.setContentText(textNotification).setProgress(0,0,false);
+                                    notificationManager.notify(1, mBuilder.build());
+                                } else if (bPath.equals(ImageBrowser.pathThumbs)) {
+                                    databaseReference2.setValue(upImageRef.getPath());
+                                }
+
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
                                     iUploadImagesToFirebase(path, user, context, newUploads, bPath);

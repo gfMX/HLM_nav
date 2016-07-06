@@ -13,6 +13,8 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,8 +22,12 @@ import java.util.List;
 public class ImageBrowser extends AppCompatActivity {
 
     static String TAG_b = "Log: ";
+    static String pathImages = "/images/";
+    static String pathThumbs = "/images/thumb_";
 
-    static FirebaseUser fireUser;
+    FirebaseUser fireUser;
+    FirebaseDatabase database;
+    DatabaseReference databaseReference;
 
     static List<String> uploadUrls = new ArrayList<>();
     static List<String> uploadTiny = new ArrayList<>();
@@ -34,6 +40,9 @@ public class ImageBrowser extends AppCompatActivity {
         setSupportActionBar(toolbar);
 
         fireUser = MainActivityFragment.user;
+        database = FirebaseDatabase.getInstance();
+        databaseReference = database.getReference(fireUser.getUid() + "/total_images");
+
         Log.i(TAG_b, "User: " + fireUser);
 
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -45,8 +54,18 @@ public class ImageBrowser extends AppCompatActivity {
                 uploadUrls = ImageBrowserFragment.imUrlsSelected;
                 uploadTiny = ImageBrowserFragment.imThumbSelected;
 
+                String textImages;
+
+                if (uploadUrls.size() == 1){
+                    textImages = " Image ";
+                } else {
+                    textImages = " Images ";
+                }
+
                 if (uploadUrls != null && uploadTiny != null) {
-                    Snackbar.make(view, "Uploading selected Images", Snackbar.LENGTH_LONG)
+                    databaseReference.setValue(uploadUrls.size());
+
+                    Snackbar.make(view, "Uploading " + uploadUrls.size() + textImages, Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
                             .show();
 
@@ -55,13 +74,13 @@ public class ImageBrowser extends AppCompatActivity {
                             fireUser,
                             getApplicationContext(),
                             uploadUrls.size(),
-                            "/images/");
+                            pathImages);
                     ImageSaver uploadThumbs = new ImageSaver();
                     uploadThumbs.iUploadImagesToFirebase(uploadTiny,
                             fireUser,
                             getApplicationContext(),
                             uploadTiny.size(),
-                            "/images/thumb_");
+                            pathThumbs);
 
                     final Handler handler = new Handler();
                     handler.postDelayed(new Runnable() {
@@ -69,7 +88,7 @@ public class ImageBrowser extends AppCompatActivity {
                         public void run() {
                             startActivity(new Intent(getApplication(), MainActivity.class));
                         }
-                    }, 1250);
+                    }, 1500);
 
                 } else{
                     Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
