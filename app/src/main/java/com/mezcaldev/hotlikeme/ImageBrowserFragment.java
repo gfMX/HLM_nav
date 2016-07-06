@@ -105,6 +105,14 @@ public class ImageBrowserFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstances){
         Log.i(TAG, "Browse Images Current Value: " + browseImages);
 
+        //Cleaning Arrays before proceed
+        imUrls.clear();
+        imImages.clear();
+        imIds.clear();
+        imIdsSelected.clear();
+        imUrlsSelected.clear();
+        imThumbSelected.clear();
+
         if(browseImages.equals("Facebook")) {
             Log.i(TAG, "Section for Facebook Image Browser");
             getFbPhotos fbPhotos = new getFbPhotos();
@@ -154,14 +162,6 @@ public class ImageBrowserFragment extends Fragment {
     public void photoSelectionFace (JSONObject photoObject){
         try {
             if (photoObject != null) {
-                //Cleaning Arrays before proceed
-                imUrls.clear();
-                imImages.clear();
-                imIds.clear();
-                imIdsSelected.clear();
-                imUrlsSelected.clear();
-                imThumbSelected.clear();
-
                 JSONArray jsonArray1 = photoObject.getJSONArray("data");
                 Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
 
@@ -279,7 +279,6 @@ public class ImageBrowserFragment extends Fragment {
                                         Log.w(TAG, "Something went wrong.");
                                     }
                                 });
-
                             }
                         }
                         @Override
@@ -294,11 +293,9 @@ public class ImageBrowserFragment extends Fragment {
         }
         @Override
         protected void onPostExecute(Void result){
-
+            Log.i(TAG, "Images: " + imUrls.size());
+            photoSelectionFire();
         }
-    }
-    private void uriInflate (Uri uri){
-
     }
     public void photoSelectionFire (){
 
