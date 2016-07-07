@@ -14,16 +14,20 @@
 
     <Button
         android:text="Cancel"
+        android:visibility="visible"
         android:id="@+id/btn_cancel_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="right|bottom" />
+        android:layout_gravity="left|bottom"
+        style="?android:attr/borderlessButtonStyle"/>
 
     <Button
         android:text="OK"
+        android:visibility="visible"
         android:id="@+id/btn_ok_image"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="left|bottom" />
+        android:layout_gravity="right|bottom"
+        style="?android:attr/borderlessButtonStyle"/>
 
 </FrameLayout>

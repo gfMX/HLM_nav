@@ -52,7 +52,7 @@ public class ImageSaver {
                     try {
                         URL imgUrl = new URL("https://graph.facebook.com/"
                                 + user.getId() + "/picture?type=large");
-                        Log.d(TAG, "Image URL: " + imgUrl);
+                        //Log.d(TAG, "Image URL: " + imgUrl);
                         InputStream inputStream = (InputStream) imgUrl.getContent();
                         Bitmap pImage = BitmapFactory.decodeStream(inputStream);
                         if (pImage != null) {
@@ -126,7 +126,7 @@ public class ImageSaver {
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.v(TAG,"Image uploaded to Firebase");
-                Log.v(TAG,"URL: " + downloadUrl);
+                //Log.v(TAG,"URL: " + downloadUrl);
             }
         });
     }

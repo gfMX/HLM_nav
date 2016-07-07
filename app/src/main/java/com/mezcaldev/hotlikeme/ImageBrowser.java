@@ -7,13 +7,11 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.util.ArrayList;
@@ -27,7 +25,7 @@ public class ImageBrowser extends AppCompatActivity {
 
     FirebaseUser fireUser;
     FirebaseDatabase database;
-    DatabaseReference databaseReference;
+    String browseImages;
 
     static List<String> uploadUrls = new ArrayList<>();
     static List<String> uploadTiny = new ArrayList<>();
@@ -41,9 +39,11 @@ public class ImageBrowser extends AppCompatActivity {
 
         fireUser = MainActivityFragment.user;
         database = FirebaseDatabase.getInstance();
-        databaseReference = database.getReference(fireUser.getUid() + "/total_images");
 
-        Log.i(TAG_b, "User: " + fireUser);
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
+            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
+        }
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -51,6 +51,11 @@ public class ImageBrowser extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null) {
+            if (browseImages.equals("Firebase")){
+                fab.setVisibility(View.GONE);
+            } else {
+                fab.setVisibility(View.VISIBLE);
+            }
             fab.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View view) {
@@ -65,8 +70,8 @@ public class ImageBrowser extends AppCompatActivity {
                         textImages = " Images ";
                     }
 
-                    if (uploadUrls != null && uploadTiny != null) {
-                        databaseReference.setValue(uploadUrls.size());
+                    if (uploadUrls.size() > 0 && uploadTiny.size() > 0) {
+                        //databaseReference.setValue(uploadUrls.size());
 
                         Snackbar.make(view, "Uploading " + uploadUrls.size() + textImages, Snackbar.LENGTH_LONG)
                                 .setAction("Action", null)

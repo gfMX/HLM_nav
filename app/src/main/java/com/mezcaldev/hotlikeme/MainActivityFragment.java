@@ -316,14 +316,15 @@ public class MainActivityFragment extends Fragment {
                 imageSaver.iUploadFBImageToFirebase(profileImageCheck.getAbsolutePath(), user);
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
-            text_instruct.setText("Please choose some images for Hot Like Me. After that, click on your image profile to change it for one of your choice.\n\nBy default (first session) HLM take your FB profile Picture.");
+            text_instruct.setText("Please choose some images for Hot Like Me. After that, click on your image profile to change it for one of your choice.\n\nThank you!");
             profilePic.setProfileId(accessToken.getUserId());
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
-            imageProfileHLM.setVisibility(View.GONE);
-            imageProfileHLM.setImageResource(R.drawable.no_user);
+            imageProfileHLM.setVisibility(View.VISIBLE);
+            imageProfileHLM.setImageBitmap(null);
+            //imageProfileHLM.setImageResource(R.drawable.no_user);
             fb_welcome_text.setText("Welcome to Hot Like Me \n Please Log In");
             text_instruct.setText("");
             btn_image.setVisibility(View.INVISIBLE);

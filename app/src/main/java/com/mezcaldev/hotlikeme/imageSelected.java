@@ -2,10 +2,13 @@ package com.mezcaldev.hotlikeme;
 
 
 import android.app.DialogFragment;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -24,8 +27,8 @@ public class imageSelected extends DialogFragment {
     static String imageProfileFileName = MainActivityFragment.imageProfileFileName;
     static Uri uriImage;
 
-    private Button btn_ok;
-    private Button btn_cancel;
+    Button btn_ok;
+    Button btn_cancel;
 
     static imageSelected newInstance(Uri uri) {
         uriImage = uri;
@@ -60,10 +63,20 @@ public class imageSelected extends DialogFragment {
         public void onClick (View v){
             switch (v.getId()){
                 case R.id.btn_ok_image:
-                    Toast.makeText(getActivity(), "Ok",
-                            Toast.LENGTH_LONG).show();
                     createBitmap(uriImage);
+                    Snackbar.make(v, "New Profile Picture selected!", Snackbar.LENGTH_LONG)
+                            .setAction("Action", null)
+                            .show();
+                    final Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            getDialog().dismiss();
+                            startActivity(new Intent(getActivity(), MainActivity.class));
+                        }
+                    }, 2000);
                     break;
+
                 case  R.id.btn_cancel_image:
                     Toast.makeText(getActivity(), "Bla, bla bla...",
                             Toast.LENGTH_LONG).show();

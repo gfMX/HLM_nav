@@ -65,6 +65,9 @@ public class ImageBrowserFragment extends Fragment {
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
+    getFbPhotos fbPhotos = new getFbPhotos();
+    getFirePhotos firePhotos = new getFirePhotos();
+
     String browseImages;
 
     public ImageBrowserFragment() {
@@ -91,7 +94,7 @@ public class ImageBrowserFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_image_browser, container, false);
 
-        Intent intent =getActivity().getIntent();
+        Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
             browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
             Log.i(TAG, "Browsing: " + browseImages);
@@ -115,11 +118,11 @@ public class ImageBrowserFragment extends Fragment {
 
         if(browseImages.equals("Facebook")) {
             Log.i(TAG, "Section for Facebook Image Browser");
-            getFbPhotos fbPhotos = new getFbPhotos();
+            //getFbPhotos fbPhotos = new getFbPhotos();
             fbPhotos.execute();
         } else {
             Log.i(TAG, "Section for Firebase Browser");
-            getFirePhotos firePhotos = new getFirePhotos();
+            //final getFirePhotos firePhotos = new getFirePhotos();
             firePhotos.execute();
         }
     }
@@ -139,10 +142,8 @@ public class ImageBrowserFragment extends Fragment {
                         @Override
                         public void onCompleted(GraphResponse response) {
                             // Application code
-                                //Log.i(TAG, "Results (GraphResponse): " + response.toString()); //Query Results
-
-                                JSONObject photoOb = response.getJSONObject();
-                                photoSelectionFace(photoOb);
+                            JSONObject photoOb = response.getJSONObject();
+                            photoSelectionFace(photoOb);
                         }
                     }
             );
@@ -181,15 +182,11 @@ public class ImageBrowserFragment extends Fragment {
                     //Log.i(TAG, "URL Image: " + sObject3);
                     //Log.i(TAG, "New elements: " + imUrls.get(i));
                 }
-                //Log.i(TAG, "Elements: " + imUrls);
+
                 gridView = (GridView) getActivity().findViewById(R.id.gridView);
                 gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
-                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
-                    public void onItemClick(AdapterView<?> parent, View v, int position, long id){
-
-                        Uri imageUri = Uri.parse(imImages.get(position));
-                        //Log.i(TAG, "Uri Obtained: " + imageUri.toString());
-                        //showSelectedImage(imageUri);
+                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 
                         int itemPosition;
 
@@ -201,13 +198,13 @@ public class ImageBrowserFragment extends Fragment {
                             imThumbSelected.add(imUrls.get(position));
 
                             itemPosition = imIdsSelected.indexOf(position);
-                            Log.i(TAG,"Index: " + itemPosition + " URL: "
+                            Log.i(TAG, "Index: " + itemPosition + " URL: "
                                     + imUrlsSelected.get(itemPosition)
                                     + " Thumb: " + imThumbSelected.get(itemPosition));
                         } else {
                             itemPosition = imIdsSelected.indexOf(position);
 
-                            Log.i(TAG,"Index: " + itemPosition + " URL: "
+                            Log.i(TAG, "Index: " + itemPosition + " URL: "
                                     + imUrlsSelected.get(itemPosition)
                                     + " Thumb: " + imThumbSelected.get(itemPosition));
 
@@ -217,11 +214,11 @@ public class ImageBrowserFragment extends Fragment {
 
                             v.setBackgroundColor(Color.TRANSPARENT);
                         }
-                        //Log.i(TAG, "Images selected: " + imIdsSelected.toString());
                     }
                 });
+
             } else {
-                Log.i(TAG, "Nothing to do here!");
+                Log.w(TAG, "Nothing to do here!");
             }
         } catch (JSONException e){
             e.printStackTrace();
@@ -238,48 +235,18 @@ public class ImageBrowserFragment extends Fragment {
         protected Void doInBackground(Void... params) {
 
             String userId = firebaseUser.getUid();
-            String imagesUploaded = database.getReference(userId).child("thumbs").toString();
-            Log.i(TAG, "Query: " + imagesUploaded);
+            final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
 
             database.getReference(userId).addValueEventListener(
                     new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            //Log.i(TAG, "Snapshot: " + dataSnapshot.getValue());
-                            //Log.i(TAG,"Total images: " + dataSnapshot.child("thumbs").getChildrenCount());
 
-                            for (int i = 0; i <= dataSnapshot.getChildrenCount(); i++) {
-                                //Log.i(TAG,"Dah: " + dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue());
-                                firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
-                                firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+                            int nElements = (int) dataSnapshot.child("images").getChildrenCount();
 
-                                storageRef.child(firebaseImageStorage1).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                    @Override
-                                    public void onSuccess(Uri uri) {
-                                        Log.i(TAG, "Uri thumbnail: " + uri);
-                                        imUrls.add(uri.toString());
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception exception) {
-                                        // Handle any errors
-                                        Log.w(TAG, "Something went wrong.");
-                                    }
-                                });
-                                storageRef.child(firebaseImageStorage2).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                    @Override
-                                    public void onSuccess(Uri uri) {
-                                        Log.i(TAG, "Uri Image: " + uri);
-                                        imImages.add(uri.toString());
-                                    }
-                                }).addOnFailureListener(new OnFailureListener() {
-                                    @Override
-                                    public void onFailure(@NonNull Exception exception) {
-                                        // Handle any errors
-                                        Log.w(TAG, "Something went wrong.");
-                                    }
-                                });
-                            }
+                            Log.i(TAG, "Total Images: " + nElements);
+                            dbTotalImagesRef.setValue(nElements);
+                            uriFromFirebase((nElements - 1), dataSnapshot);
                         }
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
@@ -293,21 +260,64 @@ public class ImageBrowserFragment extends Fragment {
         }
         @Override
         protected void onPostExecute(Void result){
-            Log.i(TAG, "Images: " + imUrls.size());
-            photoSelectionFire();
+
         }
     }
-    public void photoSelectionFire (){
+    private void uriFromFirebase(int uriLength, final DataSnapshot dataSnapshot){
+        final int i = uriLength;
 
-        gridView = (GridView) getActivity().findViewById(R.id.gridView);
-        gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
-        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+        firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
+        firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
 
-                Uri imageUri = Uri.parse(imImages.get(position));
-                showSelectedImage(imageUri);
+        //Get the thumbnails URLs from Firebase to show it on Image Browser:
+        storageRef.child(firebaseImageStorage1).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            @Override
+            public void onSuccess(Uri uri) {
+                Log.i(TAG, "Uri thumbnail " + i + ": " + uri);
+                imUrls.add(uri.toString());
+
+                //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
+                storageRef.child(firebaseImageStorage2).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Log.i(TAG, "Uri Image: " + i + ": " + uri);
+                        imImages.add(uri.toString());
+                        photoSelectionFire();
+                        if (i > 0){
+                            uriFromFirebase((i-1), dataSnapshot);
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Handle any errors
+                        Log.w(TAG, "Something went wrong getting the Full Image.");
+                    }
+                });
+
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+                Log.w(TAG, "Something went wrong getting the Thumbnail.");
             }
         });
+    }
+    public void photoSelectionFire (){
+        try {
+            gridView = (GridView) getActivity().findViewById(R.id.gridView);
+            gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
+            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                    Uri imageUri = Uri.parse(imImages.get(position));
+                    showSelectedImage(imageUri);
+                }
+            });
+        } catch (NullPointerException e) {
+            e.printStackTrace();
+            firePhotos.cancel(true);
+        }
     }
     private void showSelectedImage(Uri urImage){
         DialogFragment newFragment = imageSelected.newInstance(urImage);
