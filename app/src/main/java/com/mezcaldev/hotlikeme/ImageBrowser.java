@@ -45,58 +45,63 @@ public class ImageBrowser extends AppCompatActivity {
 
         Log.i(TAG_b, "User: " + fireUser);
 
-        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+        }
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                uploadUrls = ImageBrowserFragment.imUrlsSelected;
-                uploadTiny = ImageBrowserFragment.imThumbSelected;
+        if (fab != null) {
+            fab.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    uploadUrls = ImageBrowserFragment.imUrlsSelected;
+                    uploadTiny = ImageBrowserFragment.imThumbSelected;
 
-                String textImages;
+                    String textImages;
 
-                if (uploadUrls.size() == 1){
-                    textImages = " Image ";
-                } else {
-                    textImages = " Images ";
+                    if (uploadUrls.size() == 1) {
+                        textImages = " Image ";
+                    } else {
+                        textImages = " Images ";
+                    }
+
+                    if (uploadUrls != null && uploadTiny != null) {
+                        databaseReference.setValue(uploadUrls.size());
+
+                        Snackbar.make(view, "Uploading " + uploadUrls.size() + textImages, Snackbar.LENGTH_LONG)
+                                .setAction("Action", null)
+                                .show();
+
+                        ImageSaver uploadImages = new ImageSaver();
+                        uploadImages.iUploadImagesToFirebase(uploadUrls,
+                                fireUser,
+                                getApplicationContext(),
+                                uploadUrls.size(),
+                                pathImages);
+                        ImageSaver uploadThumbs = new ImageSaver();
+                        uploadThumbs.iUploadImagesToFirebase(uploadTiny,
+                                fireUser,
+                                getApplicationContext(),
+                                uploadTiny.size(),
+                                pathThumbs);
+
+                        final Handler handler = new Handler();
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                startActivity(new Intent(getApplication(), MainActivity.class));
+                                finish();
+                            }
+                        }, 1500);
+
+                    } else {
+                        Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
+                                .setAction("Action", null)
+                                .show();
+                    }
                 }
-
-                if (uploadUrls != null && uploadTiny != null) {
-                    databaseReference.setValue(uploadUrls.size());
-
-                    Snackbar.make(view, "Uploading " + uploadUrls.size() + textImages, Snackbar.LENGTH_LONG)
-                            .setAction("Action", null)
-                            .show();
-
-                    ImageSaver uploadImages = new ImageSaver();
-                    uploadImages.iUploadImagesToFirebase(uploadUrls,
-                            fireUser,
-                            getApplicationContext(),
-                            uploadUrls.size(),
-                            pathImages);
-                    ImageSaver uploadThumbs = new ImageSaver();
-                    uploadThumbs.iUploadImagesToFirebase(uploadTiny,
-                            fireUser,
-                            getApplicationContext(),
-                            uploadTiny.size(),
-                            pathThumbs);
-
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            startActivity(new Intent(getApplication(), MainActivity.class));
-                        }
-                    }, 1500);
-
-                } else{
-                    Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
-                            .setAction("Action", null)
-                            .show();
-                }
-            }
-        });
+            });
+        }
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
