@@ -99,7 +99,7 @@ public class ImageSaver {
         }
     }
     //Upload Image to Firebase
-    public void iUploadFBImageToFirebase(String path, FirebaseUser user){
+    public void iUploadProfileImageToFirebase(String path, FirebaseUser user){
         FirebaseStorage  storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         UploadTask uploadTask;

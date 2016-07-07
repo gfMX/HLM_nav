@@ -68,6 +68,8 @@ public class ImageBrowserFragment extends Fragment {
     getFbPhotos fbPhotos = new getFbPhotos();
     getFirePhotos firePhotos = new getFirePhotos();
 
+    Boolean breakFlag = false;
+
     String browseImages;
 
     public ImageBrowserFragment() {
@@ -188,8 +190,6 @@ public class ImageBrowserFragment extends Fragment {
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
 
-                        int itemPosition;
-
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
 
@@ -197,20 +197,17 @@ public class ImageBrowserFragment extends Fragment {
                             v.setBackgroundColor(Color.GRAY);
                             imThumbSelected.add(imUrls.get(position));
 
-                            itemPosition = imIdsSelected.indexOf(position);
-                            Log.i(TAG, "Index: " + itemPosition + " URL: "
-                                    + imUrlsSelected.get(itemPosition)
-                                    + " Thumb: " + imThumbSelected.get(itemPosition));
+                            Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
+                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
                         } else {
-                            itemPosition = imIdsSelected.indexOf(position);
+                            Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
+                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
 
-                            Log.i(TAG, "Index: " + itemPosition + " URL: "
-                                    + imUrlsSelected.get(itemPosition)
-                                    + " Thumb: " + imThumbSelected.get(itemPosition));
-
-                            imUrlsSelected.remove(itemPosition);
-                            imThumbSelected.remove(itemPosition);
-                            imIdsSelected.remove(itemPosition);
+                            imUrlsSelected.remove(imIdsSelected.indexOf(position));
+                            imThumbSelected.remove(imIdsSelected.indexOf(position));
+                            imIdsSelected.remove(imIdsSelected.indexOf(position));
 
                             v.setBackgroundColor(Color.TRANSPARENT);
                         }
@@ -306,16 +303,19 @@ public class ImageBrowserFragment extends Fragment {
     }
     public void photoSelectionFire (){
         try {
-            gridView = (GridView) getActivity().findViewById(R.id.gridView);
-            gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
-            gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                    Uri imageUri = Uri.parse(imImages.get(position));
-                    showSelectedImage(imageUri);
-                }
-            });
+            if (breakFlag == false) {
+                gridView = (GridView) getActivity().findViewById(R.id.gridView);
+                gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
+                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                        Uri imageUri = Uri.parse(imImages.get(position));
+                        showSelectedImage(imageUri);
+                    }
+                });
+            }
         } catch (NullPointerException e) {
             e.printStackTrace();
+            breakFlag = true;
             firePhotos.cancel(true);
         }
     }
