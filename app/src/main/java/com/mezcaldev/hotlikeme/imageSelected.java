@@ -113,11 +113,11 @@ public class imageSelected extends DialogFragment {
                 }
             });
             thread.start();
-            /*try {
+            try {
                 thread.join();
             } catch (InterruptedException e){
                 e.printStackTrace();
-            }*/
+            }
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
