@@ -14,6 +14,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.ImageView;
 
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
@@ -110,13 +111,7 @@ public class ImageBrowserFragment extends Fragment {
     public void onViewCreated(View view, Bundle savedInstances){
         Log.i(TAG, "Browse Images Current Value: " + browseImages);
 
-        //Cleaning Arrays before proceed
-        imUrls.clear();
-        imImages.clear();
-        imIds.clear();
-        imIdsSelected.clear();
-        imUrlsSelected.clear();
-        imThumbSelected.clear();
+        cleaningVars();
 
         if(browseImages.equals("Facebook")) {
             Log.i(TAG, "Section for Facebook Image Browser");
@@ -133,10 +128,11 @@ public class ImageBrowserFragment extends Fragment {
     private class getFbPhotos extends AsyncTask <Void, Void, Void>{
         @Override
         protected void onPreExecute(){
-
+            cleaningVars();
         }
         @Override
         protected Void doInBackground(Void... params) {
+
             GraphRequest request = GraphRequest.newGraphPathRequest(
                     accessToken,
                     "/me/photos",
@@ -188,19 +184,22 @@ public class ImageBrowserFragment extends Fragment {
                 gridView = (GridView) getActivity().findViewById(R.id.gridView);
                 gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
-
                             imUrlsSelected.add(imImages.get(position));
-                            v.setBackgroundColor(Color.GRAY);
                             imThumbSelected.add(imUrls.get(position));
 
+                            //view.setSelected(true);
+                            view.setBackgroundColor(Color.GRAY);
+
+                            Log.i(TAG, "Postion: " + position);
                             Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
                                     + imUrlsSelected.get(imIdsSelected.indexOf(position))
                                     + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
                         } else {
+                            Log.i(TAG, "Postion: " + position);
                             Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
                                     + imUrlsSelected.get(imIdsSelected.indexOf(position))
                                     + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
@@ -209,7 +208,8 @@ public class ImageBrowserFragment extends Fragment {
                             imThumbSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
 
-                            v.setBackgroundColor(Color.TRANSPARENT);
+                            //view.setSelected(false);
+                            view.setBackgroundColor(Color.TRANSPARENT);
                         }
                     }
                 });
@@ -226,7 +226,7 @@ public class ImageBrowserFragment extends Fragment {
     private class getFirePhotos extends AsyncTask<Void, Void, Void>{
         @Override
         protected void onPreExecute (){
-
+            cleaningVars();
         }
         @Override
         protected Void doInBackground(Void... params) {
@@ -322,5 +322,17 @@ public class ImageBrowserFragment extends Fragment {
     private void showSelectedImage(Uri urImage){
         DialogFragment newFragment = imageSelected.newInstance(urImage);
         newFragment.show(getActivity().getFragmentManager(), "Image");
+    }
+
+    //General Functions:
+
+    private void cleaningVars(){
+        //Cleaning Arrays before proceed
+        imUrls.clear();
+        imImages.clear();
+        imIds.clear();
+        imIdsSelected.clear();
+        imUrlsSelected.clear();
+        imThumbSelected.clear();
     }
 }

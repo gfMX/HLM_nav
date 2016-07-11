@@ -41,13 +41,15 @@ public class ImageAdapter extends ArrayAdapter {
             convertView = inflater.inflate(R.layout.grid_item_layout, parent, false);
         }
 
+        ImageView imageView = (ImageView) convertView.findViewById(R.id.im_image);
+
         Uri myUri = Uri.parse(imageUrls.get(position));
 
         Glide
                 .with(mContext)
                 .load(myUri)
                 .centerCrop()
-                .into((ImageView) convertView);
+                .into(imageView);
 
         return convertView;
     }

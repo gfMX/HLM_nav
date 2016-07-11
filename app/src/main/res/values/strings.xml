@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">Hot Like Me</string>
     <string name="image_selected_title">Image Selected</string>
+    <string name="image_container">Container for images on GridView</string>
     <string name="title_activity_image_browser">Image Browser</string>
 
     <!-- Strings related to Menu -->
