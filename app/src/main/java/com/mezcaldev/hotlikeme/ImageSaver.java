@@ -100,6 +100,7 @@ public class ImageSaver {
     }
     //Upload Image to Firebase
     public void iUploadProfileImageToFirebase(String path, FirebaseUser user){
+
         FirebaseStorage  storage = FirebaseStorage.getInstance();
         StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         UploadTask uploadTask;
@@ -115,11 +116,13 @@ public class ImageSaver {
                 double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
                 System.out.println("Upload is " + progress + "% done");
             }
+
         }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
             }
+
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
@@ -130,7 +133,13 @@ public class ImageSaver {
             }
         });
     }
-    public void iUploadImagesToFirebase(final List<String> path, final FirebaseUser user, final Context context, final int nUploads, final String bPath){
+
+    public void iUploadImagesToFirebase(final List<String> path,
+                                        final FirebaseUser user,
+                                        final Context context,
+                                        final int nUploads,
+                                        final String bPath){
+
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext())
                         .setSmallIcon(R.drawable.ic_sync_black_24dp)

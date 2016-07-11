@@ -149,11 +149,11 @@ public class MainActivityFragment extends Fragment {
 
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
-                if (!profileImageCheck.exists()) {
+                /*if (!profileImageCheck.exists()) {
                     imageSaver.iCreateBitmap(profile,
                             imageProfileFileName,
                             getActivity().getApplicationContext());
-                }
+                }*/
             }
 
             @Override
@@ -314,7 +314,7 @@ public class MainActivityFragment extends Fragment {
             }
             if (profileImageCheck.exists()) {
                 imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(getView(),pathProfileImage,imageProfileFileName));
-                imageSaver.iUploadProfileImageToFirebase(profileImageCheck.getAbsolutePath(), user);
+                //imageSaver.iUploadProfileImageToFirebase(profileImageCheck.getAbsolutePath(), user);
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText("Please choose some images for Hot Like Me. After that, click on your image profile to change it for one of your choice.\n\nThank you!");

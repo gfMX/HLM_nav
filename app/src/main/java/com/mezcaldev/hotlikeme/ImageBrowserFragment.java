@@ -2,7 +2,6 @@ package com.mezcaldev.hotlikeme;
 
 import android.app.DialogFragment;
 import android.content.Intent;
-import android.graphics.Color;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -14,7 +13,6 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
-import android.widget.ImageView;
 
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
@@ -124,7 +122,9 @@ public class ImageBrowserFragment extends Fragment {
         }
     }
 
+    //--------------------------------------------------------------------------------------------
     //Functions to browse and upload Facebook Photos
+    //--------------------------------------------------------------------------------------------
     private class getFbPhotos extends AsyncTask <Void, Void, Void>{
         @Override
         protected void onPreExecute(){
@@ -181,38 +181,39 @@ public class ImageBrowserFragment extends Fragment {
                     //Log.i(TAG, "New elements: " + imUrls.get(i));
                 }
 
+                final ImageAdapter imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
                 gridView = (GridView) getActivity().findViewById(R.id.gridView);
-                gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
+                gridView.setAdapter(imageAdapter);
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                        Log.i(TAG, "Click on: " + view.getId());
+                        Log.i(TAG, "On parent: " + parent);
 
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
                             imUrlsSelected.add(imImages.get(position));
                             imThumbSelected.add(imUrls.get(position));
 
-                            //view.setSelected(true);
-                            view.setBackgroundColor(Color.GRAY);
 
-                            Log.i(TAG, "Postion: " + position);
-                            Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
+                            //Log.i(TAG, "Postion: " + position);
+                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
                                     + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
                         } else {
-                            Log.i(TAG, "Postion: " + position);
-                            Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
+                            //Log.i(TAG, "Postion: " + position);
+                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
                                     + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
 
                             imUrlsSelected.remove(imIdsSelected.indexOf(position));
                             imThumbSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
-
-                            //view.setSelected(false);
-                            view.setBackgroundColor(Color.TRANSPARENT);
                         }
+                        imageAdapter.notifyDataSetChanged();
                     }
                 });
+
 
             } else {
                 Log.w(TAG, "Nothing to do here!");
@@ -222,7 +223,9 @@ public class ImageBrowserFragment extends Fragment {
         }
     }
 
+    //--------------------------------------------------------------------------------------------
     //Functions to Browse and select Firebase Photos
+    //--------------------------------------------------------------------------------------------
     private class getFirePhotos extends AsyncTask<Void, Void, Void>{
         @Override
         protected void onPreExecute (){
@@ -305,7 +308,7 @@ public class ImageBrowserFragment extends Fragment {
         try {
             if (breakFlag == false) {
                 gridView = (GridView) getActivity().findViewById(R.id.gridView);
-                gridView.setAdapter(new ImageAdapter(getActivity(), imUrls));
+                gridView.setAdapter(new ImageAdapter(getActivity(), imUrls, null));
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                         Uri imageUri = Uri.parse(imImages.get(position));

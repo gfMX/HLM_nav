@@ -18,7 +18,9 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.firebase.auth.FirebaseUser;
 
+import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
 
@@ -26,6 +28,9 @@ public class imageSelected extends DialogFragment {
     static final String TAG = "Saving the Image: ";
     static String imageProfileFileName = MainActivityFragment.imageProfileFileName;
     static Uri uriImage;
+
+    File localStorage;
+    FirebaseUser firebaseUser;
 
     Button btn_ok;
     Button btn_cancel;
@@ -43,6 +48,9 @@ public class imageSelected extends DialogFragment {
         ImageView imageView = (ImageView) view.findViewById(R.id.fb_prof_image);
 
         getDialog().setTitle("Selected Image");
+
+        localStorage = new File(MainActivityFragment.pathProfileImage + "/" + imageProfileFileName);
+        firebaseUser = MainActivityFragment.user;
 
         btn_ok = (Button) view.findViewById(R.id.btn_ok_image);
         btn_cancel = (Button) view.findViewById(R.id.btn_cancel_image);
@@ -67,16 +75,7 @@ public class imageSelected extends DialogFragment {
                     Snackbar.make(v, "New Profile Picture selected!", Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
                             .show();
-                    final Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            getDialog().dismiss();
-                            startActivity(new Intent(getActivity(), MainActivity.class));
-                        }
-                    }, 2000);
                     break;
-
                 case  R.id.btn_cancel_image:
                     Toast.makeText(getActivity(), "Bla, bla bla...",
                             Toast.LENGTH_LONG).show();
@@ -102,7 +101,10 @@ public class imageSelected extends DialogFragment {
                                     imageProfileFileName,
                                     getActivity().getApplicationContext()
                             );
-
+                            saveImage.iUploadProfileImageToFirebase(
+                                    localStorage.getAbsolutePath(),
+                                    firebaseUser
+                            );
                         }
                         Log.v(TAG, "Everything Ok in here! We got the Image");
                     } catch (Exception e) {
@@ -111,6 +113,19 @@ public class imageSelected extends DialogFragment {
                 }
             });
             thread.start();
+            /*try {
+                thread.join();
+            } catch (InterruptedException e){
+                e.printStackTrace();
+            }*/
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    getDialog().dismiss();
+                    startActivity(new Intent(getActivity(), MainActivity.class));
+                }
+            }, 2000);
         }
     }
 }
