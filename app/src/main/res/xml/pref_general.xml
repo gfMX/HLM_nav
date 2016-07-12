@@ -6,6 +6,8 @@
         android:summary="@string/pref_description_social_recommendations"
         android:title="@string/pref_title_social_recommendations" />
 
+    <PreferenceCategory
+        android:title="@string/pref_header_general">
     <!-- NOTE: EditTextPreference accepts EditText attributes. -->
     <!-- NOTE: EditTextPreference's summary should be set to its value by the activity code. -->
     <EditTextPreference
@@ -49,5 +51,6 @@
         android:selectAllOnFocus="true"
         android:gravity="left|top"
         android:title="@string/pref_title_description" />
+    </PreferenceCategory>
 
 </PreferenceScreen>
