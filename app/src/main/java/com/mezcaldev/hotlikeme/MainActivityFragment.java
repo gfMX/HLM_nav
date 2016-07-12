@@ -193,9 +193,9 @@ public class MainActivityFragment extends Fragment {
                   startActivity(ib);
                   break;
               case R.id.btn_start:
-                  Toast.makeText(getActivity(), "Almost there!",
+                  Toast.makeText(getActivity(), "Bla, bla bla... Let's Go!",
                           Toast.LENGTH_LONG).show();
-                  //startActivity(new Intent(getActivity(), HomeActivity.class));
+                  startActivity(new Intent(getActivity(), HLMActivity.class));
                   break;
               case R.id.hlm_image:
                   Toast.makeText(getActivity(), "Bla, bla bla... Change your profile Pic",
@@ -229,9 +229,13 @@ public class MainActivityFragment extends Fragment {
                     //If the User is logged in, display the options for the user.
                     updateUI(currentAccessToken);
                     if (currentAccessToken == null){
-                        Toast.makeText(getActivity(),"See you soon!",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),
+                                getResources().getString(R.string.text_see_you_soon),
+                                Toast.LENGTH_SHORT).show();
                     } else {
-                        Toast.makeText(getActivity(),"Welcome back!",Toast.LENGTH_SHORT).show();
+                        Toast.makeText(getActivity(),
+                                getResources().getString(R.string.text_welcome_again),
+                                Toast.LENGTH_SHORT).show();
                     }
                 }
             };
@@ -308,16 +312,16 @@ public class MainActivityFragment extends Fragment {
         //Update UI Elements according to the Given Token
         if (accessToken != null){
             if (profile != null) {
-                fb_welcome_text.setText("Welcome " + profile.getFirstName() + "!");
+                fb_welcome_text.setText(getResources().getString(R.string.text_welcome) + profile.getFirstName());
             } else {
-                fb_welcome_text.setText("Welcome!");
+                fb_welcome_text.setText(getResources().getString(R.string.text_welcome));
             }
             if (profileImageCheck.exists()) {
                 imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(getView(),pathProfileImage,imageProfileFileName));
                 //imageSaver.iUploadProfileImageToFirebase(profileImageCheck.getAbsolutePath(), user);
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
-            text_instruct.setText("Please choose some images for Hot Like Me. After that, click on your image profile to change it for one of your choice.\n\nThank you!");
+            text_instruct.setText(getResources().getString(R.string.text_start_HLM));
             profilePic.setProfileId(accessToken.getUserId());
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
@@ -326,8 +330,8 @@ public class MainActivityFragment extends Fragment {
             imageProfileHLM.setVisibility(View.VISIBLE);
             imageProfileHLM.setImageBitmap(null);
             //imageProfileHLM.setImageResource(R.drawable.no_user);
-            fb_welcome_text.setText("Welcome to Hot Like Me \n Please Log In");
-            text_instruct.setText("");
+            fb_welcome_text.setText(getResources().getString(R.string.text_sign_in));
+            text_instruct.setText(null);
             btn_image.setVisibility(View.INVISIBLE);
             btn_start.setVisibility(View.GONE);
             if (profileImageCheck.exists()) {
