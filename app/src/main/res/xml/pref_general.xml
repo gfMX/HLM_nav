@@ -2,7 +2,7 @@
 
     <SwitchPreference
         android:defaultValue="true"
-        android:key="example_switch"
+        android:key="visible_switch"
         android:summary="@string/pref_description_social_recommendations"
         android:title="@string/pref_title_social_recommendations" />
 
@@ -12,7 +12,7 @@
         android:capitalize="words"
         android:defaultValue="@string/pref_default_display_name"
         android:inputType="textCapWords"
-        android:key="example_text"
+        android:key="alias"
         android:maxLines="1"
         android:selectAllOnFocus="true"
         android:singleLine="true"
@@ -22,12 +22,32 @@
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
     <ListPreference
-        android:defaultValue="-1"
-        android:entries="@array/pref_example_list_titles"
-        android:entryValues="@array/pref_example_list_values"
-        android:key="example_list"
+        android:defaultValue="-2"
+        android:entries="@array/pref_gender"
+        android:entryValues="@array/pref_gender_values"
+        android:key="gender"
         android:negativeButtonText="@null"
         android:positiveButtonText="@null"
-        android:title="@string/pref_title_add_friends_to_messages" />
+        android:title="@string/pref_title_gender" />
+
+    <ListPreference
+        android:defaultValue="-1"
+        android:entries="@array/pref_looking_for_titles"
+        android:entryValues="@array/pref_looking_for_values"
+        android:key="looking_for"
+        android:negativeButtonText="@null"
+        android:positiveButtonText="@null"
+        android:title="@string/pref_title_looking_for" />
+
+    <EditTextPreference
+        android:capitalize="words"
+        android:defaultValue="@string/pref_default_description"
+        android:inputType="textMultiLine"
+        android:key="description"
+        android:maxLines="6"
+        android:lines="4"
+        android:selectAllOnFocus="true"
+        android:gravity="left|top"
+        android:title="@string/pref_title_description" />
 
 </PreferenceScreen>

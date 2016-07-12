@@ -170,8 +170,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
-                || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
-                || NotificationPreferenceFragment.class.getName().equals(fragmentName);
+                || DataSyncPreferenceFragment.class.getName().equals(fragmentName);
+                //|| NotificationPreferenceFragment.class.getName().equals(fragmentName);
     }
 
     /**
@@ -190,8 +190,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // to their values. When their values change, their summaries are
             // updated to reflect the new value, per the Android Design
             // guidelines.
-            bindPreferenceSummaryToValue(findPreference("example_text"));
-            bindPreferenceSummaryToValue(findPreference("example_list"));
+            //bindPreferenceSummaryToValue(findPreference("visible_switch"));
+            bindPreferenceSummaryToValue(findPreference("alias"));
+            bindPreferenceSummaryToValue(findPreference("gender"));
+            bindPreferenceSummaryToValue(findPreference("looking_for"));
+            bindPreferenceSummaryToValue(findPreference("description"));
         }
 
         @Override
@@ -209,6 +212,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      * This fragment shows notification preferences only. It is used when the
      * activity is showing a two-pane settings UI.
      */
+    /*
     @TargetApi(Build.VERSION_CODES.HONEYCOMB)
     public static class NotificationPreferenceFragment extends PreferenceFragment {
         @Override
@@ -234,7 +238,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             return super.onOptionsItemSelected(item);
         }
     }
-
+    */
     /**
      * This fragment shows data and sync preferences only. It is used when the
      * activity is showing a two-pane settings UI.
@@ -252,6 +256,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
             bindPreferenceSummaryToValue(findPreference("sync_frequency"));
+            bindPreferenceSummaryToValue(findPreference("sync_distance"));
         }
 
         @Override
