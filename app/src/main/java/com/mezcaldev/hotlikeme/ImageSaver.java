@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.view.View;
 
 import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -86,11 +85,10 @@ public class ImageSaver {
         return directory.getAbsolutePath();
     }
     //Load Image
-    public Bitmap iLoadImageFromStorage(View view, String path, String imageName) {
+    public Bitmap iLoadImageFromStorage(String path, String imageName) {
         try {
             File f=new File(path, imageName);
-            Bitmap bitmap = BitmapFactory.decodeStream(new FileInputStream(f));
-            return bitmap;
+            return BitmapFactory.decodeStream(new FileInputStream(f));
         }
         catch (FileNotFoundException e)
         {
@@ -127,7 +125,7 @@ public class ImageSaver {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
                 Log.v(TAG,"Image uploaded to Firebase");
                 //Log.v(TAG,"URL: " + downloadUrl);
             }
@@ -157,7 +155,7 @@ public class ImageSaver {
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
                 UploadTask uploadTask;
 
-                FirebaseDatabase database = FirebaseDatabase.getInstance();;
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
                 final DatabaseReference databaseReference = database.getReference(user.getUid() + bPath + (nUploads-1));
                 final DatabaseReference databaseReference2 = database.getReference(user.getUid() + "/thumbs/" + (nUploads-1));
 
@@ -195,7 +193,7 @@ public class ImageSaver {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                 if (bPath.equals(ImageBrowser.pathImages)) {
                                     databaseReference.setValue(upImageRef.getPath());
 

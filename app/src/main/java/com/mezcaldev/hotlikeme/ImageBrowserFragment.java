@@ -187,8 +187,8 @@ public class ImageBrowserFragment extends Fragment {
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                        Log.i(TAG, "Click on: " + view.getId());
-                        Log.i(TAG, "On parent: " + parent);
+                        //Log.i(TAG, "Click on: " + view.getId());
+                        //Log.i(TAG, "On parent: " + parent);
 
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
@@ -306,7 +306,7 @@ public class ImageBrowserFragment extends Fragment {
     }
     public void photoSelectionFire (){
         try {
-            if (breakFlag == false) {
+            if (!breakFlag) {
                 gridView = (GridView) getActivity().findViewById(R.id.gridView);
                 gridView.setAdapter(new ImageAdapter(getActivity(), imUrls, null));
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -328,7 +328,6 @@ public class ImageBrowserFragment extends Fragment {
     }
 
     //General Functions:
-
     private void cleaningVars(){
         //Cleaning Arrays before proceed
         imUrls.clear();

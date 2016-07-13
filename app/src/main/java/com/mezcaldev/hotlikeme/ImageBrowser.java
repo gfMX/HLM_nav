@@ -19,7 +19,6 @@ import java.util.List;
 
 public class ImageBrowser extends AppCompatActivity {
 
-    static String TAG_b = "Log: ";
     static String pathImages = "/images/";
     static String pathThumbs = "/images/thumb_";
 
@@ -100,7 +99,9 @@ public class ImageBrowser extends AppCompatActivity {
                         }, 1500);
 
                     } else {
-                        Snackbar.make(view, "No images selected, please select at least one.", Snackbar.LENGTH_LONG)
+                        Snackbar.make(view,
+                                getResources().getString(R.string.text_no_images_selected),
+                                Snackbar.LENGTH_LONG)
                                 .setAction("Action", null)
                                 .show();
                     }

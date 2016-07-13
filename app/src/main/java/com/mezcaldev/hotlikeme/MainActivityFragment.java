@@ -110,9 +110,9 @@ public class MainActivityFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_main, container, false);
+        //View view = inflater.inflate(R.layout.fragment_main, container, false);
 
-        return view;
+        return inflater.inflate(R.layout.fragment_main, container, false);
     }
 
     @Override
@@ -145,7 +145,10 @@ public class MainActivityFragment extends Fragment {
                 accessToken = loginResult.getAccessToken();
                 // App code
                 Log.d(TAG, "FB: onSuccess:" + loginResult);
-                Toast.makeText(getActivity(),"Welcome!",Toast.LENGTH_SHORT).show();
+                Toast.makeText(getActivity(),
+                        getResources().getString(R.string.text_welcome),
+                        Toast.LENGTH_SHORT)
+                        .show();
 
                 handleFacebookAccessToken(accessToken);
                 updateUI(accessToken);
@@ -183,8 +186,10 @@ public class MainActivityFragment extends Fragment {
       public void onClick (View v){
           switch (v.getId()){
               case R.id.btn_choose_img:
-                  Toast.makeText(getActivity(), "Please choose a few Images for Hot Like Me!",
-                          Toast.LENGTH_LONG).show();
+                  Toast.makeText(getActivity(),
+                          getResources().getString(R.string.text_choose_images),
+                          Toast.LENGTH_LONG)
+                          .show();
 
                   strValue = "Facebook";
 
@@ -193,12 +198,12 @@ public class MainActivityFragment extends Fragment {
                   startActivity(ib);
                   break;
               case R.id.btn_start:
-                  Toast.makeText(getActivity(), "Bla, bla bla... Let's Go!",
+                  Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                           Toast.LENGTH_LONG).show();
                   startActivity(new Intent(getActivity(), HLMActivity.class));
                   break;
               case R.id.hlm_image:
-                  Toast.makeText(getActivity(), "Bla, bla bla... Change your profile Pic",
+                  Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
                           Toast.LENGTH_LONG).show();
 
                   strValue = "Firebase";
@@ -317,8 +322,7 @@ public class MainActivityFragment extends Fragment {
                 fb_welcome_text.setText(getResources().getString(R.string.text_welcome));
             }
             if (profileImageCheck.exists()) {
-                imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(getView(),pathProfileImage,imageProfileFileName));
-                //imageSaver.iUploadProfileImageToFirebase(profileImageCheck.getAbsolutePath(), user);
+                imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
             }
             imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText(getResources().getString(R.string.text_start_HLM));
@@ -334,13 +338,15 @@ public class MainActivityFragment extends Fragment {
             text_instruct.setText(null);
             btn_image.setVisibility(View.INVISIBLE);
             btn_start.setVisibility(View.GONE);
-            if (profileImageCheck.exists()) {
+            boolean isDeleted = profileImageCheck.exists();
+            if (isDeleted) {
                 try {
-                    profileImageCheck.delete();
+                    isDeleted = profileImageCheck.delete();
                 } catch (Exception e){
                     e.printStackTrace();
                 }
             }
+            Log.v(TAG, "File Deleted: " + isDeleted);
         }
     }
     @Override

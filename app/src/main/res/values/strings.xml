@@ -133,7 +133,13 @@
     <string name="text_welcome">Welcome&#160;</string>
     <string name="text_welcome_again">Welcome back!</string>
     <string name="text_see_you_soon">See you soon!</string>
+    <string name="text_choose_images">Please choose a few Images for Hot Like Me!</string>
+    <string name="text_no_images_selected">No images selected, please select at least one.</string>
     <string name="text_sign_in">"Welcome to Hot Like Me \n Please Log In"</string>
+    <string name="text_hlm_start_button">Bla, bla bla&#8230; Let\'s Go!</string>
+    <string name="text_cancel_selection">"Bla, bla bla&#8230;"</string>
+    <string name="text_hlm_change_profile_pic">Bla, bla bla&#8230; Change your profile Pic</string>
+    <string name="text_profile_picture_selected">New Profile Picture selected!</string>
     <string name="text_start_HLM">
         Please choose a few of your images for Hot Like Me. After that, click on your image profile
         to change it for one of your choice. \n\nThank you!

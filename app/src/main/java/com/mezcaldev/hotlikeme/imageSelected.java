@@ -72,12 +72,15 @@ public class imageSelected extends DialogFragment {
             switch (v.getId()){
                 case R.id.btn_ok_image:
                     createBitmap(uriImage);
-                    Snackbar.make(v, "New Profile Picture selected!", Snackbar.LENGTH_LONG)
+                    Snackbar.make(v,
+                            getResources().getString(R.string.text_profile_picture_selected),
+                            Snackbar.LENGTH_LONG)
                             .setAction("Action", null)
                             .show();
                     break;
                 case  R.id.btn_cancel_image:
-                    Toast.makeText(getActivity(), "Bla, bla bla...",
+                    Toast.makeText(getActivity(),
+                            getResources().getString(R.string.text_cancel_selection),
                             Toast.LENGTH_LONG).show();
                     getDialog().dismiss();
                     break;
