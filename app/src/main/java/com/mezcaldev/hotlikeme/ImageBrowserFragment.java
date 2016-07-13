@@ -329,31 +329,6 @@ public class ImageBrowserFragment extends Fragment {
     }
 
     //General Functions:
-    public void updateTotalImagesOnFire (final Boolean callUri) {
-        String userId = firebaseUser.getUid();
-        final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
-
-        database.getReference(userId).addValueEventListener(
-                new ValueEventListener() {
-                    @Override
-                    public void onDataChange(DataSnapshot dataSnapshot) {
-
-                        int nElements = (int) dataSnapshot.child("images").getChildrenCount();
-
-                        Log.i(TAG, "Total Images: " + nElements);
-                        dbTotalImagesRef.setValue(nElements);
-                        if (callUri) {
-                            uriFromFirebase((nElements - 1), dataSnapshot);
-                        }
-                    }
-                    @Override
-                    public void onCancelled(DatabaseError databaseError) {
-                        Log.w(TAG, "Cancelled: ",databaseError.toException());
-                    }
-
-                }
-        );
-    }
     private void cleaningVars () {
         //Cleaning Arrays before proceed
         imUrls.clear();
