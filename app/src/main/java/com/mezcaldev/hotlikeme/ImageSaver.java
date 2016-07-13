@@ -14,8 +14,11 @@ import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
 import com.google.firebase.storage.StorageReference;
@@ -33,7 +36,7 @@ import java.net.URL;
 import java.util.List;
 
 /**
- * Created by developer on 17/06/16.
+ * Methods and functions for general use
  */
 public class ImageSaver {
 
@@ -126,6 +129,7 @@ public class ImageSaver {
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                 //Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                //Log.i(TAG, "Download URL: " + downloadUrl);
                 Log.v(TAG,"Image uploaded to Firebase");
                 //Log.v(TAG,"URL: " + downloadUrl);
             }
@@ -136,7 +140,8 @@ public class ImageSaver {
                                         final FirebaseUser user,
                                         final Context context,
                                         final int nUploads,
-                                        final String bPath){
+                                        final String bPath,
+                                        final int existentImages){
 
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext())
@@ -149,19 +154,25 @@ public class ImageSaver {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                String fileName = "image" + (nUploads-1) + ".jpg";
+
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+                int imageNumber = existentImages + nUploads-1;
+
+                String fileName = "image" + (imageNumber) + ".jpg";
                 FirebaseStorage storage = FirebaseStorage.getInstance();
                 StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
+
+                final DatabaseReference databaseReference = database.getReference(user.getUid() + bPath + imageNumber);
+                final DatabaseReference databaseReference2 = database.getReference(user.getUid() + "/thumbs/" + imageNumber);
+
                 UploadTask uploadTask;
 
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-                final DatabaseReference databaseReference = database.getReference(user.getUid() + bPath + (nUploads-1));
-                final DatabaseReference databaseReference2 = database.getReference(user.getUid() + "/thumbs/" + (nUploads-1));
 
                 try {
                     URL image = new URL(path.get(nUploads-1));
-                    Log.i(TAG, "New URL: " + image);
+                    //Log.i(TAG, "New URL: " + image);
                     try {
 
                         InputStream inputStream = (InputStream) image.getContent();
@@ -194,6 +205,7 @@ public class ImageSaver {
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
                                 //Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                //Log.i(TAG, "Download URL: " + downloadUrl);
                                 if (bPath.equals(ImageBrowser.pathImages)) {
                                     databaseReference.setValue(upImageRef.getPath());
 
@@ -202,6 +214,7 @@ public class ImageSaver {
                                         textNotification = "Image uploaded";
                                     } else{
                                         textNotification = "All images Uploaded!";
+                                        updateTotalImagesOnFire();
                                     }
 
                                     mBuilder.setContentText(textNotification).setProgress(0,0,false);
@@ -212,7 +225,7 @@ public class ImageSaver {
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
-                                    iUploadImagesToFirebase(path, user, context, newUploads, bPath);
+                                    iUploadImagesToFirebase(path, user, context, newUploads, bPath, existentImages);
                                 } else {
                                     Log.i(TAG, "All done!");
                                 }
@@ -228,4 +241,28 @@ public class ImageSaver {
         });
         thread.start();
     }
+    public void updateTotalImagesOnFire () {
+        FirebaseUser firebaseUser = MainActivityFragment.user;
+        FirebaseDatabase database = MainActivityFragment.database;
+        String userId = firebaseUser.getUid();
+        final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
+
+        database.getReference(userId).addValueEventListener(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        int nElements = (int) dataSnapshot.child("images").getChildrenCount();
+
+                        Log.i(TAG, "Total Images: " + nElements);
+                        dbTotalImagesRef.setValue(nElements);
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w(TAG, "Cancelled: ",databaseError.toException());
+                    }
+                }
+        );
+    }
+
 }

@@ -12,7 +12,11 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -75,19 +79,43 @@ public class ImageBrowser extends AppCompatActivity {
                         Snackbar.make(view, "Uploading " + uploadUrls.size() + textImages, Snackbar.LENGTH_LONG)
                                 .setAction("Action", null)
                                 .show();
+                        final DatabaseReference numberOfImages = database.getReference(fireUser.getUid());
 
-                        ImageSaver uploadImages = new ImageSaver();
-                        uploadImages.iUploadImagesToFirebase(uploadUrls,
-                                fireUser,
-                                getApplicationContext(),
-                                uploadUrls.size(),
-                                pathImages);
-                        ImageSaver uploadThumbs = new ImageSaver();
-                        uploadThumbs.iUploadImagesToFirebase(uploadTiny,
-                                fireUser,
-                                getApplicationContext(),
-                                uploadTiny.size(),
-                                pathThumbs);
+                        numberOfImages.addListenerForSingleValueEvent(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                int imagesOnFirebase;
+                                try {
+                                    imagesOnFirebase = Integer.valueOf(dataSnapshot.child("total_images").getValue().toString());
+                                } catch (NullPointerException e){
+                                    imagesOnFirebase = 0;
+                                    e.printStackTrace();
+                                }
+
+                                ImageSaver uploadImages = new ImageSaver();
+                                uploadImages.iUploadImagesToFirebase(
+                                        uploadUrls,
+                                        fireUser,
+                                        getApplicationContext(),
+                                        uploadUrls.size(),
+                                        pathImages,
+                                        imagesOnFirebase);
+                                ImageSaver uploadThumbs = new ImageSaver();
+                                uploadThumbs.iUploadImagesToFirebase(
+                                        uploadTiny,
+                                        fireUser,
+                                        getApplicationContext(),
+                                        uploadTiny.size(),
+                                        pathThumbs,
+                                        imagesOnFirebase);
+
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
 
                         final Handler handler = new Handler();
                         handler.postDelayed(new Runnable() {

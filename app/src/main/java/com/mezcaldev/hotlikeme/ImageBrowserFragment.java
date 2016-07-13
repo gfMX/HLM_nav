@@ -266,43 +266,44 @@ public class ImageBrowserFragment extends Fragment {
     private void uriFromFirebase(int uriLength, final DataSnapshot dataSnapshot){
         final int i = uriLength;
 
-        firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
-        firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+            firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
+            firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
 
-        //Get the thumbnails URLs from Firebase to show it on Image Browser:
-        storageRef.child(firebaseImageStorage1).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-            @Override
-            public void onSuccess(Uri uri) {
-                Log.i(TAG, "Uri thumbnail " + i + ": " + uri);
-                imUrls.add(uri.toString());
+            //Get the thumbnails URLs from Firebase to show it on Image Browser:
+            storageRef.child(firebaseImageStorage1).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    Log.i(TAG, "Uri thumbnail " + i + ": " + uri);
+                    imUrls.add(uri.toString());
 
-                //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
-                storageRef.child(firebaseImageStorage2).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        Log.i(TAG, "Uri Image: " + i + ": " + uri);
-                        imImages.add(uri.toString());
-                        photoSelectionFire();
-                        if (i > 0){
-                            uriFromFirebase((i-1), dataSnapshot);
+                    //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
+                    storageRef.child(firebaseImageStorage2).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            Log.i(TAG, "Uri Image: " + i + ": " + uri);
+                            imImages.add(uri.toString());
+                            photoSelectionFire();
+                            if (i > 0) {
+                                uriFromFirebase((i - 1), dataSnapshot);
+                            }
                         }
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Handle any errors
-                        Log.w(TAG, "Something went wrong getting the Full Image.");
-                    }
-                });
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Handle any errors
+                            Log.w(TAG, "Something went wrong getting the Full Image.");
+                        }
+                    });
 
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-                Log.w(TAG, "Something went wrong getting the Thumbnail.");
-            }
-        });
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle any errors
+                    Log.w(TAG, "Something went wrong getting the Thumbnail.");
+                }
+            });
+
     }
     public void photoSelectionFire (){
         try {
@@ -328,7 +329,32 @@ public class ImageBrowserFragment extends Fragment {
     }
 
     //General Functions:
-    private void cleaningVars(){
+    public void updateTotalImagesOnFire (final Boolean callUri) {
+        String userId = firebaseUser.getUid();
+        final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
+
+        database.getReference(userId).addValueEventListener(
+                new ValueEventListener() {
+                    @Override
+                    public void onDataChange(DataSnapshot dataSnapshot) {
+
+                        int nElements = (int) dataSnapshot.child("images").getChildrenCount();
+
+                        Log.i(TAG, "Total Images: " + nElements);
+                        dbTotalImagesRef.setValue(nElements);
+                        if (callUri) {
+                            uriFromFirebase((nElements - 1), dataSnapshot);
+                        }
+                    }
+                    @Override
+                    public void onCancelled(DatabaseError databaseError) {
+                        Log.w(TAG, "Cancelled: ",databaseError.toException());
+                    }
+
+                }
+        );
+    }
+    private void cleaningVars () {
         //Cleaning Arrays before proceed
         imUrls.clear();
         imImages.clear();
