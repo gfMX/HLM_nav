@@ -102,9 +102,6 @@ public class MainActivityFragment extends Fragment {
         fireRef = database.getReference();
         mAuth = FirebaseAuth.getInstance();
 
-        //Gaining Tokens in Background:
-        getUserAccess userAccess = new getUserAccess();
-        userAccess.execute();
     }
 
     @Override
@@ -117,6 +114,10 @@ public class MainActivityFragment extends Fragment {
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
+        //Gaining Tokens in Background:
+        getUserAccess userAccess = new getUserAccess();
+        userAccess.execute();
+
         callbackManager = CallbackManager.Factory.create();
 
         profileImageCheck = new File(pathProfileImage + "/" + imageProfileFileName);
@@ -131,8 +132,6 @@ public class MainActivityFragment extends Fragment {
         btn_start = (Button) view.findViewById(R.id.btn_start);
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
 
-        btn_image.setTransformationMethod(null);
-        btn_start.setTransformationMethod(null);
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile", "user_photos");
@@ -151,12 +150,7 @@ public class MainActivityFragment extends Fragment {
                         .show();
 
                 handleFacebookAccessToken(accessToken);
-                updateUI(accessToken);
-                /*if (!profileImageCheck.exists()) {
-                    imageSaver.iCreateBitmap(profile,
-                            imageProfileFileName,
-                            getActivity().getApplicationContext());
-                }*/
+                //updateUI(accessToken);
             }
 
             @Override
@@ -171,7 +165,14 @@ public class MainActivityFragment extends Fragment {
                 Log.d(TAG, "FB: Error", exception);
             }
         });
+        
+    }
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
 
+        btn_image.setTransformationMethod(null);
+        btn_start.setTransformationMethod(null);
         //Button behavior
         btn_image.setOnClickListener(settingsButtons);
         btn_start.setOnClickListener(settingsButtons);
@@ -179,8 +180,8 @@ public class MainActivityFragment extends Fragment {
         //Image Profile Behavior
         imageProfileHLM.isClickable();
         imageProfileHLM.setOnClickListener(settingsButtons);
-
     }
+
     //Buttons for different settings
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
       public void onClick (View v){
@@ -324,16 +325,18 @@ public class MainActivityFragment extends Fragment {
             if (profileImageCheck.exists()) {
                 imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
             }
-            imageProfileHLM.setVisibility(View.VISIBLE);
+            //imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText(getResources().getString(R.string.text_start_HLM));
             profilePic.setProfileId(accessToken.getUserId());
+            imageProfileHLM.setClickable(true);
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
-            imageProfileHLM.setVisibility(View.VISIBLE);
-            imageProfileHLM.setImageBitmap(null);
-            //imageProfileHLM.setImageResource(R.drawable.no_user);
+            //imageProfileHLM.setVisibility(View.VISIBLE);
+            //imageProfileHLM.setImageBitmap(null);
+            imageProfileHLM.setImageResource(R.drawable.no_user);
+            imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(getResources().getString(R.string.text_sign_in));
             text_instruct.setText(null);
             btn_image.setVisibility(View.INVISIBLE);

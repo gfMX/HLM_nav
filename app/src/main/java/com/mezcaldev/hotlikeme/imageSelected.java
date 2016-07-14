@@ -116,11 +116,11 @@ public class imageSelected extends DialogFragment {
                 }
             });
             thread.start();
-            try {
+            /*try {
                 thread.join();
             } catch (InterruptedException e){
                 e.printStackTrace();
-            }
+            }*/
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
@@ -128,7 +128,7 @@ public class imageSelected extends DialogFragment {
                     getDialog().dismiss();
                     startActivity(new Intent(getActivity(), MainActivity.class));
                 }
-            }, 2000);
+            }, 2500);
         }
     }
 }

@@ -20,6 +20,7 @@
     <string name="btn_start">Let\'s Start!</string>
 
     <!-- Strings related to Settings -->
+    <string name="action_delete">Delete Image</string>
 
     <!-- Example General settings -->
     <string name="pref_header_general">Personal Info</string>
@@ -143,5 +144,11 @@
     <string name="text_start_HLM">
         Please choose a few of your images for Hot Like Me. After that, click on your image profile
         to change it for one of your choice. \n\nThank you!
+    </string>
+    <string name="text_uploading">Uploading&#160;</string>
+    <string name="text_image_uploaded">Image uploaded</string>
+    <string name="text_images_uploaded">All images Uploaded!</string>
+    <string name="text_delete_images_no_selected">
+        If you want to delete images, please select at least one, with a Long Click
     </string>
 </resources>

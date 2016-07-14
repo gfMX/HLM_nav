@@ -211,10 +211,10 @@ public class ImageSaver {
 
                                     String textNotification;
                                     if (nUploads>1){
-                                        textNotification = "Image uploaded";
+                                        textNotification = context.getResources().getString(R.string.text_image_uploaded);
                                     } else{
-                                        textNotification = "All images Uploaded!";
-                                        updateTotalImagesOnFire();
+                                        textNotification = context.getResources().getString(R.string.text_images_uploaded);
+                                        updateTotalImagesOnFire(); //this updates the total images on Firebase
                                     }
 
                                     mBuilder.setContentText(textNotification).setProgress(0,0,false);

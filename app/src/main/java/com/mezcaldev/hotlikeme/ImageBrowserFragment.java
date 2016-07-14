@@ -9,6 +9,7 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -69,6 +70,7 @@ public class ImageBrowserFragment extends Fragment {
 
     Boolean breakFlag = false;
 
+    MenuItem item;
     String browseImages;
 
     public ImageBrowserFragment() {
@@ -94,6 +96,8 @@ public class ImageBrowserFragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_image_browser, container, false);
+
+        item = (MenuItem) view.findViewById(R.id.action_delete_image);
 
         Intent intent = getActivity().getIntent();
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
@@ -308,12 +312,45 @@ public class ImageBrowserFragment extends Fragment {
     public void photoSelectionFire (){
         try {
             if (!breakFlag) {
+                final ImageAdapter imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
                 gridView = (GridView) getActivity().findViewById(R.id.gridView);
-                gridView.setAdapter(new ImageAdapter(getActivity(), imUrls, null));
+                gridView.setAdapter(imageAdapter);
+
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                         Uri imageUri = Uri.parse(imImages.get(position));
                         showSelectedImage(imageUri);
+                    }
+                });
+
+                gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                    @Override
+                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                        if (!imIdsSelected.contains(position)) {
+                            imIdsSelected.add(position);
+                            //imUrlsSelected.add(imImages.get(position));
+                            //imThumbSelected.add(imUrls.get(position));
+
+                            //Log.i(TAG, "Postion: " + position);
+                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
+                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
+                        } else {
+                            //Log.i(TAG, "Postion: " + position);
+                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
+                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
+                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
+
+                            //imUrlsSelected.remove(imIdsSelected.indexOf(position));
+                            //imThumbSelected.remove(imIdsSelected.indexOf(position));
+                            imIdsSelected.remove(imIdsSelected.indexOf(position));
+                        }
+                        if (imIdsSelected.size() > 0){
+                            Log.i(TAG, "Menu Item: " + item);
+                            //item.setVisible(true);
+                        }
+                        imageAdapter.notifyDataSetChanged();
+                        return true;
                     }
                 });
             }
