@@ -3,6 +3,8 @@ package com.mezcaldev.hotlikeme;
 import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
@@ -28,6 +30,8 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -324,8 +328,9 @@ public class MainActivityFragment extends Fragment {
             }
             if (profileImageCheck.exists()) {
                 imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
+            } else {
+                fireProfilePic(); //Call it from somewhere else...
             }
-            //imageProfileHLM.setVisibility(View.VISIBLE);
             text_instruct.setText(getResources().getString(R.string.text_start_HLM));
             profilePic.setProfileId(accessToken.getUserId());
             imageProfileHLM.setClickable(true);
@@ -333,8 +338,6 @@ public class MainActivityFragment extends Fragment {
             btn_start.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
-            //imageProfileHLM.setVisibility(View.VISIBLE);
-            //imageProfileHLM.setImageBitmap(null);
             imageProfileHLM.setImageResource(R.drawable.no_user);
             imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(getResources().getString(R.string.text_sign_in));
@@ -351,6 +354,23 @@ public class MainActivityFragment extends Fragment {
             }
             Log.v(TAG, "File Deleted: " + isDeleted);
         }
+    }
+    private void fireProfilePic (){
+        storageRef.child(user.getUid() + "/profile_pic/" + imageProfileFileName).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+            @Override
+            public void onSuccess(byte[] bytes) {
+                // Use the bytes to display the image
+                Bitmap image = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
+                ImageSaver saveBitmap = new ImageSaver();
+                saveBitmap.iSaveToInternalStorage(image, imageProfileFileName, getContext());
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+                exception.printStackTrace();
+            }
+        });
     }
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
