@@ -53,8 +53,6 @@ public class ImageBrowserFragment extends Fragment {
     StorageReference storageRef;
     DatabaseReference fireRef;
     FirebaseAuth mAuth;
-    String firebaseImageStorage1;
-    String firebaseImageStorage2;
 
     //Internal parameters
     private GridView gridView;
@@ -64,6 +62,9 @@ public class ImageBrowserFragment extends Fragment {
     static List<Integer> imIdsSelected = new ArrayList<>();     //Actual Position
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
+
+    List<String> refImages = new ArrayList<>();
+    List<String> refThumbs = new ArrayList<>();
 
     getFbPhotos fbPhotos = new getFbPhotos();
     getFirePhotos firePhotos = new getFirePhotos();
@@ -268,34 +269,39 @@ public class ImageBrowserFragment extends Fragment {
         }
     }
     private void uriFromFirebase(int uriLength, final DataSnapshot dataSnapshot){
-        final int i = uriLength;
 
-            firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
-            firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+        Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
+        Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
 
+        for (int i=0; i < dataSnapshot.child("images").getChildrenCount(); i++){
+            System.out.println("Actual iteration: " + i);
+            refImages.add(dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString());
+            refThumbs.add(dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString());
+        }
+
+        for (int i=0; i < refImages.size(); i++) {
+            final int c = i;
             //Get the thumbnails URLs from Firebase to show it on Image Browser:
-            storageRef.child(firebaseImageStorage1).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+            storageRef.child(refThumbs.get(c)).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
-                    Log.i(TAG, "Uri thumbnail " + i + ": " + uri);
+                    //Log.i(TAG, "Uri thumbnail " + c + ": " + uri);
                     imUrls.add(uri.toString());
 
                     //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
-                    storageRef.child(firebaseImageStorage2).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    storageRef.child(refImages.get(c)).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
-                            Log.i(TAG, "Uri Image: " + i + ": " + uri);
+                            //Log.i(TAG, "Uri Image: " + c + ": " + uri);
                             imImages.add(uri.toString());
                             photoSelectionFire();
-                            if (i > 0) {
-                                uriFromFirebase((i - 1), dataSnapshot);
-                            }
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
                         public void onFailure(@NonNull Exception exception) {
                             // Handle any errors
                             Log.w(TAG, "Something went wrong getting the Full Image.");
+                            exception.printStackTrace();
                         }
                     });
 
@@ -305,9 +311,10 @@ public class ImageBrowserFragment extends Fragment {
                 public void onFailure(@NonNull Exception exception) {
                     // Handle any errors
                     Log.w(TAG, "Something went wrong getting the Thumbnail.");
+                    exception.printStackTrace();
                 }
             });
-
+        }
     }
     public void photoSelectionFire (){
         try {
@@ -328,21 +335,7 @@ public class ImageBrowserFragment extends Fragment {
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
-                            //imUrlsSelected.add(imImages.get(position));
-                            //imThumbSelected.add(imUrls.get(position));
-
-                            //Log.i(TAG, "Postion: " + position);
-                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
                         } else {
-                            //Log.i(TAG, "Postion: " + position);
-                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
-
-                            //imUrlsSelected.remove(imIdsSelected.indexOf(position));
-                            //imThumbSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
                         }
                         if (imIdsSelected.size() > 0){

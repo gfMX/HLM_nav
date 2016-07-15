@@ -164,8 +164,8 @@ public class ImageSaver {
                 StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
 
-                final DatabaseReference databaseReference = database.getReference(user.getUid() + bPath + imageNumber);
-                final DatabaseReference databaseReference2 = database.getReference(user.getUid() + "/thumbs/" + imageNumber);
+                final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + imageNumber);
+                final DatabaseReference databaseRefURLImages = database.getReference(user.getUid() + "/URLImage/" + imageNumber);
 
                 UploadTask uploadTask;
 
@@ -199,35 +199,113 @@ public class ImageSaver {
                             @Override
                             public void onFailure(@NonNull Exception exception) {
                                 // Handle unsuccessful uploads
+                                exception.printStackTrace();
                             }
                         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                 //Log.i(TAG, "Download URL: " + downloadUrl);
-                                if (bPath.equals(ImageBrowser.pathImages)) {
-                                    databaseReference.setValue(upImageRef.getPath());
+                                databaseReferenceImages.setValue(upImageRef.getPath());
+                                databaseRefURLImages.setValue(downloadUrl);
 
-                                    String textNotification;
-                                    if (nUploads>1){
-                                        textNotification = context.getResources().getString(R.string.text_image_uploaded);
-                                    } else{
-                                        textNotification = context.getResources().getString(R.string.text_images_uploaded);
-                                        updateTotalImagesOnFire(); //this updates the total images on Firebase
-                                    }
-
-                                    mBuilder.setContentText(textNotification).setProgress(0,0,false);
-                                    notificationManager.notify(1, mBuilder.build());
-                                } else if (bPath.equals(ImageBrowser.pathThumbs)) {
-                                    databaseReference2.setValue(upImageRef.getPath());
+                                String textNotification;
+                                if (nUploads>1){
+                                    textNotification = context.getResources().getString(R.string.text_image_uploaded);
+                                } else{
+                                    textNotification = context.getResources().getString(R.string.text_images_uploaded);
+                                    updateTotalImagesOnFire(); //this updates the total images on Firebase
                                 }
+
+                                mBuilder.setContentText(textNotification).setProgress(0,0,false);
+                                notificationManager.notify(1, mBuilder.build());
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
                                     iUploadImagesToFirebase(path, user, context, newUploads, bPath, existentImages);
                                 } else {
-                                    Log.i(TAG, "All done!");
+                                    Log.i(TAG, "Images: All done!");
+                                }
+                            }
+                        });
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                } catch (MalformedURLException mu) {
+                    mu.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+    }
+    public void iUploadThumbsToFirebase(final List<String> path,
+                                        final FirebaseUser user,
+                                        final Context context,
+                                        final int nUploads,
+                                        final String bPath,
+                                        final int existentImages){
+
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+
+                FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+                final int imageNumber = existentImages + nUploads-1;
+
+                String fileName = "image" + (imageNumber) + ".jpg";
+                FirebaseStorage storage = FirebaseStorage.getInstance();
+                StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+                final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
+
+                final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + imageNumber);
+                final DatabaseReference databaseRefURLThumbs = database.getReference(user.getUid() + "/URLThumb/" + imageNumber);
+
+                UploadTask uploadTask;
+
+
+                try {
+                    URL image = new URL(path.get(nUploads-1));
+                    //Log.i(TAG, "New URL: " + image);
+                    try {
+
+                        InputStream inputStream = (InputStream) image.getContent();
+                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream);
+                        byte[] data = byteArrayOutputStream.toByteArray();
+
+                        uploadTask = upImageRef.putBytes(data);
+
+                        // Listen for state changes, errors, and completion of the upload.
+                        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
+                                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
+                                System.out.println("Upload is " + progress + "% done");
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                            @Override
+                            public void onFailure(@NonNull Exception exception) {
+                                // Handle unsuccessful uploads
+                                exception.printStackTrace();
+                            }
+                        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
+                            @Override
+                            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
+                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
+                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                //Log.i(TAG, "Download URL: " + downloadUrl);
+                                databaseReferenceThumbs.setValue(upImageRef.getPath());
+                                databaseRefURLThumbs.setValue(downloadUrl);
+
+                                if (nUploads>1){
+                                    int newUploads = nUploads - 1;
+                                    iUploadThumbsToFirebase(path, user, context, newUploads, bPath, existentImages);
+                                } else {
+                                    Log.i(TAG, "Thumbs: All done!");
                                 }
                             }
                         });
@@ -252,10 +330,11 @@ public class ImageSaver {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
 
-                        int nElements = (int) dataSnapshot.child("images").getChildrenCount();
+                        int nImages = (int) dataSnapshot.child("images").getChildrenCount();
+                        int nThumbs = (int) dataSnapshot.child("thumbs").getChildrenCount();
 
-                        Log.i(TAG, "Total Images: " + nElements);
-                        dbTotalImagesRef.setValue(nElements);
+                        Log.i(TAG, "Total Images: " + nImages + " Total Thumbs: " + nThumbs);
+                        dbTotalImagesRef.setValue(nImages);
                     }
                     @Override
                     public void onCancelled(DatabaseError databaseError) {
@@ -263,6 +342,10 @@ public class ImageSaver {
                     }
                 }
         );
+    }
+
+    private void newImageOnFirebase (String path, Uri uri){
+
     }
 
 }
