@@ -122,7 +122,7 @@ public class ImageBrowserFragment extends Fragment {
             Log.i(TAG, "Section for Facebook Image Browser");
             //getFbPhotos fbPhotos = new getFbPhotos();
             fbPhotos.execute();
-        } else {
+        } else if (browseImages.equals("Firebase")){
             Log.i(TAG, "Section for Firebase Browser");
             //final getFirePhotos firePhotos = new getFirePhotos();
             firePhotos.execute();
@@ -273,8 +273,12 @@ public class ImageBrowserFragment extends Fragment {
     private void uriFromFirebase(int uriLength, final DataSnapshot dataSnapshot){
         final int i = uriLength;
 
+        //DataSnapshot temp1 = dataSnapshot.child("thumbs").getValue();
+        //System.out.println("Childrens: " + dataSnapshot.child("thumbs").getValue());
+
         firebaseThumbStorage = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
         firebaseImageStorage = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+
         Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
         Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
 

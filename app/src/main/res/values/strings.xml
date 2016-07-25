@@ -151,4 +151,7 @@
     <string name="text_delete_images_no_selected">
         If you want to delete images, please select at least one, with a Long Click
     </string>
+    <string name="text_deleting_selected_images">
+        Deleting Images&#8230;
+    </string>
 </resources>

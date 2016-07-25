@@ -14,7 +14,8 @@ import com.bumptech.glide.Glide;
 import java.util.List;
 
 /**
- * Created by developer on 27/06/16.
+ * Image Adapter for Image Selection.
+ * Created by Abraham on 27/06/16.
  */
 public class ImageAdapter extends ArrayAdapter {
     private final String TAG_i = "Image Resource: ";

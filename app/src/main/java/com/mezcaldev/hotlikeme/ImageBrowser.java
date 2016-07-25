@@ -1,7 +1,6 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.FloatingActionButton;
@@ -35,7 +34,7 @@ public class ImageBrowser extends AppCompatActivity {
 
     List<String> uploadUrls = new ArrayList<>();
     List<String> uploadTiny = new ArrayList<>();
-    List<String> deleteList = new ArrayList<>();
+    List<Integer> deleteList = new ArrayList<>();
 
 
     @Override
@@ -110,7 +109,6 @@ public class ImageBrowser extends AppCompatActivity {
                                     uploadThumbs.iUploadThumbsToFirebase(
                                             uploadTiny,
                                             fireUser,
-                                            getApplicationContext(),
                                             uploadTiny.size(),
                                             pathThumbs,
                                             imagesOnFirebase);
@@ -128,7 +126,7 @@ public class ImageBrowser extends AppCompatActivity {
                                 @Override
                                 public void run() {
                                     startActivity(new Intent(getApplication(), MainActivity.class));
-                                    finish();
+                                    //finish();
                                 }
                             }, 1500);
 
@@ -147,12 +145,12 @@ public class ImageBrowser extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.menu_image_browser, menu);
-        MenuItem deleteImage = menu.findItem(R.id.action_delete_image);
+        MenuItem trashCan = menu.findItem(R.id.action_delete_image);
 
         if (browseImages.equals("Firebase")){
-            deleteImage.setVisible(true);
+            trashCan.setVisible(true);
         } else {
-            deleteImage.setVisible(false);
+            trashCan.setVisible(false);
         }
         return true;
     }
@@ -166,9 +164,16 @@ public class ImageBrowser extends AppCompatActivity {
         }
         if (id == R.id.action_delete_image){
             Log.i(TAG, "Delete");
+            deleteList = ImageBrowserFragment.imIdsSelected;
             if (deleteList.size()>0){
-                DeleteImagesOnFire deleteImagesOnFire = new DeleteImagesOnFire();
-                deleteImagesOnFire.execute();
+                ImageSaver deleteImages = new ImageSaver();
+                deleteImages.DeleteImagesOnFire(deleteList);
+
+                Snackbar.make(getWindow().getDecorView(),
+                        getResources().getString(R.string.text_deleting_selected_images),
+                        Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .show();
             } else {
                 Snackbar.make(getWindow().getDecorView(),
                         getResources().getString(R.string.text_delete_images_no_selected),
@@ -179,22 +184,6 @@ public class ImageBrowser extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    private class DeleteImagesOnFire extends AsyncTask<Void, Void, Void> {
-        @Override
-        protected void onPreExecute(){
-
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
     }
 
 }

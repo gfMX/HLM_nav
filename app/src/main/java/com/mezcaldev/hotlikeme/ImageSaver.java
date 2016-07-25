@@ -41,6 +41,12 @@ import java.util.List;
 public class ImageSaver {
 
     private final String TAG = "Image record: ";
+    final Integer compressRatio = 85;
+
+    final FirebaseUser firebaseUser = MainActivityFragment.user;
+    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+    final FirebaseStorage  storage = FirebaseStorage.getInstance();
+    final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
     public ImageSaver() {
 
@@ -90,8 +96,8 @@ public class ImageSaver {
     //Load Image
     public Bitmap iLoadImageFromStorage(String path, String imageName) {
         try {
-            File f=new File(path, imageName);
-            return BitmapFactory.decodeStream(new FileInputStream(f));
+            File file = new File(path, imageName);
+            return BitmapFactory.decodeStream(new FileInputStream(file));
         }
         catch (FileNotFoundException e)
         {
@@ -101,9 +107,6 @@ public class ImageSaver {
     }
     //Upload Image to Firebase
     public void iUploadProfileImageToFirebase(String path, FirebaseUser user){
-
-        FirebaseStorage  storage = FirebaseStorage.getInstance();
-        StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         UploadTask uploadTask;
 
         Uri file = Uri.fromFile(new File(path));
@@ -155,13 +158,10 @@ public class ImageSaver {
             @Override
             public void run() {
 
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-
                 int imageNumber = existentImages + nUploads-1;
-
+                //String imageNumber = UUID.randomUUID().toString();
                 String fileName = "image" + (imageNumber) + ".jpg";
-                FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
 
                 final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + imageNumber);
@@ -179,7 +179,7 @@ public class ImageSaver {
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, compressRatio, byteArrayOutputStream);
                         byte[] data = byteArrayOutputStream.toByteArray();
 
                         uploadTask = upImageRef.putBytes(data);
@@ -215,7 +215,8 @@ public class ImageSaver {
                                     textNotification = context.getResources().getString(R.string.text_image_uploaded);
                                 } else{
                                     textNotification = context.getResources().getString(R.string.text_images_uploaded);
-                                    updateTotalImagesOnFire(); //this updates the total images on Firebase
+                                    //Updates the total images on Firebase
+                                    updateTotalImagesOnFire();
                                 }
 
                                 mBuilder.setContentText(textNotification).setProgress(0,0,false);
@@ -241,7 +242,6 @@ public class ImageSaver {
     }
     public void iUploadThumbsToFirebase(final List<String> path,
                                         final FirebaseUser user,
-                                        final Context context,
                                         final int nUploads,
                                         final String bPath,
                                         final int existentImages){
@@ -250,20 +250,16 @@ public class ImageSaver {
             @Override
             public void run() {
 
-                FirebaseDatabase database = FirebaseDatabase.getInstance();
-
-                final int imageNumber = existentImages + nUploads-1;
-
+                int imageNumber = existentImages + nUploads-1;
+                //String imageNumber = UUID.randomUUID().toString();
                 String fileName = "image" + (imageNumber) + ".jpg";
-                FirebaseStorage storage = FirebaseStorage.getInstance();
-                StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
 
                 final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + imageNumber);
                 final DatabaseReference databaseRefURLThumbs = database.getReference(user.getUid() + "/URLThumb/" + imageNumber);
 
                 UploadTask uploadTask;
-
 
                 try {
                     URL image = new URL(path.get(nUploads-1));
@@ -274,7 +270,7 @@ public class ImageSaver {
                         Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
 
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 85, byteArrayOutputStream);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, compressRatio, byteArrayOutputStream);
                         byte[] data = byteArrayOutputStream.toByteArray();
 
                         uploadTask = upImageRef.putBytes(data);
@@ -303,7 +299,7 @@ public class ImageSaver {
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
-                                    iUploadThumbsToFirebase(path, user, context, newUploads, bPath, existentImages);
+                                    iUploadThumbsToFirebase(path, user, newUploads, bPath, existentImages);
                                 } else {
                                     Log.i(TAG, "Thumbs: All done!");
                                 }
@@ -320,8 +316,6 @@ public class ImageSaver {
         thread.start();
     }
     public void updateTotalImagesOnFire () {
-        FirebaseUser firebaseUser = MainActivityFragment.user;
-        FirebaseDatabase database = MainActivityFragment.database;
         String userId = firebaseUser.getUid();
         final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
 
@@ -343,9 +337,15 @@ public class ImageSaver {
                 }
         );
     }
+    public void DeleteImagesOnFire (List <Integer> deleteList) {
+        Thread thread = new Thread(new Runnable() {
+            @Override
+            public void run() {
+                StorageReference fileToDelete;
 
-    private void newImageOnFirebase (String path, Uri uri){
-
+            }
+        });
+        thread.start();
     }
 
 }
