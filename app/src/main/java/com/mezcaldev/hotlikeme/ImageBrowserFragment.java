@@ -53,8 +53,8 @@ public class ImageBrowserFragment extends Fragment {
     StorageReference storageRef;
     DatabaseReference fireRef;
     FirebaseAuth mAuth;
-    String firebaseImageStorage1;
-    String firebaseImageStorage2;
+    String firebaseThumbStorage;
+    String firebaseImageStorage;
 
     //Internal parameters
     private GridView gridView;
@@ -273,35 +273,30 @@ public class ImageBrowserFragment extends Fragment {
     private void uriFromFirebase(int uriLength, final DataSnapshot dataSnapshot){
         final int i = uriLength;
 
-        //firebaseImageStorage1 = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
-        //firebaseImageStorage2 = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+        firebaseThumbStorage = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
+        firebaseImageStorage = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
         Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
         Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
 
-        for (int a=0; a < dataSnapshot.child("images").getChildrenCount(); a++){
-            System.out.println("Actual iteration: " + a);
-            refImages.add(dataSnapshot.child("images").child(String.valueOf(a)).getValue().toString());
-            refThumbs.add(dataSnapshot.child("thumbs").child(String.valueOf(a)).getValue().toString());
-        }
-        for (int b=0; b < refImages.size(); b++) {
-            final int c = b;
-            //Get the thumbnails URLs from Firebase to show it on Image Browser:
-            storageRef.child(refThumbs.get(c)).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        System.out.println("Actual iteration: " + i);
+
+        //Get the thumbnails URLs from Firebase to show it on Image Browser:
+        storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
                     //Log.i(TAG, "Uri thumbnail " + i + ": " + uri);
                     imUrls.add(uri.toString());
 
                     //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
-                    storageRef.child(refImages.get(c)).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                         @Override
                         public void onSuccess(Uri uri) {
                             //Log.i(TAG, "Uri Image: " + i + ": " + uri);
                             imImages.add(uri.toString());
                             photoSelectionFire();
-                            /*if (i > 0) {
+                            if (i > 0) {
                                 uriFromFirebase((i - 1), dataSnapshot);
-                            }*/
+                            }
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                         @Override
@@ -321,7 +316,7 @@ public class ImageBrowserFragment extends Fragment {
                     exception.printStackTrace();
                 }
             });
-        }
+        //}
     }
     public void photoSelectionFire (){
         try {
