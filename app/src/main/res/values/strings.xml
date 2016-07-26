@@ -11,7 +11,7 @@
     <string name="app_description">Hello Hot Users</string>
     <string name="app_welcome">Welcome to the app! You have successfully log in</string>
 
-    <string name="facebook_app_id">805376762931228</string>
+    <string name="facebook_app_id">755197327949172</string>
     <string name="title_activity_settings">Settings</string>
     <string name="text_profile_pic">Profile Pic</string>
 
@@ -131,6 +131,7 @@
 
 
     <!-- Context Dialogs up ahead -->
+
     <string name="text_welcome">Welcome&#160;</string>
     <string name="text_welcome_again">Welcome back!</string>
     <string name="text_see_you_soon">See you soon!</string>
@@ -151,7 +152,6 @@
     <string name="text_delete_images_no_selected">
         If you want to delete images, please select at least one, with a Long Click
     </string>
-    <string name="text_deleting_selected_images">
-        Deleting Images&#8230;
-    </string>
+    <string name="text_deleting_selected_images_1">Deleting&#160;</string>
+    <string name="text_deleting_selected_images_2">&#160;images&#8230;</string>
 </resources>

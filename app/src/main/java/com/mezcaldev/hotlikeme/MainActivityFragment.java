@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -51,6 +52,9 @@ import java.io.File;
 public class MainActivityFragment extends Fragment {
 
     private static final String TAG = "FacebookLogin";
+    //Delay Time to load Profile Picture if exists.
+    Integer minDelayTime =100;
+    Integer delayTime = 2000;
 
     //Facebook
     LoginButton loginButton;
@@ -277,6 +281,9 @@ public class MainActivityFragment extends Fragment {
                         fireRef.setValue(user.getDisplayName());
                         fireRef = database.getReference(user.getUid() + "/alias");
                         fireRef.setValue("Your display name in here");
+
+                        loadProfileDetails(delayTime);
+
                     } else {
                         // User signed out
                         Log.d(TAG, "Firebase: Signed Out: ");
@@ -321,29 +328,27 @@ public class MainActivityFragment extends Fragment {
     private void updateUI (AccessToken accessToken) {
         //Update UI Elements according to the Given Token
         if (accessToken != null){
-            if (profile != null) {
-                fb_welcome_text.setText(getResources().getString(R.string.text_welcome) + profile.getFirstName());
-            } else {
-                fb_welcome_text.setText(getResources().getString(R.string.text_welcome));
-            }
-            if (profileImageCheck.exists()) {
-                imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
-            } else {
-                fireProfilePic(); //Call it from somewhere else...
-            }
+
+            fb_welcome_text.setText(getResources().getString(R.string.text_welcome));
+
+            loadProfileDetails(minDelayTime);
+
             text_instruct.setText(getResources().getString(R.string.text_start_HLM));
+            profilePic.setVisibility(View.VISIBLE);
             profilePic.setProfileId(accessToken.getUserId());
             imageProfileHLM.setClickable(true);
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
+            profilePic.setVisibility(View.INVISIBLE);
             imageProfileHLM.setImageResource(R.drawable.no_user);
             imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(getResources().getString(R.string.text_sign_in));
             text_instruct.setText(null);
             btn_image.setVisibility(View.INVISIBLE);
             btn_start.setVisibility(View.GONE);
+
             boolean isDeleted = profileImageCheck.exists();
             if (isDeleted) {
                 try {
@@ -355,23 +360,44 @@ public class MainActivityFragment extends Fragment {
             Log.v(TAG, "File Deleted: " + isDeleted);
         }
     }
-    private void fireProfilePic (){
-        storageRef.child(user.getUid() + "/profile_pic/" + imageProfileFileName).getBytes(Long.MAX_VALUE).addOnSuccessListener(new OnSuccessListener<byte[]>() {
+    private void loadProfileDetails (Integer delayTime){
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onSuccess(byte[] bytes) {
-                // Use the bytes to display the image
-                Bitmap image = BitmapFactory.decodeByteArray(bytes,0,bytes.length);
-                ImageSaver saveBitmap = new ImageSaver();
-                saveBitmap.iSaveToInternalStorage(image, imageProfileFileName, getContext());
+            public void run() {
+                if (profile != null) {
+                    String welcomeText = getResources().getString(R.string.text_welcome) + profile.getFirstName();
+                    fb_welcome_text.setText(welcomeText);
+                }
+                if (profileImageCheck.exists()) {
+                    imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
+                } else {
+                    fireProfilePic();
+                }
             }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-                exception.printStackTrace();
-            }
-        });
+        }, delayTime);
     }
+    private void fireProfilePic (){
+        if (user != null) {
+            storageRef.child(user.getUid() + "/profile_pic/" + imageProfileFileName).getBytes(Long.MAX_VALUE)
+                    .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                        @Override
+                        public void onSuccess(byte[] bytes) {
+                            // Use the bytes to display the image
+                            Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            ImageSaver saveBitmap = new ImageSaver();
+                            saveBitmap.iSaveToInternalStorage(image, imageProfileFileName, getContext());
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle any errors
+                    exception.printStackTrace();
+                }
+            });
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

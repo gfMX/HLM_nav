@@ -65,8 +65,8 @@ public class ImageBrowserFragment extends Fragment {
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
-    List<String> refImages = new ArrayList<>();
-    List<String> refThumbs = new ArrayList<>();
+    //List<String> refImages = new ArrayList<>();
+    //List<String> refThumbs = new ArrayList<>();
 
     getFbPhotos fbPhotos = new getFbPhotos();
     getFirePhotos firePhotos = new getFirePhotos();
@@ -279,10 +279,10 @@ public class ImageBrowserFragment extends Fragment {
         firebaseThumbStorage = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
         firebaseImageStorage = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
 
-        Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
-        Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
+        //Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
+        //Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
 
-        System.out.println("Actual iteration: " + i);
+        //System.out.println("Actual iteration: " + i);
 
         //Get the thumbnails URLs from Firebase to show it on Image Browser:
         storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
@@ -345,7 +345,8 @@ public class ImageBrowserFragment extends Fragment {
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
                         }
                         if (imIdsSelected.size() > 0){
-                            Log.i(TAG, "Menu Item: " + item);
+                            //Am I using this 'if' for something?
+                            Log.i(TAG, "Menu Item: " + item); //This is null..
                             //item.setVisible(true);
                         }
                         imageAdapter.notifyDataSetChanged();

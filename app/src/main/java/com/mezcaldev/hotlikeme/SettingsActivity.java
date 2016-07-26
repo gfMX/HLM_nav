@@ -4,6 +4,7 @@ package com.mezcaldev.hotlikeme;
 import android.annotation.TargetApi;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.res.Configuration;
 import android.media.Ringtone;
 import android.media.RingtoneManager;
@@ -121,6 +122,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+
+        System.out.println("Shared Preferences: " + sharedPreferences.getAll());
+
+        if (sharedPreferences.getAll() != null){
+            if (sharedPreferences.contains("alias")){
+
+            }
+        }
     }
 
     /**
@@ -221,10 +231,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
         }
 
@@ -251,10 +257,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_data_sync);
             setHasOptionsMenu(true);
 
-            // Bind the summaries of EditText/List/Dialog/Ringtone preferences
-            // to their values. When their values change, their summaries are
-            // updated to reflect the new value, per the Android Design
-            // guidelines.
             bindPreferenceSummaryToValue(findPreference("sync_frequency"));
             bindPreferenceSummaryToValue(findPreference("sync_distance"));
         }

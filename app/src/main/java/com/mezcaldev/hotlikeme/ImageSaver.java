@@ -34,6 +34,7 @@ import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+import java.util.UUID;
 
 /**
  * Methods and functions for general use
@@ -159,13 +160,13 @@ public class ImageSaver {
             public void run() {
 
                 int imageNumber = existentImages + nUploads-1;
-                //String imageNumber = UUID.randomUUID().toString();
-                String fileName = "image" + (imageNumber) + ".jpg";
+                String uniqueID = UUID.randomUUID().toString();
+                String fileName = "image_" + uniqueID + ".jpg";
 
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
 
                 final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + imageNumber);
-                final DatabaseReference databaseRefURLImages = database.getReference(user.getUid() + "/URLImage/" + imageNumber);
+                //final DatabaseReference databaseRefURLImages = database.getReference(user.getUid() + "/URLImage/" + imageNumber);
 
                 UploadTask uploadTask;
 
@@ -205,10 +206,10 @@ public class ImageSaver {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                 //Log.i(TAG, "Download URL: " + downloadUrl);
                                 databaseReferenceImages.setValue(upImageRef.getPath());
-                                databaseRefURLImages.setValue(downloadUrl);
+                                //databaseRefURLImages.setValue(downloadUrl);
 
                                 String textNotification;
                                 if (nUploads>1){
@@ -251,13 +252,13 @@ public class ImageSaver {
             public void run() {
 
                 int imageNumber = existentImages + nUploads-1;
-                //String imageNumber = UUID.randomUUID().toString();
-                String fileName = "image" + (imageNumber) + ".jpg";
+                String uniqueID = UUID.randomUUID().toString();
+                String fileName = "thumb_" + uniqueID + ".jpg";
 
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
 
                 final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + imageNumber);
-                final DatabaseReference databaseRefURLThumbs = database.getReference(user.getUid() + "/URLThumb/" + imageNumber);
+                //final DatabaseReference databaseRefURLThumbs = database.getReference(user.getUid() + "/URLThumb/" + imageNumber);
 
                 UploadTask uploadTask;
 
@@ -292,10 +293,10 @@ public class ImageSaver {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                Uri downloadUrl = taskSnapshot.getDownloadUrl();
+                                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
                                 //Log.i(TAG, "Download URL: " + downloadUrl);
                                 databaseReferenceThumbs.setValue(upImageRef.getPath());
-                                databaseRefURLThumbs.setValue(downloadUrl);
+                                //databaseRefURLThumbs.setValue(downloadUrl);
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
@@ -341,6 +342,7 @@ public class ImageSaver {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
+                // We're working on this (:
                 StorageReference fileToDelete;
 
             }

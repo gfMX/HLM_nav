@@ -166,11 +166,17 @@ public class ImageBrowser extends AppCompatActivity {
             Log.i(TAG, "Delete");
             deleteList = ImageBrowserFragment.imIdsSelected;
             if (deleteList.size()>0){
+                Integer numberOfImages = deleteList.size();
+                String deleteText =
+                        getResources().getString(R.string.text_deleting_selected_images_1) +
+                        numberOfImages.toString() +
+                        getResources().getString(R.string.text_deleting_selected_images_2);
+
                 ImageSaver deleteImages = new ImageSaver();
                 deleteImages.DeleteImagesOnFire(deleteList);
 
                 Snackbar.make(getWindow().getDecorView(),
-                        getResources().getString(R.string.text_deleting_selected_images),
+                        deleteText,
                         Snackbar.LENGTH_LONG)
                         .setAction("Action", null)
                         .show();
