@@ -162,6 +162,7 @@ public class MainActivityFragment extends Fragment {
                         Toast.LENGTH_SHORT)
                         .show();
 
+                getFacebookDetails();
                 handleFacebookAccessToken(accessToken);
                 //updateUI(accessToken);
             }
@@ -285,7 +286,6 @@ public class MainActivityFragment extends Fragment {
                         fireRef = database.getReference(user.getUid() + "/preferences/name");
                         fireRef.setValue(user.getDisplayName());
 
-                        getFacebookDetails();
                         loadProfileDetails(delayTime);
 
                     } else {
@@ -402,48 +402,43 @@ public class MainActivityFragment extends Fragment {
         }
     }
     private void getFacebookDetails (){
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                GraphRequest request = GraphRequest.newMeRequest(
-                        accessToken,
-                        new GraphRequest.GraphJSONObjectCallback() {
-                            @Override
-                            public void onCompleted(JSONObject object, GraphResponse response) {
-                                try {
-                                    String gender = response.getJSONObject().get("gender").toString();
-                                    DatabaseReference databaseReference = database.getReference(user.getUid());
-                                    DatabaseReference databaseReferenceUsers= database.getReference();
 
-                                    databaseReference.child("/preferences/gender/").setValue(gender);
-                                    databaseReference.child("/groups").child(gender).setValue(true);
+        GraphRequest request = GraphRequest.newMeRequest(
+                accessToken,
+                new GraphRequest.GraphJSONObjectCallback() {
+                    @Override
+                    public void onCompleted(JSONObject object, GraphResponse response) {
+                        try {
+                            String gender = response.getJSONObject().get("gender").toString();
+                            DatabaseReference databaseReference = database.getReference(user.getUid());
+                            DatabaseReference databaseReferenceUsers= database.getReference();
 
-                                    if (gender.equalsIgnoreCase("male") || gender.equalsIgnoreCase("female")){
-                                        databaseReferenceUsers
-                                                .child("groups/")
-                                                .child(gender)
-                                                .child(user.getUid())
-                                                .setValue(true);
-                                    } else {
-                                        databaseReferenceUsers
-                                                .child("groups/other")
-                                                .child(user.getUid())
-                                                .setValue(true);
-                                    }
-                                    Log.i(TAG, "We got the gender: " + gender);
-                                } catch (JSONException e){
-                                    e.printStackTrace();
-                                }
+                            databaseReference.child("/preferences/gender/").setValue(gender);
+                            databaseReference.child("/groups").child(gender).setValue(true);
+
+                            if (gender.equalsIgnoreCase("male") || gender.equalsIgnoreCase("female")){
+                                databaseReferenceUsers
+                                        .child("groups/")
+                                        .child(gender)
+                                        .child(user.getUid())
+                                        .setValue(true);
+                            } else {
+                                databaseReferenceUsers
+                                        .child("groups/other")
+                                        .child(user.getUid())
+                                        .setValue(true);
                             }
-                        });
+                            Log.i(TAG, "We got the gender: " + gender);
+                        } catch (JSONException e){
+                            e.printStackTrace();
+                        }
+                    }
+                });
 
-                Bundle parameters = new Bundle();
-                parameters.putString("fields", "gender");
-                request.setParameters(parameters);
-                request.executeAsync();
-            }
-        });
-        thread.start();
+        Bundle parameters = new Bundle();
+        parameters.putString("fields", "gender");
+        request.setParameters(parameters);
+        request.executeAsync();
     }
 
     @Override
