@@ -33,6 +33,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -338,13 +339,54 @@ public class ImageSaver {
                 }
         );
     }
-    public void DeleteImagesOnFire (List <Integer> deleteList) {
+    public void DeleteImagesOnFire (final List <Integer> deleteList) {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-                // We're working on this (:
-                StorageReference fileToDelete;
+                List<String> imagesToDelete = new ArrayList<>();
+                List<String> thumbsToDelete = new ArrayList<>();
 
+                DatabaseReference imageReference = database.getReference().child(firebaseUser.getUid()).child("/images/");
+                DatabaseReference thumbReference = database.getReference().child(firebaseUser.getUid()).child("/images/thumbs");
+
+                System.out.println("Files to delete: " + deleteList);
+
+                for (int i = 0; i < deleteList.size(); i++){
+                    System.out.println("References: " + imageReference.child(String.valueOf(deleteList.get(i))));
+                }
+                // We're working on this (: It isn't ready yet!!
+                /*for (int i = 0; i < deleteList.size(); i++) {
+                    StorageReference deletetRefImage = storageRef
+                            .child(firebaseUser.getUid())
+                            .child("images/")
+                            .child(deleteList.get(i).toString());
+                    final StorageReference deletetRefThumb = storageRef
+                            .child(firebaseUser.getUid())
+                            .child("images/thumbs/")
+                            .child(deleteList.get(i).toString());
+
+                    deletetRefImage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                        @Override
+                        public void onSuccess(Void aVoid) {
+                            deletetRefThumb.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                                @Override
+                                public void onSuccess(Void aVoid) {
+
+                                }
+                            }).addOnFailureListener(new OnFailureListener() {
+                                @Override
+                                public void onFailure(@NonNull Exception exception) {
+                                    // Uh-oh, an error occurred!
+                                }
+                            });
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            // Uh-oh, an error occurred!
+                        }
+                    });
+                }*/
             }
         });
         thread.start();
