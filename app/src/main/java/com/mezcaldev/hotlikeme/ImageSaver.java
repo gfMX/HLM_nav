@@ -86,7 +86,7 @@ public class ImageSaver {
         try {
             fOut = new FileOutputStream(imPath);
             // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmapImage.compress(Bitmap.CompressFormat.PNG, 100, fOut);
+            bitmapImage.compress(Bitmap.CompressFormat.JPEG, compressRatio, fOut);
             fOut.close();
         } catch (Exception e) {
             e.printStackTrace();

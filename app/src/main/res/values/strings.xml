@@ -33,32 +33,20 @@
     <string name="pref_title_display_name">Display name:</string>
     <string name="pref_default_display_name">Your display name here</string>
 
-    <string name="pref_title_gender">Your Gender:</string>
-    <string-array name="pref_gender">
-        <item>Female</item>
-        <item>Male</item>
-        <item>Other</item>
-        <item>Please choose</item>
-    </string-array>
-    <string-array name="pref_gender_values">
-        <item>1</item>
-        <item>0</item>
-        <item>-1</item>
-        <item>-2</item>
-    </string-array>
-
     <string name="pref_title_looking_for">Looking for:</string>
     <string-array name="pref_looking_for_titles">
         <item>Females</item>
         <item>Males</item>
         <item>Both</item>
         <item>Other</item>
+        <item>Please choose</item>
     </string-array>
     <string-array name="pref_looking_for_values">
-        <item>1</item>
-        <item>0</item>
-        <item>-1</item>
-        <item>-2</item>
+        <item>females</item>
+        <item>males</item>
+        <item>both</item>
+        <item>other</item>
+        <item>not defined</item>
     </string-array>
 
     <string name="pref_title_description">A little description about you:</string>
@@ -90,7 +78,7 @@
         <item>60</item>
         <item>180</item>
         <item>360</item>
-        <item>-1</item>
+        <item>0</item>
     </string-array>
 
     <string name="pref_title_discovery_distance">Discovery Distance:</string>

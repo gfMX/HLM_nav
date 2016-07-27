@@ -22,6 +22,10 @@ import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.MenuItem;
 
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import java.util.List;
 
 /**
@@ -36,6 +40,11 @@ import java.util.List;
  * API Guide</a> for more information on developing a Settings UI.
  */
 public class SettingsActivity extends AppCompatPreferenceActivity {
+
+    FirebaseUser firebaseUser = MainActivityFragment.user;
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference databaseReference = database.getReference(firebaseUser.getUid());
+
     /**
      * A preference value change listener that updates the preference's summary
      * to reflect its new value.
@@ -127,9 +136,22 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         System.out.println("Shared Preferences: " + sharedPreferences.getAll());
 
         if (sharedPreferences.getAll() != null){
-            if (sharedPreferences.contains("alias")){
+            databaseReference.child("/preferences/alias/")
+                    .setValue(sharedPreferences.getString("alias", "None"));
 
-            }
+            databaseReference.child("/preferences/description/")
+                    .setValue(sharedPreferences.getString("description", "None"));
+            databaseReference.child("/preferences/looking_for/")
+                    .setValue(sharedPreferences.getString("looking_for", "Not specified"));
+            databaseReference.child("/preferences/sync_freq/")
+                    .setValue(sharedPreferences.getString("sync_frequency", "0"));
+            databaseReference.child("/preferences/sync_distance/")
+                    .setValue(sharedPreferences.getString("sync_distance", "100"));
+
+            databaseReference.child("/preferences/visible/")
+                    .setValue(sharedPreferences.getBoolean("visible_switch", true));
+            databaseReference.child("/preferences/gps_enabled/")
+                    .setValue(sharedPreferences.getBoolean("gps_enabled", true));
         }
     }
 
@@ -202,7 +224,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             // guidelines.
 
             bindPreferenceSummaryToValue(findPreference("alias"));
-            bindPreferenceSummaryToValue(findPreference("gender"));
             bindPreferenceSummaryToValue(findPreference("looking_for"));
             bindPreferenceSummaryToValue(findPreference("description"));
         }
@@ -231,7 +252,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             addPreferencesFromResource(R.xml.pref_notification);
             setHasOptionsMenu(true);
 
-            bindPreferenceSummaryToValue(findPreference("notifications_new_message_ringtone"));
+            bindPreferenceSummaryToValue(findPreference("notifications_new_discovery_ringtone"));
         }
 
         @Override

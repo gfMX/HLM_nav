@@ -24,16 +24,7 @@
          dismiss it. -->
     <!-- NOTE: ListPreference's summary should be set to its value by the activity code. -->
     <ListPreference
-        android:defaultValue="-2"
-        android:entries="@array/pref_gender"
-        android:entryValues="@array/pref_gender_values"
-        android:key="gender"
-        android:negativeButtonText="@null"
-        android:positiveButtonText="@null"
-        android:title="@string/pref_title_gender" />
-
-    <ListPreference
-        android:defaultValue="-1"
+        android:defaultValue="Not defined"
         android:entries="@array/pref_looking_for_titles"
         android:entryValues="@array/pref_looking_for_values"
         android:key="looking_for"
