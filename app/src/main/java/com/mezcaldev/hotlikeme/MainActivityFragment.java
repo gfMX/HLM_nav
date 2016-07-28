@@ -78,6 +78,7 @@ public class MainActivityFragment extends Fragment {
     private TextView text_instruct;
     private Button btn_image;
     private Button btn_start;
+    private Button btn_settings;
 
     //Firebase
     static FirebaseUser user;
@@ -143,6 +144,7 @@ public class MainActivityFragment extends Fragment {
 
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
         btn_start = (Button) view.findViewById(R.id.btn_start);
+        btn_settings = (Button) view.findViewById(R.id.btn_settings);
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
 
 
@@ -162,7 +164,6 @@ public class MainActivityFragment extends Fragment {
                         Toast.LENGTH_SHORT)
                         .show();
 
-                getFacebookDetails();
                 handleFacebookAccessToken(accessToken);
                 //updateUI(accessToken);
             }
@@ -185,11 +186,14 @@ public class MainActivityFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
+
         btn_image.setTransformationMethod(null);
         btn_start.setTransformationMethod(null);
+        btn_settings.setTransformationMethod(null);
         //Button behavior
         btn_image.setOnClickListener(settingsButtons);
         btn_start.setOnClickListener(settingsButtons);
+        btn_settings.setOnClickListener(settingsButtons);
 
         //Image Profile Behavior
         imageProfileHLM.isClickable();
@@ -216,6 +220,11 @@ public class MainActivityFragment extends Fragment {
                   Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                           Toast.LENGTH_LONG).show();
                   startActivity(new Intent(getActivity(), HLMActivity.class));
+                  break;
+              case R.id.btn_settings:
+                  Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
+                          Toast.LENGTH_LONG).show();
+                  startActivity(new Intent(getActivity(), SettingsActivity.class));
                   break;
               case R.id.hlm_image:
                   Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
@@ -247,16 +256,20 @@ public class MainActivityFragment extends Fragment {
                     // Set the access token using.
                     // currentAccessToken when it's loaded or set.
                     //If the User is logged in, display the options for the user.
-                    updateUI(currentAccessToken);
                     if (currentAccessToken == null){
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_see_you_soon),
                                 Toast.LENGTH_SHORT).show();
+
+                        FirebaseAuth.getInstance().signOut();
+                        Log.i(TAG, "Firebase: " + FirebaseAuth.getInstance().toString());
+
                     } else {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_welcome_again),
                                 Toast.LENGTH_SHORT).show();
                     }
+                    updateUI(currentAccessToken);
                 }
             };
             profileTracker = new ProfileTracker() {
@@ -285,14 +298,14 @@ public class MainActivityFragment extends Fragment {
                         //Stores references needed by the App on Firebase:
                         fireRef = database.getReference(user.getUid() + "/preferences/name");
                         fireRef.setValue(user.getDisplayName());
-
-                        loadProfileDetails(delayTime);
-
+                        if (accessToken!=null) {
+                            loadProfileDetails(delayTime);
+                        }
                     } else {
                         // User signed out
-                        Log.d(TAG, "Firebase: Signed Out: ");
+                        Log.d(TAG, "Firebase: Signed Out");
                     }
-                    //Update UI
+                    //UpdateUI
                     updateUI(accessToken);
                 }
             };
@@ -323,7 +336,8 @@ public class MainActivityFragment extends Fragment {
                             Toast.makeText(getActivity(), "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
-                        // ...
+
+                        getFacebookDetails();
                     }
                 });
     }
@@ -331,8 +345,7 @@ public class MainActivityFragment extends Fragment {
     //UI Status Updater
     private void updateUI (AccessToken accessToken) {
         //Update UI Elements according to the Given Token
-        if (accessToken != null){
-
+        if (accessToken != null && user != null){
             fb_welcome_text.setText(getResources().getString(R.string.text_welcome));
 
             loadProfileDetails(minDelayTime);
@@ -343,15 +356,18 @@ public class MainActivityFragment extends Fragment {
             imageProfileHLM.setClickable(true);
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
+            btn_settings.setVisibility(View.GONE);
         } else {
+
             profilePic.setProfileId(null);
             profilePic.setVisibility(View.INVISIBLE);
             imageProfileHLM.setImageResource(R.drawable.no_user);
             imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(getResources().getString(R.string.text_sign_in));
             text_instruct.setText(null);
-            btn_image.setVisibility(View.INVISIBLE);
+            btn_image.setVisibility(View.GONE);
             btn_start.setVisibility(View.GONE);
+            btn_settings.setVisibility(View.GONE);
 
             boolean isDeleted = profileImageCheck.exists();
             if (isDeleted) {

@@ -35,20 +35,20 @@
         android:id="@+id/hlm_image"
         android:src="@drawable/no_user"
         android:visibility="visible"
-        android:layout_width="165dp"
-        android:layout_height="165dp"
-        android:layout_above="@+id/btn_choose_img"
+        android:layout_width="220dp"
+        android:layout_height="220dp"
+        android:layout_below="@+id/fb_image"
         android:layout_centerHorizontal="true"
-        android:layout_marginBottom="5dp"
+        android:layout_margin="10dp"
         android:contentDescription="@string/text_profile_pic" />
 
     <Button
         android:text="@string/btn_choose_img"
-        android:visibility="invisible"
+        android:visibility="gone"
         android:layout_width="182dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:layout_centerVertical="true"
+        android:layout_below="@id/hlm_image"
         android:layout_centerHorizontal="true"
         android:id="@+id/btn_choose_img" />
 
@@ -61,11 +61,20 @@
         android:layout_below="@+id/btn_choose_img"
         android:layout_centerHorizontal="true" />
 
+    <Button
+        android:text="@string/btn_settings"
+        android:visibility="gone"
+        android:layout_width="182dp"
+        android:layout_height="wrap_content"
+        android:id="@+id/btn_settings"
+        android:layout_below="@+id/btn_start"
+        android:layout_centerHorizontal="true" />
+
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button"
         android:layout_width="176dp"
         android:layout_height="wrap_content"
-        android:layout_below="@+id/btn_start"
+        android:layout_below="@+id/btn_settings"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="4dp"/>
 
