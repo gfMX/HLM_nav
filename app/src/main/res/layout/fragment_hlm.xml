@@ -9,5 +9,12 @@
     tools:context="com.mezcaldev.hotlikeme.HLMActivityFragment"
     tools:showIn="@layout/activity_hlm">
 
+<ImageView
+    android:id="@+id/user_profile_images"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_margin="15dp"
+    android:layout_centerVertical="true"
+    android:layout_centerHorizontal="true"/>
 
 </RelativeLayout>

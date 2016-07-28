@@ -127,6 +127,8 @@ public class ImageSaver {
             @Override
             public void onFailure(@NonNull Exception exception) {
                 // Handle unsuccessful uploads
+                exception.printStackTrace();
+
             }
 
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
