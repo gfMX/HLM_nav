@@ -70,6 +70,8 @@ public class MainActivityFragment extends Fragment {
     static ProfileTracker profileTracker;
     String profileName;
     String welcomeText;
+    String instructionText;
+    String signInText;
 
     //UI Elements
     static String imageProfileFileName = "profile_im.jpg";
@@ -149,6 +151,8 @@ public class MainActivityFragment extends Fragment {
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
 
         welcomeText = getResources().getString(R.string.text_welcome);
+        instructionText = getResources().getString(R.string.text_start_HLM);
+        signInText = getResources().getString(R.string.text_sign_in);
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile", "user_photos");
@@ -352,7 +356,7 @@ public class MainActivityFragment extends Fragment {
 
             loadProfileDetails(minDelayTime);
 
-            text_instruct.setText(getResources().getString(R.string.text_start_HLM));
+            text_instruct.setText(instructionText);
             profilePic.setVisibility(View.VISIBLE);
             profilePic.setProfileId(accessToken.getUserId());
             imageProfileHLM.setClickable(true);
@@ -364,7 +368,7 @@ public class MainActivityFragment extends Fragment {
             profilePic.setVisibility(View.INVISIBLE);
             imageProfileHLM.setImageResource(R.drawable.no_user);
             imageProfileHLM.setClickable(false);
-            fb_welcome_text.setText(getResources().getString(R.string.text_sign_in));
+            fb_welcome_text.setText(signInText);
             text_instruct.setText(null);
             btn_image.setVisibility(View.GONE);
             btn_start.setVisibility(View.GONE);

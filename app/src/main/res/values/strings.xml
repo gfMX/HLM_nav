@@ -35,15 +35,15 @@
 
     <string name="pref_title_looking_for">Looking for:</string>
     <string-array name="pref_looking_for_titles">
-        <item>Females</item>
-        <item>Males</item>
+        <item>Girls</item>
+        <item>Boys</item>
         <item>Both</item>
         <item>Other</item>
         <item>Please choose</item>
     </string-array>
     <string-array name="pref_looking_for_values">
-        <item>females</item>
-        <item>males</item>
+        <item>female</item>
+        <item>male</item>
         <item>both</item>
         <item>other</item>
         <item>not defined</item>
@@ -133,7 +133,7 @@
     <string name="text_settings_activity">your display name, synchronization options, and more</string>
     <string name="text_start_HLM">
         Please choose a few of your images for Hot Like Me. After that, click on your image profile
-        to change it for one of your choice. \n\nThank you!
+        to change it for one of your choice.
     </string>
     <string name="text_uploading">Uploading&#160;</string>
     <string name="text_image_uploaded">Image uploaded</string>
