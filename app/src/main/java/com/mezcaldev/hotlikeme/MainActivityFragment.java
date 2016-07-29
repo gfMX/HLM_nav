@@ -68,6 +68,8 @@ public class MainActivityFragment extends Fragment {
     static AccessTokenTracker accessTokenTracker;
     static Profile profile;
     static ProfileTracker profileTracker;
+    String profileName;
+    String welcomeText;
 
     //UI Elements
     static String imageProfileFileName = "profile_im.jpg";
@@ -165,7 +167,6 @@ public class MainActivityFragment extends Fragment {
                         .show();
 
                 handleFacebookAccessToken(accessToken);
-                //updateUI(accessToken);
             }
 
             @Override
@@ -284,6 +285,8 @@ public class MainActivityFragment extends Fragment {
             accessTokenTracker.startTracking();
 
             profile = Profile.getCurrentProfile();
+            profileName = profile.getFirstName();
+            welcomeText = getResources().getString(R.string.text_welcome) + profileName;
             profileTracker.startTracking();
 
             //Auth Listener
@@ -336,7 +339,6 @@ public class MainActivityFragment extends Fragment {
                             Toast.makeText(getActivity(), "Authentication failed.",
                                     Toast.LENGTH_SHORT).show();
                         }
-
                         getFacebookDetails();
                     }
                 });
@@ -358,7 +360,6 @@ public class MainActivityFragment extends Fragment {
             btn_start.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.GONE);
         } else {
-
             profilePic.setProfileId(null);
             profilePic.setVisibility(View.INVISIBLE);
             imageProfileHLM.setImageResource(R.drawable.no_user);
@@ -385,8 +386,7 @@ public class MainActivityFragment extends Fragment {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (profile != null) {
-                    String welcomeText = getResources().getString(R.string.text_welcome) + profile.getFirstName();
+                if (profile != null && welcomeText != null) {
                     fb_welcome_text.setText(welcomeText);
                 }
                 if (profileImageCheck.exists()) {
