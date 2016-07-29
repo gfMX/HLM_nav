@@ -224,7 +224,7 @@ public class MainActivityFragment extends Fragment {
               case R.id.btn_start:
                   Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                           Toast.LENGTH_LONG).show();
-                  startActivity(new Intent(getActivity(), HLMActivity.class));
+                  startActivity(new Intent(getActivity(), HLMSlidePagerActivity.class));
                   break;
               case R.id.btn_settings:
                   Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),

@@ -55,8 +55,8 @@
                 android:value="MainActivity" />
         </activity>
         <activity
-            android:name=".HLMActivity"
-            android:label="@string/title_activity_hlm"
+            android:name=".HLMSlidePagerActivity"
+            android:label="@string/title_activity_pager_hlm"
             android:parentActivityName=".MainActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data

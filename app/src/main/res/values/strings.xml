@@ -3,6 +3,7 @@
     <string name="image_selected_title">Image Selected</string>
     <string name="image_container">Container for images on GridView</string>
     <string name="title_activity_image_browser">Image Browser</string>
+    <string name="title_activity_pager_hlm">HLM Browser</string>
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
