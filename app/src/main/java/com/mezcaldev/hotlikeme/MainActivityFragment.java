@@ -109,7 +109,6 @@ public class MainActivityFragment extends Fragment {
         Context context = getContext();
         File pathP = (new ContextWrapper(context).getDir("imageDir", Context.MODE_PRIVATE));
         pathProfileImage = pathP.getAbsolutePath();
-        //Log.i(TAG, "Path obtained: " + pathP.getAbsolutePath());
 
         //Initialize Firebase
         database = FirebaseDatabase.getInstance();
@@ -137,7 +136,7 @@ public class MainActivityFragment extends Fragment {
         callbackManager = CallbackManager.Factory.create();
 
         profileImageCheck = new File(pathProfileImage + "/" + imageProfileFileName);
-        Log.i(TAG, "Profile check path: " + profileImageCheck.getAbsolutePath());
+        //Log.i(TAG, "Profile check path: " + profileImageCheck.getAbsolutePath());
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -149,6 +148,7 @@ public class MainActivityFragment extends Fragment {
         btn_settings = (Button) view.findViewById(R.id.btn_settings);
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
 
+        welcomeText = getResources().getString(R.string.text_welcome);
 
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile", "user_photos");
@@ -348,7 +348,7 @@ public class MainActivityFragment extends Fragment {
     private void updateUI (AccessToken accessToken) {
         //Update UI Elements according to the Given Token
         if (accessToken != null && user != null){
-            fb_welcome_text.setText(getResources().getString(R.string.text_welcome));
+            fb_welcome_text.setText(welcomeText);
 
             loadProfileDetails(minDelayTime);
 
@@ -386,7 +386,7 @@ public class MainActivityFragment extends Fragment {
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-                if (profile != null && welcomeText != null) {
+                if (profile != null) {
                     fb_welcome_text.setText(welcomeText);
                 }
                 if (profileImageCheck.exists()) {
