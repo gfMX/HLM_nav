@@ -393,5 +393,36 @@ public class ImageSaver {
         });
         thread.start();
     }
+    public void getUriProfilePics (String gender){
+        final List <String> users = new ArrayList<>();
+
+        DatabaseReference databaseReference = database.getReference().child("groups").child("male");
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+              int numChildren = (int) dataSnapshot.getChildrenCount();
+
+                String string = dataSnapshot.getValue().toString();
+                System.out.println("Number of users: " + numChildren);
+                System.out.println("Original value: " + string);
+
+                for (DataSnapshot data: dataSnapshot.getChildren()){
+                    System.out.println("Bah: " + data.getKey());
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+        if (gender.equalsIgnoreCase("male")){
+
+        } else if (gender.equalsIgnoreCase("female")){
+
+        } else{
+
+        }
+    }
 
 }

@@ -1,7 +1,9 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
@@ -16,14 +18,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     //The number of pages (wizard steps) to show in this demo.
     private static final int NUM_PAGES = 5;
 
-    /**
-     * The pager widget, which handles animation and allows swiping horizontally to access previous
-     * and next wizard steps.
-     */
-    private ViewPager mPager;
 
-    //The pager adapter, which provides the pages to the view pager widget.
+    private ViewPager mPager;
     PagerAdapter mPagerAdapter;
+    ImageSaver uriProfiles = new ImageSaver();
 
 
 
@@ -37,6 +35,12 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
+
+        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String gender = sharedPreferences.getString("looking_for", "Not specified");
+        System.out.println("Looking for: " + gender);
+
+        uriProfiles.getUriProfilePics(gender);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
