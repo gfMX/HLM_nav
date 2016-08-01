@@ -143,12 +143,32 @@ public class ImageSaver {
         });
     }
 
-    public void iUploadImagesToFirebase(final List<String> path,
+    public void uploadToFirebase (List<String> listImages,
+                                  List<String> listThumbs,
+                                  FirebaseUser user,
+                                  Context context,
+                                  int nUploads,
+                                  int existentImages){
+
+        String pathImages = "/images/";
+        String pathThumbs = "/images/thumbs/";
+
+        String uniqueID = UUID.randomUUID().toString();
+        String uID = uniqueID;
+
+        iUploadImagesToFirebase(listImages, listThumbs, user, context, nUploads, pathImages, existentImages, uID);
+        iUploadThumbsToFirebase(listThumbs, user, nUploads, pathThumbs, existentImages, uID);
+
+    }
+
+    public void iUploadImagesToFirebase(final List<String> pathImages,
+                                        final List<String> pathThumbs,
                                         final FirebaseUser user,
                                         final Context context,
                                         final int nUploads,
                                         final String bPath,
-                                        final int existentImages){
+                                        final int existentImages,
+                                        final String uniqueID){
 
         final NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(context.getApplicationContext())
@@ -163,7 +183,6 @@ public class ImageSaver {
             public void run() {
 
                 int imageNumber = existentImages + nUploads-1;
-                String uniqueID = UUID.randomUUID().toString();
                 String fileName = "image_" + uniqueID + ".jpg";
 
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
@@ -175,7 +194,7 @@ public class ImageSaver {
 
 
                 try {
-                    URL image = new URL(path.get(nUploads-1));
+                    URL image = new URL(pathImages.get(nUploads-1));
                     //Log.i(TAG, "New URL: " + image);
                     try {
 
@@ -193,10 +212,8 @@ public class ImageSaver {
                             @Override
                             public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
                                 double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                                if (bPath.equals(ImageBrowser.pathImages)) {
-                                    mBuilder.setProgress(100, (int) progress, false);
-                                    notificationManager.notify(1, mBuilder.build());
-                                }
+                                mBuilder.setProgress(100, (int) progress, false);
+                                notificationManager.notify(1, mBuilder.build());
                                 System.out.println("Upload is " + progress + "% done");
                             }
                         }).addOnFailureListener(new OnFailureListener() {
@@ -208,9 +225,6 @@ public class ImageSaver {
                         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                                //Log.i(TAG, "Download URL: " + downloadUrl);
                                 databaseReferenceImages.setValue(upImageRef.getPath());
                                 //databaseRefURLImages.setValue(downloadUrl);
 
@@ -228,7 +242,7 @@ public class ImageSaver {
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
-                                    iUploadImagesToFirebase(path, user, context, newUploads, bPath, existentImages);
+                                    uploadToFirebase(pathImages, pathThumbs, user, context, newUploads, existentImages);
                                 } else {
                                     Log.i(TAG, "Images: All done!");
                                 }
@@ -248,14 +262,14 @@ public class ImageSaver {
                                         final FirebaseUser user,
                                         final int nUploads,
                                         final String bPath,
-                                        final int existentImages){
+                                        final int existentImages,
+                                        final String uniqueID){
 
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
 
                 int imageNumber = existentImages + nUploads-1;
-                String uniqueID = UUID.randomUUID().toString();
                 String fileName = "thumb_" + uniqueID + ".jpg";
 
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
@@ -295,15 +309,11 @@ public class ImageSaver {
                         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                                //Log.i(TAG, "Download URL: " + downloadUrl);
                                 databaseReferenceThumbs.setValue(upImageRef.getPath());
-                                //databaseRefURLThumbs.setValue(downloadUrl);
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
-                                    iUploadThumbsToFirebase(path, user, newUploads, bPath, existentImages);
+                                    //iUploadThumbsToFirebase(path, user, newUploads, bPath, existentImages, uniqueID);
                                 } else {
                                     Log.i(TAG, "Thumbs: All done!");
                                 }
@@ -407,7 +417,7 @@ public class ImageSaver {
                 System.out.println("Original value: " + string);
 
                 for (DataSnapshot data: dataSnapshot.getChildren()){
-                    System.out.println("Bah: " + data.getKey());
+                    System.out.println("User: " + data.getKey());
                 }
             }
 

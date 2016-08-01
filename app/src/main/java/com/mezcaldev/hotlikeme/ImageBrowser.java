@@ -24,8 +24,6 @@ import java.util.List;
 
 public class ImageBrowser extends AppCompatActivity {
 
-    static String pathImages = "/images/";
-    static String pathThumbs = "/images/thumbs/";
     final static String TAG = "IB: ";
 
     FirebaseUser fireUser;
@@ -98,20 +96,20 @@ public class ImageBrowser extends AppCompatActivity {
                                     }
 
                                     ImageSaver uploadImages = new ImageSaver();
-                                    uploadImages.iUploadImagesToFirebase(
+                                    uploadImages.uploadToFirebase(
                                             uploadUrls,
+                                            uploadTiny,
                                             fireUser,
                                             getApplicationContext(),
                                             uploadUrls.size(),
-                                            pathImages,
                                             imagesOnFirebase);
-                                    ImageSaver uploadThumbs = new ImageSaver();
+                                   /* ImageSaver uploadThumbs = new ImageSaver();
                                     uploadThumbs.iUploadThumbsToFirebase(
                                             uploadTiny,
                                             fireUser,
                                             uploadTiny.size(),
                                             pathThumbs,
-                                            imagesOnFirebase);
+                                            imagesOnFirebase);*/
 
                                 }
 

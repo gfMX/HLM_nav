@@ -276,40 +276,56 @@ public class ImageBrowserFragment extends Fragment {
         //DataSnapshot temp1 = dataSnapshot.child("thumbs").getValue();
         //System.out.println("Childrens: " + dataSnapshot.child("thumbs").getValue());
 
-        firebaseThumbStorage = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
-        firebaseImageStorage = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+        //firebaseThumbStorage = dataSnapshot.child("thumbs").child(String.valueOf(i)).getValue().toString();
+        //firebaseImageStorage = dataSnapshot.child("images").child(String.valueOf(i)).getValue().toString();
+        
 
-        //Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
-        //Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
 
-        //System.out.println("Actual iteration: " + i);
+        //for (DataSnapshot data0: dataSnapshot.getChildren()){
+        System.out.println("Sons: " + dataSnapshot.getChildren());
+        //}
 
-        //Get the thumbnails URLs from Firebase to show it on Image Browser:
-        storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+        DataSnapshot snapImages = dataSnapshot.child("images");
+        for (DataSnapshot data: snapImages.getChildren()) {
+            //System.out.println("Data from images: " + data);
+
+
+            firebaseImageStorage = data.getValue().toString();
+            //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
+            storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    //Log.i(TAG, "Uri Image: " + i + ": " + uri);
+                    imImages.add(uri.toString());
+                    //photoSelectionFire();
+                            /*if (i > 0) {
+                                uriFromFirebase((i - 1), dataSnapshot);
+                            }*/
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    // Handle any errors
+                    Log.w(TAG, "Something went wrong getting the Full Image.");
+                    exception.printStackTrace();
+                }
+            });
+        }
+
+        DataSnapshot snapThumbs = dataSnapshot.child("thumbs");
+        for (DataSnapshot data: snapThumbs.getChildren()){
+            firebaseThumbStorage = data.getValue().toString();
+            //Log.i(TAG,"Data " + dataSnapshot.child("images").getValue().toString());
+            //Log.i(TAG,"Total: " + dataSnapshot.child("images").getChildrenCount());
+
+            //System.out.println("Actual iteration: " + i);
+
+            //Get the thumbnails URLs from Firebase to show it on Image Browser:
+            storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
                     //Log.i(TAG, "Uri thumbnail " + i + ": " + uri);
                     imUrls.add(uri.toString());
-
-                    //Get the Full Res Images URL from Firebase to show it on click and set it as Profile Pic
-                    storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            //Log.i(TAG, "Uri Image: " + i + ": " + uri);
-                            imImages.add(uri.toString());
-                            photoSelectionFire();
-                            if (i > 0) {
-                                uriFromFirebase((i - 1), dataSnapshot);
-                            }
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            // Handle any errors
-                            Log.w(TAG, "Something went wrong getting the Full Image.");
-                            exception.printStackTrace();
-                        }
-                    });
 
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -320,7 +336,8 @@ public class ImageBrowserFragment extends Fragment {
                     exception.printStackTrace();
                 }
             });
-        //}
+        }
+        //photoSelectionFire();
     }
     public void photoSelectionFire (){
         try {
