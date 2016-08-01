@@ -9,12 +9,9 @@ import android.view.MenuItem;
 
 public class MainActivity extends AppCompatActivity {
 
-    static MenuItem settings_menu;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //AppEventsLogger.activateApp(this);
 
         setContentView(R.layout.activity_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);

@@ -1,9 +1,9 @@
 <resources>
-    <string name="app_name">Hot Like Me</string>
+    <string name="app_name">HotLikeMe</string>
     <string name="image_selected_title">Image Selected</string>
     <string name="image_container">Container for images on GridView</string>
     <string name="title_activity_image_browser">Image Browser</string>
-    <string name="title_activity_pager_hlm">HLM Browser</string>
+    <string name="title_activity_pager_hlm">HotLikeMe</string>
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
@@ -144,4 +144,8 @@
     </string>
     <string name="text_deleting_selected_images_1">Deleting&#160;</string>
     <string name="text_deleting_selected_images_2">&#160;images&#8230;</string>
+    <string name="text_slide">
+        Sample text for slide pages.\nHere will see the user profile pics.
+    </string>
+    <string name="text_hlm_users">Profile pics of HotLikeMe Users</string>
 </resources>
