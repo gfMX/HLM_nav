@@ -81,7 +81,6 @@ public class HLMPageFragment extends Fragment {
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                     @Override
                     public void onSuccess(byte[] bytes) {
-                        // Use the bytes to display the image
                         Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                         //ImageSaver saveBitmap = new ImageSaver();
                         //saveBitmap.iSaveToInternalStorage(image, imageProfileTemp, getContext());
