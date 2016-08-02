@@ -45,6 +45,9 @@ public class ImageSaver {
     private final String TAG = "Image record: ";
     final Integer compressRatio = 85;
 
+    String pathImages = "/images/";
+    String pathThumbs = "/images/thumbs/";
+
     final FirebaseUser firebaseUser = MainActivityFragment.user;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage  storage = FirebaseStorage.getInstance();
@@ -149,9 +152,6 @@ public class ImageSaver {
                                   Context context,
                                   int nUploads){
 
-        String pathImages = "/images/";
-        String pathThumbs = "/images/thumbs/";
-
         String uniqueID = UUID.randomUUID().toString();
 
         iUploadThumbsToFirebase(listThumbs, user, nUploads, pathThumbs, uniqueID);
@@ -178,7 +178,8 @@ public class ImageSaver {
             @Override
             public void run() {
 
-                String fileName = "image_" + uniqueID + ".jpg";
+                String fName = "image_" + uniqueID;
+                String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
                 final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + uniqueID);
 
@@ -260,7 +261,8 @@ public class ImageSaver {
             @Override
             public void run() {
 
-                String fileName = "thumb_" + uniqueID + ".jpg";
+                String fName = "thumb_" + uniqueID;
+                String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
                 final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + uniqueID);
 
@@ -297,13 +299,6 @@ public class ImageSaver {
                             @Override
                             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                                 databaseReferenceThumbs.setValue(upImageRef.getPath());
-
-                                if (nUploads>1){
-                                    int newUploads = nUploads - 1;
-                                    //iUploadThumbsToFirebase(path, user, newUploads, bPath, existentImages, uniqueID);
-                                } else {
-                                    Log.i(TAG, "Thumbs: All done!");
-                                }
                             }
                         });
                     } catch (IOException e) {
@@ -345,15 +340,15 @@ public class ImageSaver {
                 List<String> imagesToDelete = new ArrayList<>();
                 List<String> thumbsToDelete = new ArrayList<>();
 
-                DatabaseReference imageReference = database.getReference().child(firebaseUser.getUid()).child("/images/");
-                DatabaseReference thumbReference = database.getReference().child(firebaseUser.getUid()).child("/images/thumbs");
+                DatabaseReference imageReference = database.getReference().child(firebaseUser.getUid()).child(pathImages);
+                DatabaseReference thumbReference = database.getReference().child(firebaseUser.getUid()).child(pathThumbs);
 
-                System.out.println("Files to delete: " + deleteList);
+                System.out.println("Positions to delete: " + deleteList);
 
                 for (int i = 0; i < deleteList.size(); i++){
                     System.out.println("References: " + imageReference.child(String.valueOf(deleteList.get(i))));
                 }
-                // We're working on this (: It isn't ready yet!!
+                // On the works
                 /*for (int i = 0; i < deleteList.size(); i++) {
                     StorageReference deletetRefImage = storageRef
                             .child(firebaseUser.getUid())
@@ -389,37 +384,6 @@ public class ImageSaver {
             }
         });
         thread.start();
-    }
-    public void getUriProfilePics (String gender){
-        final List <String> users = new ArrayList<>();
-
-        DatabaseReference databaseReference = database.getReference().child("groups").child("male");
-        databaseReference.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-              int numChildren = (int) dataSnapshot.getChildrenCount();
-
-                String string = dataSnapshot.getValue().toString();
-                System.out.println("Number of users: " + numChildren);
-                System.out.println("Original value: " + string);
-
-                for (DataSnapshot data: dataSnapshot.getChildren()){
-                    System.out.println("User: " + data.getKey());
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-        if (gender.equalsIgnoreCase("male")){
-
-        } else if (gender.equalsIgnoreCase("female")){
-
-        } else{
-
-        }
     }
 
 }

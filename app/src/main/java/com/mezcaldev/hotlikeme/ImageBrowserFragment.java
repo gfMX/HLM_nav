@@ -56,6 +56,7 @@ public class ImageBrowserFragment extends Fragment {
     String firebaseThumbStorage;
     String firebaseImageStorage;
     List<String> imageKeyList = new ArrayList<>();
+    List<String> thumbKeyList = new ArrayList<>();
 
     //Internal parameters
     private GridView gridView;
@@ -255,20 +256,24 @@ public class ImageBrowserFragment extends Fragment {
     }
     private void imagesFromFire (int uriLength, final DataSnapshot dataSnapshot){
         DataSnapshot snapImages = dataSnapshot.child("images");
-
         for (DataSnapshot data: snapImages.getChildren()) {
             imageKeyList.add(data.getKey());
         }
-        uriFromFirebase(imageKeyList.size(), dataSnapshot, imageKeyList);
+        DataSnapshot snapThumbs = dataSnapshot.child("thumbs");
+        for (DataSnapshot data: snapThumbs.getChildren()) {
+            thumbKeyList.add(data.getKey());
+        }
+        uriFromFirebase(imageKeyList.size(), dataSnapshot, imageKeyList, thumbKeyList);
     }
-    private void uriFromFirebase(final int uriLength, final DataSnapshot dataSnapshot, final List<String> keyList){
+    private void uriFromFirebase(final int uriLength, final DataSnapshot dataSnapshot, final List<String> imageList, final List<String> thumbList){
 
         int i = uriLength - 1;
-        String stringKey = keyList.get(i);
+        String imageKey = imageList.get(i);
+        String thumbKey = thumbList.get(i);
 
-        //System.out.println("Sons: " + dataSnapshot.getChildren());
-        firebaseThumbStorage = dataSnapshot.child("thumbs").child(stringKey).getValue().toString();
-        firebaseImageStorage = dataSnapshot.child("images").child(stringKey).getValue().toString();
+        System.out.println("Key: " + imageKey);
+        firebaseThumbStorage = dataSnapshot.child("thumbs").child(thumbKey).getValue().toString();
+        firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
 
             storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
@@ -283,7 +288,7 @@ public class ImageBrowserFragment extends Fragment {
                             imImages.add(uri.toString());
                             photoSelectionFire();
                             if (uriLength > 1){
-                                uriFromFirebase((uriLength-1),dataSnapshot,keyList);
+                                uriFromFirebase((uriLength-1),dataSnapshot,imageList, thumbList);
                             }
                         }
                     }).addOnFailureListener(new OnFailureListener() {

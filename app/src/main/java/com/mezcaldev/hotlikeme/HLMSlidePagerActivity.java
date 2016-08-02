@@ -13,17 +13,37 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.View;
+
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.FirebaseStorage;
+import com.google.firebase.storage.StorageReference;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class HLMSlidePagerActivity extends AppCompatActivity {
     //The number of pages (wizard steps) to show in this demo.
-    private static final int NUM_PAGES = 5;
+    private static final int NUM_PAGES = 3;
+    public static String userKey;
 
 
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
-    ImageSaver uriProfiles = new ImageSaver();
 
+    String gender;
+    List<String> users = new ArrayList<>();
 
+    //Firebase Initialization
+    final FirebaseUser firebaseUser = MainActivityFragment.user;
+    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+    final FirebaseStorage storage = FirebaseStorage.getInstance();
+    final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,15 +57,17 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         }
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-        String gender = sharedPreferences.getString("looking_for", "Not specified");
+        gender = sharedPreferences.getString("looking_for", "Not specified");
         System.out.println("Looking for: " + gender);
-
-        uriProfiles.getUriProfilePics(gender);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
+        mPager.setPageTransformer(true, new DepthPageTransformer());
+
+        getUriProfilePics(gender);
+
     }
 
     @Override
@@ -92,12 +114,75 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
+            userKey = users.get(position);
             return new HLMPageFragment();
         }
 
         @Override
         public int getCount() {
-            return NUM_PAGES;
+            return users.size();
+        }
+    }
+
+    public void getUriProfilePics (String gender){
+        DatabaseReference databaseReference = database.getReference().child("groups").child("male");
+        databaseReference.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int numChildren = (int) dataSnapshot.getChildrenCount();
+
+                String string = dataSnapshot.getValue().toString();
+                System.out.println("Number of users: " + numChildren);
+                //System.out.println("Original value: " + string);
+
+                for (DataSnapshot data: dataSnapshot.getChildren()){
+                    System.out.println("User: " + data.getKey());
+                    users.add(data.getKey());
+                    mPagerAdapter.notifyDataSetChanged();
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    public class DepthPageTransformer implements ViewPager.PageTransformer {
+        private static final float MIN_SCALE = 0.75f;
+
+        public void transformPage(View view, float position) {
+            int pageWidth = view.getWidth();
+
+            if (position < -1) { // [-Infinity,-1)
+                // This page is way off-screen to the left.
+                view.setAlpha(0);
+
+            } else if (position <= 0) { // [-1,0]
+                // Use the default slide transition when moving to the left page
+                view.setAlpha(1);
+                view.setTranslationX(0);
+                view.setScaleX(1);
+                view.setScaleY(1);
+
+            } else if (position <= 1) { // (0,1]
+                // Fade the page out.
+                view.setAlpha(1 - position);
+
+                // Counteract the default slide transition
+                view.setTranslationX(pageWidth * -position);
+
+                // Scale the page down (between MIN_SCALE and 1)
+                float scaleFactor = MIN_SCALE
+                        + (1 - MIN_SCALE) * (1 - Math.abs(position));
+                view.setScaleX(scaleFactor);
+                view.setScaleY(scaleFactor);
+
+            } else { // (1,+Infinity]
+                // This page is way off-screen to the right.
+                view.setAlpha(0);
+            }
         }
     }
 }
