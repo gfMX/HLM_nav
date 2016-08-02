@@ -55,6 +55,7 @@ public class ImageBrowserFragment extends Fragment {
     FirebaseAuth mAuth;
     String firebaseThumbStorage;
     String firebaseImageStorage;
+    List<String> imageKeyList = new ArrayList<>();
 
     //Internal parameters
     private GridView gridView;
@@ -182,10 +183,6 @@ public class ImageBrowserFragment extends Fragment {
                     imUrls.add(sObject1);
                     imImages.add(sObject3);
                     imIds.add(sObject2);
-
-                    //Log.i(TAG, "Object: " + sObject1 + " Id: " + sObject2);
-                    //Log.i(TAG, "URL Image: " + sObject3);
-                    //Log.i(TAG, "New elements: " + imUrls.get(i));
                 }
 
                 final ImageAdapter imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
@@ -194,25 +191,11 @@ public class ImageBrowserFragment extends Fragment {
                 gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
                     public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
 
-                        //Log.i(TAG, "Click on: " + view.getId());
-                        //Log.i(TAG, "On parent: " + parent);
-
                         if (!imIdsSelected.contains(position)) {
                             imIdsSelected.add(position);
                             imUrlsSelected.add(imImages.get(position));
                             imThumbSelected.add(imUrls.get(position));
-
-
-                            //Log.i(TAG, "Postion: " + position);
-                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
                         } else {
-                            //Log.i(TAG, "Postion: " + position);
-                            /*Log.i(TAG, "Index: " + imIdsSelected.indexOf(position) + " URL: "
-                                    + imUrlsSelected.get(imIdsSelected.indexOf(position))
-                                    + " Thumb: " + imThumbSelected.get(imIdsSelected.indexOf(position)));*/
-
                             imUrlsSelected.remove(imIdsSelected.indexOf(position));
                             imThumbSelected.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
@@ -253,7 +236,7 @@ public class ImageBrowserFragment extends Fragment {
 
                             Log.i(TAG, "Total Images: " + nElements);
                             dbTotalImagesRef.setValue(nElements);
-                            uriFromFirebase((nElements - 1), dataSnapshot);
+                            imagesFromFire((nElements - 1), dataSnapshot);
                         }
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
@@ -270,51 +253,54 @@ public class ImageBrowserFragment extends Fragment {
 
         }
     }
-    private void childsFromFire (int uriLength, final DataSnapshot dataSnapshot){
-
-    }
-    private void uriFromFirebase(int uriLength, final DataSnapshot dataSnapshot){
-
-        System.out.println("Sons: " + dataSnapshot.getChildren());
-
+    private void imagesFromFire (int uriLength, final DataSnapshot dataSnapshot){
         DataSnapshot snapImages = dataSnapshot.child("images");
+
         for (DataSnapshot data: snapImages.getChildren()) {
+            imageKeyList.add(data.getKey());
+        }
+        uriFromFirebase(imageKeyList.size(), dataSnapshot, imageKeyList);
+    }
+    private void uriFromFirebase(final int uriLength, final DataSnapshot dataSnapshot, final List<String> keyList){
 
-            firebaseThumbStorage = dataSnapshot.child("thumbs").child(data.getKey()).getValue().toString();
-            firebaseImageStorage = dataSnapshot.child("images").child(data.getKey()).getValue().toString();
+        int i = uriLength - 1;
+        String stringKey = keyList.get(i);
 
-            storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                @Override
-                public void onSuccess(Uri uri) {
-                    imImages.add(uri.toString());
-                    photoSelectionFire();
+        //System.out.println("Sons: " + dataSnapshot.getChildren());
+        firebaseThumbStorage = dataSnapshot.child("thumbs").child(stringKey).getValue().toString();
+        firebaseImageStorage = dataSnapshot.child("images").child(stringKey).getValue().toString();
 
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
-                    Log.w(TAG, "Something went wrong getting the Full Image.");
-                    exception.printStackTrace();
-                }
-            });
-            //Get the thumbnails URLs from Firebase to show it on Image Browser:
             storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
                     imUrls.add(uri.toString());
-                    photoSelectionFire();
+                    //photoSelectionFire();
 
+                    //Get the Full Images URLs from Firebase to show it on Image Browser:
+                    storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                        @Override
+                        public void onSuccess(Uri uri) {
+                            imImages.add(uri.toString());
+                            photoSelectionFire();
+                            if (uriLength > 1){
+                                uriFromFirebase((uriLength-1),dataSnapshot,keyList);
+                            }
+                        }
+                    }).addOnFailureListener(new OnFailureListener() {
+                        @Override
+                        public void onFailure(@NonNull Exception exception) {
+                            Log.w(TAG, "Something went wrong getting the Full Image.");
+                            exception.printStackTrace();
+                        }
+                    });
                 }
             }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
                     Log.w(TAG, "Something went wrong getting the Thumbnail.");
                     exception.printStackTrace();
                 }
             });
-        }
     }
     public void photoSelectionFire (){
         try {

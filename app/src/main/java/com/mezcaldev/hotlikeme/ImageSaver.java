@@ -147,18 +147,15 @@ public class ImageSaver {
                                   List<String> listThumbs,
                                   FirebaseUser user,
                                   Context context,
-                                  int nUploads,
-                                  int existentImages){
+                                  int nUploads){
 
         String pathImages = "/images/";
         String pathThumbs = "/images/thumbs/";
 
         String uniqueID = UUID.randomUUID().toString();
-        String uID = uniqueID;
 
-        iUploadImagesToFirebase(listImages, listThumbs, user, context, nUploads, pathImages, existentImages, uID);
-        iUploadThumbsToFirebase(listThumbs, user, nUploads, pathThumbs, existentImages, uID);
-
+        iUploadThumbsToFirebase(listThumbs, user, nUploads, pathThumbs, uniqueID);
+        iUploadImagesToFirebase(listImages, listThumbs, user, context, nUploads, pathImages, uniqueID);
     }
 
     public void iUploadImagesToFirebase(final List<String> pathImages,
@@ -167,7 +164,6 @@ public class ImageSaver {
                                         final Context context,
                                         final int nUploads,
                                         final String bPath,
-                                        final int existentImages,
                                         final String uniqueID){
 
         final NotificationCompat.Builder mBuilder =
@@ -182,13 +178,9 @@ public class ImageSaver {
             @Override
             public void run() {
 
-                int imageNumber = existentImages + nUploads-1;
                 String fileName = "image_" + uniqueID + ".jpg";
-
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
-
-                final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + imageNumber);
-                //final DatabaseReference databaseRefURLImages = database.getReference(user.getUid() + "/URLImage/" + imageNumber);
+                final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + uniqueID);
 
                 UploadTask uploadTask;
 
@@ -242,7 +234,7 @@ public class ImageSaver {
 
                                 if (nUploads>1){
                                     int newUploads = nUploads - 1;
-                                    uploadToFirebase(pathImages, pathThumbs, user, context, newUploads, existentImages);
+                                    uploadToFirebase(pathImages, pathThumbs, user, context, newUploads);
                                 } else {
                                     Log.i(TAG, "Images: All done!");
                                 }
@@ -262,20 +254,15 @@ public class ImageSaver {
                                         final FirebaseUser user,
                                         final int nUploads,
                                         final String bPath,
-                                        final int existentImages,
                                         final String uniqueID){
 
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
 
-                int imageNumber = existentImages + nUploads-1;
                 String fileName = "thumb_" + uniqueID + ".jpg";
-
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
-
-                final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + imageNumber);
-                //final DatabaseReference databaseRefURLThumbs = database.getReference(user.getUid() + "/URLThumb/" + imageNumber);
+                final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + uniqueID);
 
                 UploadTask uploadTask;
 

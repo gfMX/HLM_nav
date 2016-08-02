@@ -13,11 +13,7 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,42 +78,14 @@ public class ImageBrowser extends AppCompatActivity {
                                     Snackbar.LENGTH_LONG)
                                     .setAction("Action", null)
                                     .show();
-                            final DatabaseReference numberOfImages = database.getReference(fireUser.getUid());
 
-                            numberOfImages.addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    int imagesOnFirebase;
-                                    try {
-                                        imagesOnFirebase = Integer.valueOf(dataSnapshot.child("total_images").getValue().toString());
-                                    } catch (NullPointerException e){
-                                        imagesOnFirebase = 0;
-                                        e.printStackTrace();
-                                    }
-
-                                    ImageSaver uploadImages = new ImageSaver();
-                                    uploadImages.uploadToFirebase(
-                                            uploadUrls,
-                                            uploadTiny,
-                                            fireUser,
-                                            getApplicationContext(),
-                                            uploadUrls.size(),
-                                            imagesOnFirebase);
-                                   /* ImageSaver uploadThumbs = new ImageSaver();
-                                    uploadThumbs.iUploadThumbsToFirebase(
-                                            uploadTiny,
-                                            fireUser,
-                                            uploadTiny.size(),
-                                            pathThumbs,
-                                            imagesOnFirebase);*/
-
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
+                            ImageSaver uploadImages = new ImageSaver();
+                            uploadImages.uploadToFirebase(
+                                    uploadUrls,
+                                    uploadTiny,
+                                    fireUser,
+                                    getApplicationContext(),
+                                    uploadUrls.size());
 
                             final Handler handler = new Handler();
                             handler.postDelayed(new Runnable() {
