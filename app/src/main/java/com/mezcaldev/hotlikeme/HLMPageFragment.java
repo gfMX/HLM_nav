@@ -59,7 +59,7 @@ public class HLMPageFragment extends Fragment {
         String userDescription;
         Bitmap userImage;
 
-        DatabaseReference databaseReference = database.getReference().child(userKey).child("preferences");
+        DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("preferences");
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {

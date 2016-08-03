@@ -43,7 +43,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     FirebaseUser firebaseUser = MainActivityFragment.user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
-    DatabaseReference databaseReference = database.getReference(firebaseUser.getUid());
+    DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid());
 
     /**
      * A preference value change listener that updates the preference's summary

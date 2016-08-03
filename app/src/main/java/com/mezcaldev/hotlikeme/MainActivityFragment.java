@@ -291,8 +291,12 @@ public class MainActivityFragment extends Fragment {
             accessTokenTracker.startTracking();
 
             profile = Profile.getCurrentProfile();
-            profileName = profile.getFirstName();
-            welcomeText = getResources().getString(R.string.text_welcome) + profileName;
+            if (profile != null) {
+                profileName = profile.getFirstName();
+                welcomeText = getResources().getString(R.string.text_welcome) + profileName;
+            } else {
+                welcomeText = getResources().getString(R.string.text_welcome);
+            }
             profileTracker.startTracking();
 
             //Auth Listener
@@ -305,8 +309,10 @@ public class MainActivityFragment extends Fragment {
                         Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
                         //Stores references needed by the App on Firebase:
-                        fireRef = database.getReference(user.getUid() + "/preferences/name");
+                        fireRef = database.getReference().child("users").child(user.getUid()).child("/preferences/name");
                         fireRef.setValue(user.getDisplayName());
+                        fireRef = database.getReference().child("groups").child("users").child(user.getUid());
+                        fireRef.setValue(true);
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
                         }
@@ -405,7 +411,11 @@ public class MainActivityFragment extends Fragment {
     }
     private void fireProfilePic (){
         if (user != null) {
-            storageRef.child(user.getUid() + "/profile_pic/" + imageProfileFileName).getBytes(Long.MAX_VALUE)
+            storageRef
+                    .child("users")
+                    .child(user.getUid())
+                    .child("/profile_pic/" + imageProfileFileName)
+                    .getBytes(Long.MAX_VALUE)
                     .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                         @Override
                         public void onSuccess(byte[] bytes) {
@@ -432,7 +442,7 @@ public class MainActivityFragment extends Fragment {
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         try {
                             String gender = response.getJSONObject().get("gender").toString();
-                            DatabaseReference databaseReference = database.getReference(user.getUid());
+                            DatabaseReference databaseReference = database.getReference().child("users").child(user.getUid());
                             DatabaseReference databaseReferenceUsers= database.getReference();
                             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                             SharedPreferences.Editor editor = sharedPreferences.edit();

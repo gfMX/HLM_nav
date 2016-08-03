@@ -226,9 +226,10 @@ public class ImageBrowserFragment extends Fragment {
         protected Void doInBackground(Void... params) {
 
             String userId = firebaseUser.getUid();
-            final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
+            final DatabaseReference dbTotalImagesRef =
+                    database.getReference().child("users").child(userId).child("/total_images");
 
-            database.getReference(userId).addValueEventListener(
+            database.getReference().child("users").child(userId).addValueEventListener(
                     new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {

@@ -181,7 +181,8 @@ public class ImageSaver {
                 String fName = "image_" + uniqueID;
                 String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
-                final DatabaseReference databaseReferenceImages = database.getReference(user.getUid() + bPath + uniqueID);
+                final DatabaseReference databaseReferenceImages =
+                        database.getReference().child("users").child(user.getUid()).child(bPath).child(uniqueID);
 
                 UploadTask uploadTask;
 
@@ -264,7 +265,8 @@ public class ImageSaver {
                 String fName = "thumb_" + uniqueID;
                 String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
-                final DatabaseReference databaseReferenceThumbs = database.getReference(user.getUid() + "/thumbs/" + uniqueID);
+                final DatabaseReference databaseReferenceThumbs =
+                        database.getReference().child("users").child(user.getUid()).child("/thumbs/").child(uniqueID);
 
                 UploadTask uploadTask;
 
@@ -313,9 +315,10 @@ public class ImageSaver {
     }
     public void updateTotalImagesOnFire () {
         String userId = firebaseUser.getUid();
-        final DatabaseReference dbTotalImagesRef = database.getReference(userId + "/total_images");
+        final DatabaseReference dbTotalImagesRef =
+                database.getReference().child("users").child(userId).child("/total_images");
 
-        database.getReference(userId).addValueEventListener(
+        database.getReference().child("/users/").child(userId).addValueEventListener(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {
@@ -340,8 +343,10 @@ public class ImageSaver {
                 List<String> imagesToDelete = new ArrayList<>();
                 List<String> thumbsToDelete = new ArrayList<>();
 
-                DatabaseReference imageReference = database.getReference().child(firebaseUser.getUid()).child(pathImages);
-                DatabaseReference thumbReference = database.getReference().child(firebaseUser.getUid()).child(pathThumbs);
+                DatabaseReference imageReference =
+                        database.getReference().child("users").child(firebaseUser.getUid()).child(pathImages);
+                DatabaseReference thumbReference =
+                        database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs);
 
                 System.out.println("Positions to delete: " + deleteList);
 
