@@ -412,7 +412,6 @@ public class MainActivityFragment extends Fragment {
     private void fireProfilePic (){
         if (user != null) {
             storageRef
-                    .child("users")
                     .child(user.getUid())
                     .child("/profile_pic/" + imageProfileFileName)
                     .getBytes(Long.MAX_VALUE)
