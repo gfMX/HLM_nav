@@ -50,6 +50,8 @@ public class HLMPageFragment extends Fragment {
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
 
+        viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
+
         //viewUserAlias.setText(userKey);
         getUserDetails(userKey);
     }
@@ -82,8 +84,7 @@ public class HLMPageFragment extends Fragment {
                     @Override
                     public void onSuccess(byte[] bytes) {
                         Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        //ImageSaver saveBitmap = new ImageSaver();
-                        //saveBitmap.iSaveToInternalStorage(image, imageProfileTemp, getContext());
+                        
                         viewUserImage.setImageBitmap(image);
                     }
                 }).addOnFailureListener(new OnFailureListener() {

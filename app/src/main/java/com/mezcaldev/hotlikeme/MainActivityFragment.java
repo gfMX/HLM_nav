@@ -311,7 +311,7 @@ public class MainActivityFragment extends Fragment {
                         //Stores references needed by the App on Firebase:
                         fireRef = database.getReference().child("users").child(user.getUid()).child("/preferences/name");
                         fireRef.setValue(user.getDisplayName());
-                        fireRef = database.getReference().child("groups").child("users").child(user.getUid());
+                        fireRef = database.getReference().child("groups").child("both").child(user.getUid());
                         fireRef.setValue(true);
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
