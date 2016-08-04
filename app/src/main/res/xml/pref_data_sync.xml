@@ -6,7 +6,7 @@
     <PreferenceCategory
         android:title="@string/pref_header_data_sync">
         <SwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:key="gps_enabled"
             android:title="@string/pref_title_localization"
             android:summary="@string/pref_localization_description"/>
