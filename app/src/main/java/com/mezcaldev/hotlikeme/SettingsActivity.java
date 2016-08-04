@@ -43,6 +43,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
 
     FirebaseUser firebaseUser = MainActivityFragment.user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference databaseReferenceZero = database.getReference();
     DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid());
 
     /**
@@ -132,6 +133,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         super.onCreate(savedInstanceState);
         setupActionBar();
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        String gender = sharedPreferences.getString("gender", "Not defined").toLowerCase();
 
         System.out.println("Shared Preferences: " + sharedPreferences.getAll());
 
@@ -152,6 +154,15 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     .setValue(sharedPreferences.getBoolean("visible_switch", true));
             databaseReference.child("/preferences/gps_enabled/")
                     .setValue(sharedPreferences.getBoolean("gps_enabled", true));
+        }
+        if (sharedPreferences.getBoolean("visible_switch", true)){
+            System.out.println("User Visible");
+            databaseReferenceZero.child("groups").child(gender).child(firebaseUser.getUid()).setValue(true);
+            databaseReferenceZero.child("groups").child("both").child(firebaseUser.getUid()).setValue(true);
+        } else {
+            System.out.println("User Not Visible");
+            databaseReferenceZero.child("groups").child(gender).child(firebaseUser.getUid()).setValue(null);
+            databaseReferenceZero.child("groups").child("both").child(firebaseUser.getUid()).setValue(null);
         }
     }
 

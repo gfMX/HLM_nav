@@ -74,6 +74,7 @@ public class MainActivityFragment extends Fragment {
     String welcomeText;
     String instructionText;
     String signInText;
+    static String gender;
 
     //UI Elements
     static String imageProfileFileName = "profile_im.jpg";
@@ -94,11 +95,13 @@ public class MainActivityFragment extends Fragment {
     static DatabaseReference fireRef;
     static FirebaseStorage storage;
     static StorageReference storageRef;
+    Boolean flagImagesOnFirebase = false;
 
     //Other elements
     String strValue;
     ImageSaver imageSaver = new ImageSaver();
     File profileImageCheck;
+
 
     public MainActivityFragment() {
 
@@ -234,14 +237,19 @@ public class MainActivityFragment extends Fragment {
                   startActivity(new Intent(getActivity(), SettingsActivity.class));
                   break;
               case R.id.hlm_image:
-                  Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
-                          Toast.LENGTH_LONG).show();
+                  if (flagImagesOnFirebase) {
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
+                              Toast.LENGTH_LONG).show();
 
-                  strValue = "Firebase";
+                      strValue = "Firebase";
 
-                  Intent ic = new Intent(getActivity(), ImageBrowser.class);
-                  ic.putExtra(Intent.EXTRA_TEXT, strValue);
-                  startActivity(ic);
+                      Intent ic = new Intent(getActivity(), ImageBrowser.class);
+                      ic.putExtra(Intent.EXTRA_TEXT, strValue);
+                      startActivity(ic);
+                  } else {
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
+                              Toast.LENGTH_LONG).show();
+                  }
                   break;
           }
       }
@@ -311,8 +319,9 @@ public class MainActivityFragment extends Fragment {
                         //Stores references needed by the App on Firebase:
                         fireRef = database.getReference().child("users").child(user.getUid()).child("/preferences/name");
                         fireRef.setValue(user.getDisplayName());
-                        fireRef = database.getReference().child("groups").child("both").child(user.getUid());
-                        fireRef.setValue(true);
+
+                        //fireRef = database.getReference().child("groups").child("both").child(user.getUid());
+                        //fireRef.setValue(true);
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
                         }
@@ -402,6 +411,7 @@ public class MainActivityFragment extends Fragment {
                     fb_welcome_text.setText(welcomeText);
                 }
                 if (profileImageCheck.exists()) {
+                    flagImagesOnFirebase = true;
                     imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
                 } else {
                     fireProfilePic();
@@ -422,11 +432,14 @@ public class MainActivityFragment extends Fragment {
                             Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                             ImageSaver saveBitmap = new ImageSaver();
                             saveBitmap.iSaveToInternalStorage(image, imageProfileFileName, getContext());
+
+                            flagImagesOnFirebase = true;
                         }
                     }).addOnFailureListener(new OnFailureListener() {
                 @Override
                 public void onFailure(@NonNull Exception exception) {
                     // Handle any errors
+                    flagImagesOnFirebase = false;
                     exception.printStackTrace();
                 }
             });
@@ -440,28 +453,19 @@ public class MainActivityFragment extends Fragment {
                     @Override
                     public void onCompleted(JSONObject object, GraphResponse response) {
                         try {
-                            String gender = response.getJSONObject().get("gender").toString();
+                            gender = response.getJSONObject().get("gender").toString();
+                            System.out.println("Gender: " + gender);
                             DatabaseReference databaseReference = database.getReference().child("users").child(user.getUid());
-                            DatabaseReference databaseReferenceUsers= database.getReference();
+                            //DatabaseReference databaseReferenceUsers= database.getReference();
                             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putString("gender", gender);
+                            editor.apply();
 
                             databaseReference.child("/preferences/gender/").setValue(gender);
-                            databaseReference.child("/groups").child(gender).setValue(true);
+                            //databaseReference.child("groups").child(gender).child(user.getUid()).setValue(true);
+                            //databaseReferenceUsers.child("groups").child("both").child(user.getUid()).setValue(true);
 
-                            if (gender.equalsIgnoreCase("male") || gender.equalsIgnoreCase("female")){
-                                databaseReferenceUsers
-                                        .child("groups/")
-                                        .child(gender)
-                                        .child(user.getUid())
-                                        .setValue(true);
-                            } else {
-                                databaseReferenceUsers
-                                        .child("groups/other")
-                                        .child(user.getUid())
-                                        .setValue(true);
-                            }
                             Log.i(TAG, "We got the gender: " + gender);
                         } catch (JSONException e){
                             e.printStackTrace();
