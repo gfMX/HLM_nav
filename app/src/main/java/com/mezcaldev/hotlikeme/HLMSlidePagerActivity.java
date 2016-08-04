@@ -14,6 +14,7 @@ import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -122,6 +123,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         public int getCount() {
             return users.size();
         }
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            super.destroyItem(container, position, object);
+        }
     }
 
     public void getUriProfilePics (String gender){
@@ -219,5 +224,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
                 page.setAlpha(0);
             }
         }
+    }
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        finish();
     }
 }

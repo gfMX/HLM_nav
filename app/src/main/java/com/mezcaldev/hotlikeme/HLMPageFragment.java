@@ -1,15 +1,22 @@
 package com.mezcaldev.hotlikeme;
 
+import android.content.ClipData;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
+import android.util.Log;
+import android.view.DragEvent;
+import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -27,8 +34,11 @@ public class HLMPageFragment extends Fragment {
 
     TextView viewUserAlias;
     ImageView viewUserImage;
+    ImageView dropZone1;
+    ImageView dropZone2;
     TextView viewUserDescription;
-    String imageProfileTemp = "profile_pic_tmp.jpg";
+    String DEBUG_TAG = "Debug: ";
+
 
     //Firebase Initialization
     final FirebaseUser firebaseUser = MainActivityFragment.user;
@@ -46,20 +56,55 @@ public class HLMPageFragment extends Fragment {
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
+
         viewUserAlias = (TextView) view.findViewById(R.id.textView);
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
 
-        viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
+        dropZone1 = (ImageView) view.findViewById(R.id.dropZone1);
+        dropZone2 = (ImageView) view.findViewById(R.id.dropZone2);
 
-        //viewUserAlias.setText(userKey);
+        DragEventListener dragEventListener = new DragEventListener();
+
+        dropZone1.setOnDragListener(dragEventListener);
+        dropZone2.setOnDragListener(dragEventListener);
+        //view.findViewById(R.id.content).setOnDragListener(dragEventListener);
+
+        viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
+        viewUserImage.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                switch (event.getAction() & MotionEvent.ACTION_MASK) {
+                    case MotionEvent.ACTION_DOWN:
+                        System.out.println("Down");
+                        ClipData data = ClipData.newPlainText("userKey", userKey);
+                        View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
+                        v.startDrag(data, shadowBuilder, v, 0);
+                        //v.setVisibility(View.INVISIBLE);
+
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        System.out.println("Up");
+
+                        break;
+                    case MotionEvent.ACTION_POINTER_DOWN:
+
+                        break;
+                    case MotionEvent.ACTION_POINTER_UP:
+
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        System.out.println("Move");
+                        break;
+                }
+                return true;
+            }
+        });
+
         getUserDetails(userKey);
     }
 
     private void getUserDetails (String userKey){
-        String userName;
-        String userDescription;
-        Bitmap userImage;
 
         DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("preferences");
         databaseReference.addValueEventListener(new ValueEventListener() {
@@ -94,7 +139,92 @@ public class HLMPageFragment extends Fragment {
                 exception.printStackTrace();
             }
         });
+    }
 
+    protected class DragEventListener implements View.OnDragListener {
+        // This is the method that the system calls when it dispatches a drag event to the
+        // listener.
+        public boolean onDrag(View v, DragEvent event) {
+            // Defines a variable to store the action type for the incoming event
+            final int action = event.getAction();
+
+            // Handles each of the expected events
+            switch(action) {
+
+                case DragEvent.ACTION_DRAG_STARTED:
+                    Snackbar.make(v,
+                            "Up: Like.\nDown:Dislike.",
+                            Snackbar.LENGTH_LONG)
+                            .setAction("Action", null)
+                            .show();
+
+                    return true;
+
+                case DragEvent.ACTION_DRAG_ENTERED:
+                    if (v.getId() == R.id.dropZone1) {
+                        Toast.makeText(getContext(), "I like it!", Toast.LENGTH_SHORT).show();
+                    }
+                    if (v.getId() == R.id.dropZone2){
+                        Toast toast = Toast.makeText(getContext(), "Next please!", Toast.LENGTH_SHORT);
+                        toast.setGravity(Gravity.TOP,0,175);
+                        toast.show();
+                    }
+                    // Invalidate the view to force a redraw in the new tint
+                    v.invalidate();
+
+                    return true;
+
+                case DragEvent.ACTION_DRAG_LOCATION:
+
+
+                    // Ignore the event
+                    return true;
+
+                case DragEvent.ACTION_DRAG_EXITED:
+                    // Invalidate the view to force a redraw in the new tint
+                    v.invalidate();
+
+                    return true;
+
+                case DragEvent.ACTION_DROP:
+                    // Gets the item containing the dragged data
+                    ClipData.Item item = event.getClipData().getItemAt(0);
+
+
+                    // Invalidates the view to force a redraw
+                    v.invalidate();
+
+                    // Returns true. DragEvent.getResult() will return true.
+                    return true;
+
+                case DragEvent.ACTION_DRAG_ENDED:
+                    // Invalidates the view to force a redraw
+                    v.invalidate();
+
+                    // Does a getResult(), and displays what happened.
+                    if (event.getResult()) {
+                        Toast.makeText(getContext(), "If you say so...", Toast.LENGTH_SHORT).show();
+                    } else {
+                        Toast.makeText(getContext(), "Think about it", Toast.LENGTH_SHORT).show();
+                    }
+                    // returns true; the value is ignored.
+                    return true;
+
+                // An unknown action type was received.
+                default:
+                    Log.e("DragDrop Example","Unknown action type received by OnDragListener.");
+                    break;
+            }
+
+            return false;
+        }
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        viewUserImage.setImageBitmap(null);
+        viewUserImage.destroyDrawingCache();
     }
 }
 
