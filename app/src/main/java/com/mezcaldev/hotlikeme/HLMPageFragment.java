@@ -38,11 +38,15 @@ public class HLMPageFragment extends Fragment {
     ImageView dropZoneRight;
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
+    int displayWidth;
     boolean flagOne = false;
     boolean flagTwo = false;
+    boolean flagThree = false;
+    boolean flagFour = false;
 
     TextView viewUserDescription;
-    Toast toastImage;
+    Toast toast1;
+    Toast toast2;
     String DEBUG_TAG = "Debug: ";
 
 
@@ -74,6 +78,7 @@ public class HLMPageFragment extends Fragment {
 
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         displayHeight = metrics.heightPixels;
+        displayWidth = metrics.widthPixels;
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
         viewUserImage.setOnTouchListener(new View.OnTouchListener() {
@@ -81,7 +86,7 @@ public class HLMPageFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 int x = (int) event.getX();
                 int y = (int) event.getY();
-                //int xRaw = (int) event.getRawX();
+                int xRaw = (int) event.getRawX();
                 int yRaw = (int) event.getRawY();
 
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
@@ -93,6 +98,17 @@ public class HLMPageFragment extends Fragment {
                         System.out.println("Up");
                         v.setTranslationY(0);
                         v.setTranslationX(0);
+
+                        if (yRaw < (displayHeight / 2 - tolerancePixels)) {
+                            System.out.println("User ID: " + userKey);
+                            Toast.makeText(getContext(), "Added!", Toast.LENGTH_SHORT).show();
+
+                        }
+                        if (yRaw > (displayHeight / 2 + tolerancePixels)) {
+                            //Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT).show();
+
+                        }
+
                         break;
                     case MotionEvent.ACTION_POINTER_DOWN:
                         System.out.println("Pointer Down");
@@ -103,19 +119,56 @@ public class HLMPageFragment extends Fragment {
 
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        //System.out.println("Move: " + y + " Display height: " + displayHeight/2);
+
+                        System.out.println("Move: " + xRaw + " Display height: " + displayHeight / 2);
                         v.setX((v.getX() - v.getWidth() / 2) + x);
                         v.setY((v.getY() - v.getHeight() / 2) + y);
-                        if (yRaw < (displayHeight/2 - tolerancePixels) && !flagOne){
-                            Toast.makeText(getContext(), "I Like it!", Toast.LENGTH_SHORT).show();
+                        if (yRaw < (displayHeight / 2 - tolerancePixels) && !flagOne) {
+                            System.out.println("Up");
+                            toast1 = Toast.makeText(getContext(), "I Love it!", Toast.LENGTH_SHORT);
+                            toast1.show();
+
                             flagOne = true;
                             flagTwo = false;
+                            flagThree = false;
+                            flagFour = false;
                         }
-                        if (yRaw > (displayHeight/2 + tolerancePixels) && !flagTwo){
-                            Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT).show();
+                        if (yRaw > (displayHeight / 2 + tolerancePixels) && !flagTwo) {
+                            System.out.println("Down");
+                            toast2 = Toast.makeText(getContext(), "No! Definitely No!", Toast.LENGTH_SHORT);
+                            toast2.show();
+
                             flagOne = false;
                             flagTwo = true;
+                            flagThree = false;
+                            flagFour = false;
+                        }/*
+                        if (xRaw < (displayWidth/2 + tolerancePixels) && !flagThree) {
+                            System.out.println("Left");
+                            toast2 = Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT);
+                            toast2.setGravity(Gravity.TOP,0,120);
+                            toast2.show();
+
+                            flagOne = false;
+                            flagTwo = false;
+                            flagThree = true;
+                            flagFour = false;
+
+                            event.setAction(MotionEvent.ACTION_UP);
+                            onTouch(v, event);
                         }
+                        if (xRaw > (displayWidth/2 + tolerancePixels) && !flagFour){
+                            System.out.println("Right");
+                            toast2 = Toast.makeText(getContext(), "Maybe", Toast.LENGTH_SHORT);
+                            toast2.setGravity(Gravity.TOP,0,120);
+                            toast2.show();
+
+                            flagOne = false;
+                            flagTwo = false;
+                            flagThree = false;
+                            flagFour = true;
+                        }*/
+
                         break;
                 }
                 return true;
