@@ -11,8 +11,33 @@
         <ImageView
             android:id="@+id/dropZone1"
             android:layout_width="match_parent"
-            android:layout_height="120dp"
+            android:layout_height="90dp"
             android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:contentDescription="@string/app_name"/>
+        <ImageView
+            android:id="@+id/dropZoneLeft"
+            android:layout_width="100dp"
+            android:layout_height="290dp"
+            android:layout_marginTop="15dp"
+            android:layout_below="@+id/dropZone1"
+            android:layout_alignParentStart="true"
+            android:layout_alignParentLeft="true"
+            android:contentDescription="@string/app_name"/>
+        <ImageView
+            android:id="@+id/dropZoneRight"
+            android:layout_width="100dp"
+            android:layout_height="290dp"
+            android:layout_marginTop="15dp"
+            android:layout_below="@+id/dropZone1"
+            android:layout_alignParentEnd="true"
+            android:layout_alignParentRight="true"
+            android:contentDescription="@string/app_name"/>
+        <ImageView
+            android:id="@+id/dropZone2"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:layout_below="@+id/imageView"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/app_name"/>
         <TextView style="?android:textAppearanceLarge"
@@ -45,13 +70,6 @@
             android:text="@string/text_slide"
             android:layout_below="@+id/imageView"
             android:layout_centerHorizontal="true" />
-        <ImageView
-            android:id="@+id/dropZone2"
-            android:layout_width="match_parent"
-            android:layout_height="120dp"
-            android:layout_below="@+id/imageView"
-            android:layout_centerHorizontal="true"
-            android:contentDescription="@string/app_name"/>
     </RelativeLayout>
 </ScrollView>
 

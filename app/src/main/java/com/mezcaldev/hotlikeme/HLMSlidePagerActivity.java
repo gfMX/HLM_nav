@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 
@@ -29,16 +30,16 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class HLMSlidePagerActivity extends AppCompatActivity {
-    //The number of pages (wizard steps) to show in this demo.
-    private static final int NUM_PAGES = 3;
+
     public static String userKey;
-
-
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
+    int x;
+    int y;
 
     String gender;
-    List<String> users = new ArrayList<>();
+    static int currentPage;
+    static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
     final FirebaseUser firebaseUser = MainActivityFragment.user;
@@ -66,6 +67,26 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
         mPager.setPageTransformer(true, new RotatePageTransformer());
+        mPager.setOnTouchListener(new View.OnTouchListener() {
+                                       @Override
+                                       public boolean onTouch(View view, MotionEvent event) {
+                                           x = (int) event.getX();
+                                           y = (int) event.getY();
+                                           switch (event.getAction()) {
+                                               case MotionEvent.ACTION_DOWN:
+
+                                                   break;
+                                               case MotionEvent.ACTION_MOVE:
+                                                   //System.out.println("Position X: " + x +" Y: " + y);
+                                                   break;
+                                               case MotionEvent.ACTION_UP:
+
+                                                   break;
+                                           }
+                                           return false;
+                                       }
+                                   }
+        );
 
         getUriProfilePics(gender);
 
@@ -115,6 +136,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
+            currentPage = position;
             userKey = users.get(position);
             return new HLMPageFragment();
         }
@@ -152,6 +174,12 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
 
             }
         });
+    }
+
+
+
+    public void selectPage(int page) {
+        mPager.setCurrentItem(page);
     }
 
     public class DepthPageTransformer implements ViewPager.PageTransformer {
@@ -194,8 +222,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         private static final float MIN_SCALE = 0.75f;
 
         public void transformPage(View page, float position) {
-            page.setPivotX(page.getWidth());
-            page.setPivotY(page.getHeight()/2);
+            page.setPivotX(page.getWidth() + x);
+            page.setPivotY(page.getHeight()/2 + y);
             page.setRotation(position * +15f);
 
             page.setAlpha(1 - position);
@@ -205,6 +233,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             } else if (position <= 0) { // [-1,0]
                 // Use the default slide transition when moving to the left page
                 page.setTranslationX(0);
+                page.setTranslationY(0);
                 page.setScaleX(1);
                 page.setScaleY(1);
 
@@ -212,6 +241,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
 
                 // Counteract the default slide transition
                 page.setTranslationX(page.getWidth() * -position);
+                page.setTranslationY(y/2 * position);
 
                 // Scale the page down (between MIN_SCALE and 1)
                 float scaleFactor = MIN_SCALE
@@ -225,6 +255,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             }
         }
     }
+
     @Override
     public void onDestroy(){
         super.onDestroy();

@@ -36,7 +36,14 @@ public class HLMPageFragment extends Fragment {
     ImageView viewUserImage;
     ImageView dropZone1;
     ImageView dropZone2;
+    ImageView dropZoneLeft;
+    ImageView dropZoneRight;
+    int totalPages = HLMSlidePagerActivity.users.size();
+    int currentPage = HLMSlidePagerActivity.currentPage;
+    int newPage;
+
     TextView viewUserDescription;
+    Toast toastImage;
     String DEBUG_TAG = "Debug: ";
 
 
@@ -63,11 +70,15 @@ public class HLMPageFragment extends Fragment {
 
         dropZone1 = (ImageView) view.findViewById(R.id.dropZone1);
         dropZone2 = (ImageView) view.findViewById(R.id.dropZone2);
+        dropZoneLeft = (ImageView) view.findViewById(R.id.dropZoneLeft);
+        dropZoneRight = (ImageView) view.findViewById(R.id.dropZoneRight);
+
 
         DragEventListener dragEventListener = new DragEventListener();
 
         dropZone1.setOnDragListener(dragEventListener);
         dropZone2.setOnDragListener(dragEventListener);
+
         //view.findViewById(R.id.content).setOnDragListener(dragEventListener);
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
@@ -162,10 +173,11 @@ public class HLMPageFragment extends Fragment {
 
                 case DragEvent.ACTION_DRAG_ENTERED:
                     if (v.getId() == R.id.dropZone1) {
-                        Toast.makeText(getContext(), "I like it!", Toast.LENGTH_SHORT).show();
+                        toastImage = Toast.makeText(getContext(), "I like it!", Toast.LENGTH_SHORT);
+                        toastImage.show();
                     }
                     if (v.getId() == R.id.dropZone2){
-                        Toast toast = Toast.makeText(getContext(), "Next please!", Toast.LENGTH_SHORT);
+                        Toast toast = Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT);
                         toast.setGravity(Gravity.TOP,0,175);
                         toast.show();
                     }
@@ -190,7 +202,6 @@ public class HLMPageFragment extends Fragment {
                     // Gets the item containing the dragged data
                     ClipData.Item item = event.getClipData().getItemAt(0);
 
-
                     // Invalidates the view to force a redraw
                     v.invalidate();
 
@@ -203,9 +214,12 @@ public class HLMPageFragment extends Fragment {
 
                     // Does a getResult(), and displays what happened.
                     if (event.getResult()) {
-                        Toast.makeText(getContext(), "If you say so...", Toast.LENGTH_SHORT).show();
+                        System.out.println("Result: " + event.toString());
+                        toastImage = Toast.makeText(getContext(), "If you say so...", Toast.LENGTH_SHORT);
+                        toastImage.show();
                     } else {
-                        Toast.makeText(getContext(), "Think about it", Toast.LENGTH_SHORT).show();
+                        toastImage = Toast.makeText(getContext(), "Think about it", Toast.LENGTH_SHORT);
+                        toastImage.show();
                     }
                     // returns true; the value is ignored.
                     return true;
@@ -214,11 +228,13 @@ public class HLMPageFragment extends Fragment {
                 default:
                     Log.e("DragDrop Example","Unknown action type received by OnDragListener.");
                     break;
+
             }
 
             return false;
         }
     }
+
 
     @Override
     public void onDestroy() {
