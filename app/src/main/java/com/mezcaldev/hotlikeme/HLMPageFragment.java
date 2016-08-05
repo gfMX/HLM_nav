@@ -1,15 +1,11 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.ClipData;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
-import android.util.Log;
-import android.view.DragEvent;
-import android.view.Gravity;
+import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -30,6 +26,8 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 public class HLMPageFragment extends Fragment {
+    int tolerancePixels = 50;
+
     String userKey = HLMSlidePagerActivity.userKey;
 
     TextView viewUserAlias;
@@ -38,9 +36,10 @@ public class HLMPageFragment extends Fragment {
     ImageView dropZone2;
     ImageView dropZoneLeft;
     ImageView dropZoneRight;
-    int totalPages = HLMSlidePagerActivity.users.size();
-    int currentPage = HLMSlidePagerActivity.currentPage;
-    int newPage;
+    DisplayMetrics metrics = new DisplayMetrics();
+    int displayHeight;
+    boolean flagOne = false;
+    boolean flagTwo = false;
 
     TextView viewUserDescription;
     Toast toastImage;
@@ -73,39 +72,50 @@ public class HLMPageFragment extends Fragment {
         dropZoneLeft = (ImageView) view.findViewById(R.id.dropZoneLeft);
         dropZoneRight = (ImageView) view.findViewById(R.id.dropZoneRight);
 
-
-        DragEventListener dragEventListener = new DragEventListener();
-
-        dropZone1.setOnDragListener(dragEventListener);
-        dropZone2.setOnDragListener(dragEventListener);
-
-        //view.findViewById(R.id.content).setOnDragListener(dragEventListener);
+        getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
+        displayHeight = metrics.heightPixels;
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
         viewUserImage.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
+                int x = (int) event.getX();
+                int y = (int) event.getY();
+                //int xRaw = (int) event.getRawX();
+                int yRaw = (int) event.getRawY();
+
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
                         System.out.println("Down");
-                        ClipData data = ClipData.newPlainText("userKey", userKey);
-                        View.DragShadowBuilder shadowBuilder = new View.DragShadowBuilder(v);
-                        v.startDrag(data, shadowBuilder, v, 0);
-                        //v.setVisibility(View.INVISIBLE);
 
                         break;
                     case MotionEvent.ACTION_UP:
                         System.out.println("Up");
-
+                        v.setTranslationY(0);
+                        v.setTranslationX(0);
                         break;
                     case MotionEvent.ACTION_POINTER_DOWN:
+                        System.out.println("Pointer Down");
 
                         break;
                     case MotionEvent.ACTION_POINTER_UP:
+                        System.out.println("Pointer Up");
 
                         break;
                     case MotionEvent.ACTION_MOVE:
-                        System.out.println("Move");
+                        //System.out.println("Move: " + y + " Display height: " + displayHeight/2);
+                        v.setX((v.getX() - v.getWidth() / 2) + x);
+                        v.setY((v.getY() - v.getHeight() / 2) + y);
+                        if (yRaw < (displayHeight/2 - tolerancePixels) && !flagOne){
+                            Toast.makeText(getContext(), "I Like it!", Toast.LENGTH_SHORT).show();
+                            flagOne = true;
+                            flagTwo = false;
+                        }
+                        if (yRaw > (displayHeight/2 + tolerancePixels) && !flagTwo){
+                            Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT).show();
+                            flagOne = false;
+                            flagTwo = true;
+                        }
                         break;
                 }
                 return true;
@@ -140,7 +150,6 @@ public class HLMPageFragment extends Fragment {
                     @Override
                     public void onSuccess(byte[] bytes) {
                         Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                        
                         viewUserImage.setImageBitmap(image);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -150,89 +159,6 @@ public class HLMPageFragment extends Fragment {
                 exception.printStackTrace();
             }
         });
-    }
-
-    protected class DragEventListener implements View.OnDragListener {
-        // This is the method that the system calls when it dispatches a drag event to the
-        // listener.
-        public boolean onDrag(View v, DragEvent event) {
-            // Defines a variable to store the action type for the incoming event
-            final int action = event.getAction();
-
-            // Handles each of the expected events
-            switch(action) {
-
-                case DragEvent.ACTION_DRAG_STARTED:
-                    Snackbar.make(v,
-                            "Up: Like.\nDown:Dislike.",
-                            Snackbar.LENGTH_LONG)
-                            .setAction("Action", null)
-                            .show();
-
-                    return true;
-
-                case DragEvent.ACTION_DRAG_ENTERED:
-                    if (v.getId() == R.id.dropZone1) {
-                        toastImage = Toast.makeText(getContext(), "I like it!", Toast.LENGTH_SHORT);
-                        toastImage.show();
-                    }
-                    if (v.getId() == R.id.dropZone2){
-                        Toast toast = Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT);
-                        toast.setGravity(Gravity.TOP,0,175);
-                        toast.show();
-                    }
-                    // Invalidate the view to force a redraw in the new tint
-                    v.invalidate();
-
-                    return true;
-
-                case DragEvent.ACTION_DRAG_LOCATION:
-
-
-                    // Ignore the event
-                    return true;
-
-                case DragEvent.ACTION_DRAG_EXITED:
-                    // Invalidate the view to force a redraw in the new tint
-                    v.invalidate();
-
-                    return true;
-
-                case DragEvent.ACTION_DROP:
-                    // Gets the item containing the dragged data
-                    ClipData.Item item = event.getClipData().getItemAt(0);
-
-                    // Invalidates the view to force a redraw
-                    v.invalidate();
-
-                    // Returns true. DragEvent.getResult() will return true.
-                    return true;
-
-                case DragEvent.ACTION_DRAG_ENDED:
-                    // Invalidates the view to force a redraw
-                    v.invalidate();
-
-                    // Does a getResult(), and displays what happened.
-                    if (event.getResult()) {
-                        System.out.println("Result: " + event.toString());
-                        toastImage = Toast.makeText(getContext(), "If you say so...", Toast.LENGTH_SHORT);
-                        toastImage.show();
-                    } else {
-                        toastImage = Toast.makeText(getContext(), "Think about it", Toast.LENGTH_SHORT);
-                        toastImage.show();
-                    }
-                    // returns true; the value is ignored.
-                    return true;
-
-                // An unknown action type was received.
-                default:
-                    Log.e("DragDrop Example","Unknown action type received by OnDragListener.");
-                    break;
-
-            }
-
-            return false;
-        }
     }
 
 
