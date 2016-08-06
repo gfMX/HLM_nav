@@ -125,7 +125,7 @@ public class HLMPageFragment extends Fragment {
                         v.setY((v.getY() - v.getHeight() / 2) + y);
                         if (yRaw < (displayHeight / 2 - tolerancePixels) && !flagOne) {
                             System.out.println("Up");
-                            toast1 = Toast.makeText(getContext(), "I Love it!", Toast.LENGTH_SHORT);
+                            toast1 = Toast.makeText(getContext(), "I Like it!", Toast.LENGTH_SHORT);
                             toast1.show();
 
                             flagOne = true;
@@ -135,7 +135,7 @@ public class HLMPageFragment extends Fragment {
                         }
                         if (yRaw > (displayHeight / 2 + tolerancePixels) && !flagTwo) {
                             System.out.println("Down");
-                            toast2 = Toast.makeText(getContext(), "No! Definitely No!", Toast.LENGTH_SHORT);
+                            toast2 = Toast.makeText(getContext(), "I don't Like it!", Toast.LENGTH_SHORT);
                             toast2.show();
 
                             flagOne = false;
