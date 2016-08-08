@@ -11,49 +11,48 @@
         <ImageView
             android:id="@+id/dropZone1"
             android:layout_width="match_parent"
-            android:layout_height="100dp"
+            android:layout_height="80dp"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
-            android:contentDescription="@string/app_name"/>
+            android:contentDescription="@string/app_name" />
         <ImageView
             android:id="@+id/dropZone2"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
-            android:layout_below="@+id/imageView"
-            android:layout_centerHorizontal="true"
+            android:layout_height="80dp"
             android:contentDescription="@string/app_name"
+            android:layout_centerHorizontal="true"
             android:layout_alignParentBottom="true" />
         <TextView style="?android:textAppearanceLarge"
             android:textStyle="bold"
             android:padding="16dp"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="top"
             android:text="@string/text_welcome"
             android:id="@+id/textView"
-            android:layout_alignParentTop="true"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerVertical="true"
+            android:layout_toLeftOf="@+id/imageView"
+            android:layout_toStartOf="@+id/imageView" />
         <ImageView
-            android:layout_height="360dp"
-            android:layout_margin="10dp"
+            android:layout_height="320dp"
             android:layout_width="wrap_content"
+            android:layout_margin="20dp"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
             android:src="@drawable/no_user"
             android:contentDescription="@string/text_hlm_users"
-            android:layout_below="@+id/textView"
-            android:layout_centerHorizontal="true"
             android:padding="15dp"
             android:background="@color/colorWhite"
-            android:id="@+id/imageView" />
+            android:id="@+id/imageView"
+            android:layout_centerHorizontal="true"
+            android:layout_alignParentTop="true"/>
         <TextView
-            android:layout_margin="15dp"
-            android:layout_width="280dp"
+            android:layout_width="240dp"
             android:layout_height="wrap_content"
             android:id="@+id/userDescription"
             android:text="@string/text_slide"
-            android:layout_below="@+id/imageView"
-            android:layout_centerHorizontal="true" />
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@+id/imageView"
+            android:layout_toEndOf="@+id/imageView" />
     </RelativeLayout>
 </ScrollView>
 

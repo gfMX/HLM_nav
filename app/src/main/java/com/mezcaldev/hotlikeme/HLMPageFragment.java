@@ -26,7 +26,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 public class HLMPageFragment extends Fragment {
-    int tolerancePixels = 50;
 
     String userKey = HLMSlidePagerActivity.userKey;
 
@@ -34,11 +33,10 @@ public class HLMPageFragment extends Fragment {
     ImageView viewUserImage;
     ImageView dropZone1;
     ImageView dropZone2;
-    ImageView dropZoneLeft;
-    ImageView dropZoneRight;
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
     int displayWidth;
+    int tolerancePixels = 150;
     boolean flagOne = false;
     boolean flagTwo = false;
     boolean flagThree = false;
@@ -73,12 +71,11 @@ public class HLMPageFragment extends Fragment {
 
         dropZone1 = (ImageView) view.findViewById(R.id.dropZone1);
         dropZone2 = (ImageView) view.findViewById(R.id.dropZone2);
-        dropZoneLeft = (ImageView) view.findViewById(R.id.dropZoneLeft);
-        dropZoneRight = (ImageView) view.findViewById(R.id.dropZoneRight);
 
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         displayHeight = metrics.heightPixels;
         displayWidth = metrics.widthPixels;
+        tolerancePixels = metrics.heightPixels / 6; // Gives one third of the Screen Height For tolerance.
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
         viewUserImage.setOnTouchListener(new View.OnTouchListener() {
@@ -120,7 +117,7 @@ public class HLMPageFragment extends Fragment {
                         break;
                     case MotionEvent.ACTION_MOVE:
 
-                        System.out.println("Move: " + xRaw + " Display height: " + displayHeight / 2);
+                        //System.out.println("Move: " + xRaw + " Display height: " + displayHeight / 2);
                         v.setX((v.getX() - v.getWidth() / 2) + x);
                         v.setY((v.getY() - v.getHeight() / 2) + y);
                         if (yRaw < (displayHeight / 2 - tolerancePixels) && !flagOne) {
