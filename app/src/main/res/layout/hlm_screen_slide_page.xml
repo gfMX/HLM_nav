@@ -18,7 +18,7 @@
         <ImageView
             android:id="@+id/dropZone2"
             android:layout_width="match_parent"
-            android:layout_height="180dp"
+            android:layout_height="130dp"
             android:layout_below="@+id/imageView"
             android:layout_centerHorizontal="true"
             android:contentDescription="@string/app_name"
@@ -39,20 +39,30 @@
             android:layout_width="wrap_content"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:src="@drawable/no_user"
+            android:src="@drawable/ic_person_black"
             android:contentDescription="@string/text_hlm_users"
             android:layout_below="@+id/textView"
             android:layout_centerHorizontal="true"
             android:padding="15dp"
             android:background="@color/colorWhite"
             android:id="@+id/imageView" />
+        <RatingBar
+            android:id="@+id/rating"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="?android:attr/ratingBarStyle"
+            android:numStars="5"
+            android:stepSize="0.5"
+            android:isIndicator="false"
+            android:layout_below="@id/imageView"
+            android:layout_centerHorizontal="true"/>
         <TextView
             android:layout_margin="15dp"
             android:layout_width="280dp"
             android:layout_height="wrap_content"
             android:id="@+id/userDescription"
             android:text="@string/text_slide"
-            android:layout_below="@+id/imageView"
+            android:layout_below="@+id/rating"
             android:layout_centerHorizontal="true" />
     </RelativeLayout>
 </ScrollView>

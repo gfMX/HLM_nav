@@ -6,11 +6,13 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
 import android.util.DisplayMetrics;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -33,14 +35,23 @@ public class HLMPageFragment extends Fragment {
     ImageView viewUserImage;
     ImageView dropZone1;
     ImageView dropZone2;
+    RatingBar ratingBar;
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
     int displayWidth;
-    int tolerancePixels = 150;
+    int tolerancePixels = 100; //Initial value is recalculate with display Height
+    int screenUp;
+    int screenDown;
+    int screenPart;
+    int screenParts = 13;
+    int starsRating;
     boolean flagOne = false;
     boolean flagTwo = false;
     boolean flagThree = false;
     boolean flagFour = false;
+
+    float distanceY = 0;
+    float distanceX = 0;
 
     TextView viewUserDescription;
     Toast toast1;
@@ -68,6 +79,7 @@ public class HLMPageFragment extends Fragment {
         viewUserAlias = (TextView) view.findViewById(R.id.textView);
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
+        ratingBar = (RatingBar) view.findViewById(R.id.rating);
 
         dropZone1 = (ImageView) view.findViewById(R.id.dropZone1);
         dropZone2 = (ImageView) view.findViewById(R.id.dropZone2);
@@ -76,6 +88,11 @@ public class HLMPageFragment extends Fragment {
         displayHeight = metrics.heightPixels;
         displayWidth = metrics.widthPixels;
         tolerancePixels = metrics.heightPixels / 6; // Gives one third of the Screen Height For tolerance.
+        screenUp = displayHeight / 2 - tolerancePixels;
+        screenDown = displayHeight / 2 + tolerancePixels;
+        screenPart = displayHeight / screenParts;
+
+        getUserDetails(userKey);
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
         viewUserImage.setOnTouchListener(new View.OnTouchListener() {
@@ -86,9 +103,26 @@ public class HLMPageFragment extends Fragment {
                 int xRaw = (int) event.getRawX();
                 int yRaw = (int) event.getRawY();
 
+                //Adds the users that Current User likes
+                DatabaseReference referenceLikeUser = database.getReference()
+                        .child("users")
+                        .child(firebaseUser.getUid())
+                        .child("like_user")
+                        .child(userKey);
+                
+                //Adds the rate of the Current User to the rating of the external user
+                DatabaseReference referenceUserRated = database.getReference()
+                        .child("users")
+                        .child(userKey)
+                        .child("user_rate")
+                        .child(firebaseUser.getUid());
+
+
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
                         System.out.println("Down");
+                        distanceX = x;
+                        distanceY = y;
 
                         break;
                     case MotionEvent.ACTION_UP:
@@ -96,15 +130,21 @@ public class HLMPageFragment extends Fragment {
                         v.setTranslationY(0);
                         v.setTranslationX(0);
 
-                        if (yRaw < (displayHeight / 2 - tolerancePixels)) {
+                        if (yRaw < screenUp) {
                             System.out.println("User ID: " + userKey);
+                            referenceLikeUser.setValue(true);
                             Toast.makeText(getContext(), "Added!", Toast.LENGTH_SHORT).show();
 
                         }
-                        if (yRaw > (displayHeight / 2 + tolerancePixels)) {
-                            //Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT).show();
-
+                        if (yRaw > screenDown) {
+                            System.out.println("User ID: " + userKey);
+                            referenceLikeUser.setValue(null);
+                            Toast.makeText(getContext(), "Removed!", Toast.LENGTH_SHORT).show();
                         }
+
+                        referenceUserRated.setValue(starsRating);
+
+                        resetFlags();
 
                         break;
                     case MotionEvent.ACTION_POINTER_DOWN:
@@ -116,63 +156,64 @@ public class HLMPageFragment extends Fragment {
 
                         break;
                     case MotionEvent.ACTION_MOVE:
-
-                        //System.out.println("Move: " + xRaw + " Display height: " + displayHeight / 2);
                         v.setX((v.getX() - v.getWidth() / 2) + x);
                         v.setY((v.getY() - v.getHeight() / 2) + y);
-                        if (yRaw < (displayHeight / 2 - tolerancePixels) && !flagOne) {
+                        if (yRaw < screenUp && !flagOne) {
                             System.out.println("Up");
                             toast1 = Toast.makeText(getContext(), "I Like it!", Toast.LENGTH_SHORT);
+                            toast1.setGravity(Gravity.CENTER,0,400);
                             toast1.show();
 
+                            resetFlags();
                             flagOne = true;
-                            flagTwo = false;
-                            flagThree = false;
-                            flagFour = false;
                         }
-                        if (yRaw > (displayHeight / 2 + tolerancePixels) && !flagTwo) {
+                        if (yRaw > screenDown && !flagTwo) {
                             System.out.println("Down");
                             toast2 = Toast.makeText(getContext(), "I don't Like it!", Toast.LENGTH_SHORT);
+                            toast2.setGravity(Gravity.CENTER,0,-350);
                             toast2.show();
 
-                            flagOne = false;
+                            resetFlags();
                             flagTwo = true;
-                            flagThree = false;
-                            flagFour = false;
-                        }/*
-                        if (xRaw < (displayWidth/2 + tolerancePixels) && !flagThree) {
-                            System.out.println("Left");
-                            toast2 = Toast.makeText(getContext(), "Nop!", Toast.LENGTH_SHORT);
-                            toast2.setGravity(Gravity.TOP,0,120);
-                            toast2.show();
-
-                            flagOne = false;
-                            flagTwo = false;
-                            flagThree = true;
-                            flagFour = false;
-
-                            event.setAction(MotionEvent.ACTION_UP);
-                            onTouch(v, event);
                         }
-                        if (xRaw > (displayWidth/2 + tolerancePixels) && !flagFour){
-                            System.out.println("Right");
-                            toast2 = Toast.makeText(getContext(), "Maybe", Toast.LENGTH_SHORT);
-                            toast2.setGravity(Gravity.TOP,0,120);
-                            toast2.show();
 
-                            flagOne = false;
-                            flagTwo = false;
-                            flagThree = false;
-                            flagFour = true;
-                        }*/
-
+                        if (yRaw < screenPart){
+                            //Upper limit of the screen
+                            System.out.println("None");
+                        } else if (yRaw < screenPart * 2) {
+                            starsRating = 5;
+                        } else if (yRaw < screenPart * 3) {
+                            starsRating = 4;
+                        } else if (yRaw < screenPart * 4) {
+                            starsRating = 3;
+                        } else if (yRaw < screenPart * 5) {
+                            starsRating = 2;
+                        } else if (yRaw < screenPart * 6) {
+                            starsRating = 1;
+                        } else if (yRaw < screenPart * 7) {
+                            //Null zone doesn't add or change Rating
+                            System.out.println("None");
+                            starsRating = 0;
+                        } else if (yRaw < screenPart * 8) {
+                            starsRating = 5;
+                        } else if (yRaw < screenPart * 9) {
+                            starsRating = 4;
+                        } else if (yRaw < screenPart * 10) {
+                            starsRating = 3;
+                        } else if (yRaw < screenPart * 11) {
+                            starsRating = 2;
+                        } else if (yRaw < screenPart * 12) {
+                            starsRating = 1;
+                        } else if (yRaw < screenPart * 13) {
+                            //Way too low of the screen
+                            System.out.println("None");
+                        }
+                        ratingBar.setRating(starsRating);
                         break;
                 }
                 return true;
             }
         });
-
-        getUserDetails(userKey);
     }
 
     private void getUserDetails (String userKey){
@@ -211,12 +252,21 @@ public class HLMPageFragment extends Fragment {
         });
     }
 
+    private void showStars(int numberOfStars){
+
+    }
+
+    private void resetFlags (){
+        flagOne = false;
+        flagTwo = false;
+        flagThree = false;
+        flagFour = false;
+    }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         viewUserImage.setImageBitmap(null);
-        viewUserImage.destroyDrawingCache();
     }
 }
 

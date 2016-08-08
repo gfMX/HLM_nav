@@ -33,7 +33,7 @@
 
     <ImageView
         android:id="@+id/hlm_image"
-        android:src="@drawable/no_user"
+        android:src="@drawable/ic_person_black"
         android:visibility="visible"
         android:layout_width="230dp"
         android:layout_height="230dp"

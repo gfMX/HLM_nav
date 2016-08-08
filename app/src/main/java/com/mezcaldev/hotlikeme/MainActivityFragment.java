@@ -383,7 +383,7 @@ public class MainActivityFragment extends Fragment {
         } else {
             profilePic.setProfileId(null);
             profilePic.setVisibility(View.INVISIBLE);
-            imageProfileHLM.setImageResource(R.drawable.no_user);
+            imageProfileHLM.setImageResource(R.drawable.ic_person_black);
             imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(signInText);
             text_instruct.setText(null);
