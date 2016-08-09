@@ -167,9 +167,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int numChildren = (int) dataSnapshot.getChildrenCount();
 
-                String string = dataSnapshot.getValue().toString();
                 System.out.println("Number of users: " + numChildren);
-                //System.out.println("Original value: " + string);
 
                 for (DataSnapshot data: dataSnapshot.getChildren()){
                     System.out.println("User: " + data.getKey());

@@ -479,6 +479,23 @@ public class MainActivityFragment extends Fragment {
         request.executeAsync();
     }
 
+    private class getPreferencesFromFirebase extends AsyncTask <Void, Void, Void>{
+        @Override
+        protected void onPreExecute (){
+
+        }
+
+        @Override
+        protected Void doInBackground(Void... voids) {
+
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result){
+
+        }
+    }
+
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);

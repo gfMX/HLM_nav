@@ -36,6 +36,7 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 
 public class ImageBrowserFragment extends Fragment {
@@ -348,10 +349,17 @@ public class ImageBrowserFragment extends Fragment {
                             databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
+                                    //System.out.println("Dah: " + dataSnapshot.getChildren().iterator().next());
+                                    Iterator <DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
                                     for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                        if (data.getKey().equals("bla")) {
+                                        //System.out.println("Key: " + deleteListImages);
+                                        if (iterator.hasNext()) {
+                                            System.out.println("Dah: " + iterator.next());
+                                            if (data.getKey().equals(iterator.next().toString())) {
 
+                                            }
                                         }
+                                        System.out.println("Deh: " + data);
                                     }
 
                                 }

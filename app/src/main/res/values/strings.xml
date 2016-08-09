@@ -39,13 +39,11 @@
         <item>Girls</item>
         <item>Boys</item>
         <item>Both</item>
-        <item>Please choose</item>
     </string-array>
     <string-array name="pref_looking_for_values">
         <item>female</item>
         <item>male</item>
         <item>both</item>
-        <item>not defined</item>
     </string-array>
 
     <string name="pref_title_description">A little description about you:</string>
