@@ -28,7 +28,8 @@ public class ImageBrowser extends AppCompatActivity {
 
     List<String> uploadUrls = new ArrayList<>();
     List<String> uploadTiny = new ArrayList<>();
-    List<Integer> deleteList = new ArrayList<>();
+    List<String> deleteListImages = new ArrayList<>();
+    List<String> deleteListThumbs = new ArrayList<>();
 
 
     @Override
@@ -130,16 +131,17 @@ public class ImageBrowser extends AppCompatActivity {
         }
         if (id == R.id.action_delete_image){
             Log.i(TAG, "Delete");
-            deleteList = ImageBrowserFragment.imIdsSelected;
-            if (deleteList.size()>0){
-                Integer numberOfImages = deleteList.size();
+            deleteListImages = ImageBrowserFragment.deleteListImages;
+            deleteListThumbs = ImageBrowserFragment.deleteListThumbs;
+            if (deleteListImages.size()>0){
+                Integer numberOfImages = deleteListImages.size();
                 String deleteText =
                         getResources().getString(R.string.text_deleting_selected_images_1) +
                         numberOfImages.toString() +
                         getResources().getString(R.string.text_deleting_selected_images_2);
 
                 ImageSaver deleteImages = new ImageSaver();
-                deleteImages.DeleteImagesOnFire(deleteList);
+                deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs);
 
                 Snackbar.make(getWindow().getDecorView(),
                         deleteText,

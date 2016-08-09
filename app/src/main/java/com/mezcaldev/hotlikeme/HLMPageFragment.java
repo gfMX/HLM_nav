@@ -2,6 +2,7 @@ package com.mezcaldev.hotlikeme;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -36,6 +37,7 @@ public class HLMPageFragment extends Fragment {
     ImageView dropZone1;
     ImageView dropZone2;
     RatingBar ratingBar;
+
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
     int displayWidth;
@@ -44,11 +46,14 @@ public class HLMPageFragment extends Fragment {
     int screenDown;
     int screenPart;
     int screenParts = 13;
-    int starsRating;
+    float starsRating;
+
     boolean flagOne = false;
     boolean flagTwo = false;
     boolean flagThree = false;
     boolean flagFour = false;
+
+    UserRating userRating = new UserRating();
 
     float distanceY = 0;
     float distanceX = 0;
@@ -56,7 +61,6 @@ public class HLMPageFragment extends Fragment {
     TextView viewUserDescription;
     Toast toast1;
     Toast toast2;
-    String DEBUG_TAG = "Debug: ";
 
 
     //Firebase Initialization
@@ -64,6 +68,8 @@ public class HLMPageFragment extends Fragment {
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
+    DatabaseReference referenceLikeUser;
+    DatabaseReference referenceUserRated;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -76,6 +82,20 @@ public class HLMPageFragment extends Fragment {
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
 
+        //Adds the users that Current User likes
+        referenceLikeUser = database.getReference()
+                .child("users")
+                .child(firebaseUser.getUid())
+                .child("like_user")
+                .child(userKey);
+
+        //Adds the rate of the Current User to the rating of the external user
+        referenceUserRated = database.getReference()
+                .child("users")
+                .child(userKey)
+                .child("user_rate")
+                .child(firebaseUser.getUid());
+
         viewUserAlias = (TextView) view.findViewById(R.id.textView);
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
@@ -87,12 +107,22 @@ public class HLMPageFragment extends Fragment {
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         displayHeight = metrics.heightPixels;
         displayWidth = metrics.widthPixels;
-        tolerancePixels = metrics.heightPixels / 6; // Gives one third of the Screen Height For tolerance.
+        tolerancePixels = metrics.heightPixels / 24; // Divided by 6 Gives one third of the Screen Height For tolerance.
         screenUp = displayHeight / 2 - tolerancePixels;
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
         getUserDetails(userKey);
+        userRating.execute();
+
+        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+
+                starsRating = rating;
+                referenceUserRated.setValue(starsRating);
+
+            }
+        });
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
         viewUserImage.setOnTouchListener(new View.OnTouchListener() {
@@ -100,23 +130,8 @@ public class HLMPageFragment extends Fragment {
             public boolean onTouch(View v, MotionEvent event) {
                 int x = (int) event.getX();
                 int y = (int) event.getY();
-                int xRaw = (int) event.getRawX();
+                //int xRaw = (int) event.getRawX();
                 int yRaw = (int) event.getRawY();
-
-                //Adds the users that Current User likes
-                DatabaseReference referenceLikeUser = database.getReference()
-                        .child("users")
-                        .child(firebaseUser.getUid())
-                        .child("like_user")
-                        .child(userKey);
-                
-                //Adds the rate of the Current User to the rating of the external user
-                DatabaseReference referenceUserRated = database.getReference()
-                        .child("users")
-                        .child(userKey)
-                        .child("user_rate")
-                        .child(firebaseUser.getUid());
-
 
                 switch (event.getAction() & MotionEvent.ACTION_MASK) {
                     case MotionEvent.ACTION_DOWN:
@@ -160,7 +175,7 @@ public class HLMPageFragment extends Fragment {
                         v.setY((v.getY() - v.getHeight() / 2) + y);
                         if (yRaw < screenUp && !flagOne) {
                             System.out.println("Up");
-                            toast1 = Toast.makeText(getContext(), "I Like it!", Toast.LENGTH_SHORT);
+                            toast1 = Toast.makeText(getContext(), "I will like to get in touch!", Toast.LENGTH_SHORT);
                             toast1.setGravity(Gravity.CENTER,0,400);
                             toast1.show();
 
@@ -169,7 +184,7 @@ public class HLMPageFragment extends Fragment {
                         }
                         if (yRaw > screenDown && !flagTwo) {
                             System.out.println("Down");
-                            toast2 = Toast.makeText(getContext(), "I don't Like it!", Toast.LENGTH_SHORT);
+                            toast2 = Toast.makeText(getContext(), "I don't wan't to get in touch.", Toast.LENGTH_SHORT);
                             toast2.setGravity(Gravity.CENTER,0,-350);
                             toast2.show();
 
@@ -252,8 +267,38 @@ public class HLMPageFragment extends Fragment {
         });
     }
 
-    private void showStars(int numberOfStars){
+    public class UserRating extends AsyncTask <Void, Void, Void>{
+        @Override
+        protected void onPreExecute() {
 
+        }
+        @Override
+        protected Void doInBackground(Void...params) {
+            DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("user_rate");
+            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    for (DataSnapshot data : dataSnapshot.getChildren()) {
+                        if (data.getKey().equals(firebaseUser.getUid())) {
+                            starsRating = Float.valueOf(data.getValue().toString()) / dataSnapshot.getChildrenCount();
+                            ratingBar.setRating(starsRating);
+                            System.out.println("Long: " + starsRating);
+                        }
+                    }
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+            return null;
+        }
+        @Override
+        protected void onPostExecute(Void result){
+
+        }
     }
 
     private void resetFlags (){

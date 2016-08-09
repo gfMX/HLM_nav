@@ -57,6 +57,8 @@ public class ImageBrowserFragment extends Fragment {
     String firebaseImageStorage;
     List<String> imageKeyList = new ArrayList<>();
     List<String> thumbKeyList = new ArrayList<>();
+    static  List<String> deleteListImages = new ArrayList<>();
+    static  List<String> deleteListThumbs = new ArrayList<>();
 
     //Internal parameters
     private GridView gridView;
@@ -238,7 +240,7 @@ public class ImageBrowserFragment extends Fragment {
 
                             Log.i(TAG, "Total Images: " + nElements);
                             dbTotalImagesRef.setValue(nElements);
-                            imagesFromFire((nElements - 1), dataSnapshot);
+                            imagesFromFire(dataSnapshot);
                         }
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
@@ -255,7 +257,7 @@ public class ImageBrowserFragment extends Fragment {
 
         }
     }
-    private void imagesFromFire (int uriLength, final DataSnapshot dataSnapshot){
+    private void imagesFromFire (final DataSnapshot dataSnapshot){
         DataSnapshot snapImages = dataSnapshot.child("images");
         for (DataSnapshot data: snapImages.getChildren()) {
             imageKeyList.add(data.getKey());
@@ -325,14 +327,23 @@ public class ImageBrowserFragment extends Fragment {
                 gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
                     @Override
                     public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        if (!imIdsSelected.contains(position)) {
+                        //System.out.println("Key List1: " + imageKeyList);
+                        //System.out.println("Key List2: " + thumbKeyList);
+
+                        if (!deleteListImages.contains(imageKeyList.get(position)) && !imIdsSelected.contains(position)) {
+                            deleteListImages.add(imageKeyList.get(position));
+                            deleteListThumbs.add(thumbKeyList.get(position));
                             imIdsSelected.add(position);
                         } else {
+                            deleteListImages.remove(imIdsSelected.indexOf(position));
+                            deleteListThumbs.remove(imIdsSelected.indexOf(position));
                             imIdsSelected.remove(imIdsSelected.indexOf(position));
                         }
-                        if (imIdsSelected.size() > 0){
+                        if (deleteListImages.size() > 0){
+                            System.out.println("Images Keys: " + deleteListImages);
+                            System.out.println("Thumbs Keys: " + deleteListThumbs);
                             //Am I using this 'if' for something?
-                            Log.i(TAG, "Menu Item: " + item); //This is null..
+                            //Log.i(TAG, "Menu Item: " + item); //This is null..
                             //item.setVisible(true);
                         }
                         imageAdapter.notifyDataSetChanged();
@@ -360,5 +371,7 @@ public class ImageBrowserFragment extends Fragment {
         imIdsSelected.clear();
         imUrlsSelected.clear();
         imThumbSelected.clear();
+        deleteListImages.clear();
+        deleteListThumbs.clear();
     }
 }

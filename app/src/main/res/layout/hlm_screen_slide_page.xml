@@ -46,13 +46,12 @@
             android:padding="15dp"
             android:background="@color/colorWhite"
             android:id="@+id/imageView" />
-        <RatingBar
+        <RatingBar style="?android:attr/ratingBarStyle"
             android:id="@+id/rating"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            style="?android:attr/ratingBarStyle"
             android:numStars="5"
-            android:stepSize="0.5"
+            android:stepSize="1"
             android:isIndicator="false"
             android:layout_below="@id/imageView"
             android:layout_centerHorizontal="true"/>
