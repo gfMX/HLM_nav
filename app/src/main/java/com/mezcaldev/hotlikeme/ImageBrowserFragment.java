@@ -342,9 +342,26 @@ public class ImageBrowserFragment extends Fragment {
                         if (deleteListImages.size() > 0){
                             System.out.println("Images Keys: " + deleteListImages);
                             System.out.println("Thumbs Keys: " + deleteListThumbs);
-                            //Am I using this 'if' for something?
-                            //Log.i(TAG, "Menu Item: " + item); //This is null..
-                            //item.setVisible(true);
+
+                            //Method for getting the values of the keys to delete:
+                            DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid()).child("images");
+                            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    for (DataSnapshot data : dataSnapshot.getChildren()) {
+                                        if (data.getKey().equals("bla")) {
+
+                                        }
+                                    }
+
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
+
                         }
                         imageAdapter.notifyDataSetChanged();
                         return true;
@@ -374,4 +391,5 @@ public class ImageBrowserFragment extends Fragment {
         deleteListImages.clear();
         deleteListThumbs.clear();
     }
+
 }
