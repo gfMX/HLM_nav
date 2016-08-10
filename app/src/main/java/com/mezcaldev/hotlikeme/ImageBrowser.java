@@ -35,17 +35,24 @@ public class ImageBrowser extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_image_browser);
+
+        Intent intent = getIntent();
+        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
+            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
+        }
+
+        if (browseImages.equals("Firebase")){
+            setContentView(R.layout.activity_fire_browser);
+        } else {
+            setContentView(R.layout.activity_image_browser);
+        }
+
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
         fireUser = MainActivityFragment.user;
         database = FirebaseDatabase.getInstance();
 
-        Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
-            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
-        }
 
         if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -127,6 +134,7 @@ public class ImageBrowser extends AppCompatActivity {
 
         if (id == R.id.action_settings) {
             startActivity(new Intent(this, SettingsActivity.class));
+            finish();
             return true;
         }
         if (id == R.id.action_delete_image){
