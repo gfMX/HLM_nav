@@ -345,11 +345,12 @@ public class ImageSaver {
                 DatabaseReference thumbReference =
                         database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs);
 
-                System.out.println("Positions to delete: " + imagesToDelete);
+                System.out.println("Images to delete: " + imagesToDelete);
+                System.out.println("Thumbs to delete: " + thumbsToDelete);
 
-                for (int i = 0; i < imagesToDelete.size(); i++){
-                    System.out.println("References: " + imageReference.child(String.valueOf(imagesToDelete.get(i))));
-                }
+                /*for (int i = 0; i < imagesToDelete.size(); i++){
+                    System.out.println("References: " );
+                }*/
                 // On the works
                 /*for (int i = 0; i < deleteList.size(); i++) {
                     StorageReference deletetRefImage = storageRef

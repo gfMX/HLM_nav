@@ -133,6 +133,7 @@ public class ImageBrowser extends AppCompatActivity {
             Log.i(TAG, "Delete");
             deleteListImages = ImageBrowserFragment.keyOfImage;
             deleteListThumbs = ImageBrowserFragment.keyOfThumb;
+
             if (deleteListImages.size()>0){
                 Integer numberOfImages = deleteListImages.size();
                 String deleteText =
@@ -148,6 +149,11 @@ public class ImageBrowser extends AppCompatActivity {
                             public void onClick(View v) {
                                 ImageSaver deleteImages = new ImageSaver();
                                 deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs);
+                                Snackbar.make(getWindow().getDecorView(),
+                                        getResources().getString(R.string.text_deleting_images),
+                                        Snackbar.LENGTH_LONG)
+                                        .setAction("Action", null)
+                                        .show();
                             }
                         })
                         .show();

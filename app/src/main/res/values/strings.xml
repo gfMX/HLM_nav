@@ -140,7 +140,8 @@
         If you want to delete images, please select at least one, with a Long Click
     </string>
     <string name="text_deleting_selected_images_1">You ara about to delete&#160;</string>
-    <string name="text_deleting_selected_images_2">&#160;image(s). Sure?</string>
+    <string name="text_deleting_selected_images_2">&#160;image(s). Are you Sure?</string>
+    <string name="text_deleting_images">Deleting Images&#8230;</string>
     <string name="text_slide">
         Sample text for slide pages.\nHere will see the user profile pics.
     </string>
