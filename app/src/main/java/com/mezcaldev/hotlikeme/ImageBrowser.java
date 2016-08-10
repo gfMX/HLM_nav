@@ -7,7 +7,6 @@ import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -24,28 +23,16 @@ public class ImageBrowser extends AppCompatActivity {
 
     FirebaseUser fireUser;
     FirebaseDatabase database;
-    String browseImages;
 
     List<String> uploadUrls = new ArrayList<>();
     List<String> uploadTiny = new ArrayList<>();
-    List<String> deleteListImages = new ArrayList<>();
-    List<String> deleteListThumbs = new ArrayList<>();
 
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_image_browser);
 
-        Intent intent = getIntent();
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
-            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
-        }
-
-        if (browseImages.equals("Firebase")){
-            setContentView(R.layout.activity_fire_browser);
-        } else {
-            setContentView(R.layout.activity_image_browser);
-        }
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -60,9 +47,6 @@ public class ImageBrowser extends AppCompatActivity {
 
         FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
         if (fab != null) {
-            if (browseImages.equals("Firebase")){
-                fab.setVisibility(View.GONE);
-            } else {
                 fab.setVisibility(View.VISIBLE);
                 fab.setOnClickListener(new View.OnClickListener() {
                     @Override
@@ -114,18 +98,13 @@ public class ImageBrowser extends AppCompatActivity {
                     }
                 });
             }
-        }
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.menu_image_browser, menu);
         MenuItem trashCan = menu.findItem(R.id.action_delete_image);
 
-        if (browseImages.equals("Firebase")){
-            trashCan.setVisible(true);
-        } else {
-            trashCan.setVisible(false);
-        }
+        trashCan.setVisible(false);
         return true;
     }
     @Override
@@ -137,43 +116,7 @@ public class ImageBrowser extends AppCompatActivity {
             finish();
             return true;
         }
-        if (id == R.id.action_delete_image){
-            Log.i(TAG, "Delete");
-            deleteListImages = ImageBrowserFragment.keyOfImage;
-            deleteListThumbs = ImageBrowserFragment.keyOfThumb;
 
-            if (deleteListImages.size()>0){
-                Integer numberOfImages = deleteListImages.size();
-                String deleteText =
-                        getResources().getString(R.string.text_deleting_selected_images_1) +
-                        numberOfImages.toString() +
-                        getResources().getString(R.string.text_deleting_selected_images_2);
-
-                Snackbar.make(getWindow().getDecorView(),
-                        deleteText,
-                        Snackbar.LENGTH_LONG)
-                        .setAction("DELETE", new View.OnClickListener() {
-                            @Override
-                            public void onClick(View v) {
-                                ImageSaver deleteImages = new ImageSaver();
-                                deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs);
-                                Snackbar.make(getWindow().getDecorView(),
-                                        getResources().getString(R.string.text_deleting_images),
-                                        Snackbar.LENGTH_LONG)
-                                        .setAction("Action", null)
-                                        .show();
-                            }
-                        })
-                        .show();
-            } else {
-                Snackbar.make(getWindow().getDecorView(),
-                        getResources().getString(R.string.text_delete_images_no_selected),
-                        Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
-                        .show();
-            }
-            return true;
-        }
         return super.onOptionsItemSelected(item);
     }
 

@@ -220,10 +220,7 @@ public class MainActivityFragment extends Fragment {
                           Toast.LENGTH_LONG)
                           .show();
 
-                  strValue = "Facebook";
-
                   Intent ib = new Intent(getActivity(), ImageBrowser.class);
-                  ib.putExtra(Intent.EXTRA_TEXT, strValue);
                   startActivity(ib);
                   break;
               case R.id.btn_start:
@@ -241,10 +238,7 @@ public class MainActivityFragment extends Fragment {
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
                               Toast.LENGTH_LONG).show();
 
-                      strValue = "Firebase";
-
-                      Intent ic = new Intent(getActivity(), ImageBrowser.class);
-                      ic.putExtra(Intent.EXTRA_TEXT, strValue);
+                      Intent ic = new Intent(getActivity(), FireBrowserActivity.class);
                       startActivity(ic);
                   } else {
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
