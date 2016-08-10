@@ -460,6 +460,7 @@ public class MainActivityFragment extends Fragment {
                             SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                             SharedPreferences.Editor editor = sharedPreferences.edit();
                             editor.putString("gender", gender);
+                            editor.putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true));
                             editor.apply();
 
                             databaseReference.child("/preferences/gender/").setValue(gender);

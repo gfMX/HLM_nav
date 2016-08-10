@@ -17,8 +17,6 @@ import android.widget.GridView;
 
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
-import com.facebook.GraphRequest;
-import com.facebook.GraphResponse;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -31,14 +29,10 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import java.util.ArrayList;
 import java.util.List;
 
-public class ImageBrowserFragment extends Fragment {
+public class FireBrowser extends Fragment {
 
     //Facebook parameters
     private static final String TAG = "Image Browser: ";
@@ -72,10 +66,6 @@ public class ImageBrowserFragment extends Fragment {
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
-    //List<String> refImages = new ArrayList<>();
-    //List<String> refThumbs = new ArrayList<>();
-
-    getFbPhotos fbPhotos = new getFbPhotos();
     getFirePhotos firePhotos = new getFirePhotos();
 
     Boolean breakFlag = false;
@@ -83,7 +73,7 @@ public class ImageBrowserFragment extends Fragment {
     MenuItem item;
     String browseImages;
 
-    public ImageBrowserFragment() {
+    public FireBrowser() {
 
     }
 
@@ -124,104 +114,9 @@ public class ImageBrowserFragment extends Fragment {
         Log.i(TAG, "Browse Images Current Value: " + browseImages);
 
         cleaningVars();
-
-        if(browseImages.equals("Facebook")) {
-            Log.i(TAG, "Section for Facebook Image Browser");
-            //getFbPhotos fbPhotos = new getFbPhotos();
-            fbPhotos.execute();
-        } else if (browseImages.equals("Firebase")){
-            Log.i(TAG, "Section for Firebase Browser");
-            //final getFirePhotos firePhotos = new getFirePhotos();
-            firePhotos.execute();
-        }
+        firePhotos.execute();
     }
 
-    //--------------------------------------------------------------------------------------------
-    //Functions to browse and upload Facebook Photos
-    //--------------------------------------------------------------------------------------------
-    private class getFbPhotos extends AsyncTask <Void, Void, Void>{
-        @Override
-        protected void onPreExecute(){
-            cleaningVars();
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-
-            GraphRequest request = GraphRequest.newGraphPathRequest(
-                    accessToken,
-                    "/me/photos",
-                    new GraphRequest.Callback() {
-                        @Override
-                        public void onCompleted(GraphResponse response) {
-                            // Application code
-                            JSONObject photoOb = response.getJSONObject();
-                            photoSelectionFace(photoOb);
-                        }
-                    }
-            );
-            Bundle parameters = new Bundle();
-            parameters.putString("fields", fieldsParams);
-            parameters.putString("limit", limitParams);
-            request.setParameters(parameters);
-            request.executeAsync();
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
-    }
-    public void photoSelectionFace (JSONObject photoObject){
-        try {
-            if (photoObject != null) {
-                JSONArray jsonArray1 = photoObject.getJSONArray("data");
-                Log.i(TAG, "Data length: " + photoObject.getJSONArray("data").length());
-
-                for (int i = 0; i < jsonArray1.length(); i++) {
-                    JSONObject object1 = jsonArray1.getJSONObject(i);
-                    JSONObject object2 = object1.getJSONArray("images").getJSONObject(0);
-
-                    String sObject1 = object1.get("picture").toString();
-                    String sObject3 = object2.get("source").toString();
-                    String sObject2 = object1.get("id").toString();
-
-                    imUrls.add(sObject1);
-                    imImages.add(sObject3);
-                    imIds.add(sObject2);
-                }
-
-                final ImageAdapter imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
-                gridView = (GridView) getActivity().findViewById(R.id.gridView);
-                gridView.setAdapter(imageAdapter);
-                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                        if (!imIdsSelected.contains(position)) {
-                            imIdsSelected.add(position);
-                            imUrlsSelected.add(imImages.get(position));
-                            imThumbSelected.add(imUrls.get(position));
-                        } else {
-                            imUrlsSelected.remove(imIdsSelected.indexOf(position));
-                            imThumbSelected.remove(imIdsSelected.indexOf(position));
-                            imIdsSelected.remove(imIdsSelected.indexOf(position));
-                        }
-                        imageAdapter.notifyDataSetChanged();
-                    }
-                });
-
-
-            } else {
-                Log.w(TAG, "Nothing to do here!");
-            }
-        } catch (JSONException e){
-            e.printStackTrace();
-        }
-    }
-
-    //--------------------------------------------------------------------------------------------
-    //Functions to Browse and select Firebase Photos
-    //--------------------------------------------------------------------------------------------
     private class getFirePhotos extends AsyncTask<Void, Void, Void>{
         @Override
         protected void onPreExecute (){
@@ -264,7 +159,7 @@ public class ImageBrowserFragment extends Fragment {
     private void imagesFromFire (DataSnapshot dataSnapshot){
         //Start changes
         DataSnapshot snapThumbs = dataSnapshot.child("thumbs");
-       for (DataSnapshot data : snapThumbs.getChildren()) {
+        for (DataSnapshot data : snapThumbs.getChildren()) {
             thumbKeyList.add(data.getKey());
         }
         DataSnapshot snapImages = dataSnapshot.child("images");

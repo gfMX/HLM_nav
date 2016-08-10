@@ -122,7 +122,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                     .setValue(sharedPreferences.getString("sync_distance", "100"));
 
             databaseReference.child("/preferences/visible/")
-                    .setValue(sharedPreferences.getBoolean("visible_switch", false));
+                    .setValue(sharedPreferences.getBoolean("visible_switch", true));
             databaseReference.child("/preferences/gps_enabled/")
                     .setValue(sharedPreferences.getBoolean("gps_enabled", false));
         }
