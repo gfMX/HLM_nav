@@ -36,7 +36,6 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 
 public class ImageBrowserFragment extends Fragment {
@@ -58,8 +57,10 @@ public class ImageBrowserFragment extends Fragment {
     String firebaseImageStorage;
     List<String> imageKeyList = new ArrayList<>();
     List<String> thumbKeyList = new ArrayList<>();
-    static  List<String> deleteListImages = new ArrayList<>();
-    static  List<String> deleteListThumbs = new ArrayList<>();
+    static List<String> deleteListImages = new ArrayList<>();
+    static List<String> deleteListThumbs = new ArrayList<>();
+    static List<String> keyOfImage = new ArrayList<>();
+    static List<String> keyOfThumb = new ArrayList<>();
 
     //Internal parameters
     private GridView gridView;
@@ -267,17 +268,18 @@ public class ImageBrowserFragment extends Fragment {
         for (DataSnapshot data: snapThumbs.getChildren()) {
             thumbKeyList.add(data.getKey());
         }
-        uriFromFirebase(imageKeyList.size(), dataSnapshot, imageKeyList, thumbKeyList);
+        uriFromFirebase(0, dataSnapshot, imageKeyList, thumbKeyList);
     }
-    private void uriFromFirebase(final int uriLength, final DataSnapshot dataSnapshot, final List<String> imageList, final List<String> thumbList){
+    private void uriFromFirebase(final int iteration, final DataSnapshot dataSnapshot, final List<String> imageList, final List<String> thumbList){
 
-        int i = uriLength - 1;
-        String imageKey = imageList.get(i);
-        String thumbKey = thumbList.get(i);
+        final int size = imageList.size();
+        String imageKey = imageList.get(iteration);
+        String thumbKey = thumbList.get(iteration);
 
         System.out.println("Key: " + imageKey);
         firebaseThumbStorage = dataSnapshot.child("thumbs").child(thumbKey).getValue().toString();
         firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
+        System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
 
             storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
@@ -291,8 +293,8 @@ public class ImageBrowserFragment extends Fragment {
                         public void onSuccess(Uri uri) {
                             imImages.add(uri.toString());
                             photoSelectionFire();
-                            if (uriLength > 1){
-                                uriFromFirebase((uriLength-1),dataSnapshot,imageList, thumbList);
+                            if (iteration < (size -1)){
+                                uriFromFirebase((iteration + 1),dataSnapshot,imageList, thumbList);
                             }
                         }
                     }).addOnFailureListener(new OnFailureListener() {
@@ -344,26 +346,49 @@ public class ImageBrowserFragment extends Fragment {
                             System.out.println("Images Keys: " + deleteListImages);
                             System.out.println("Thumbs Keys: " + deleteListThumbs);
 
-                            //Method for getting the values of the keys to delete:
-                            DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid()).child("images");
-                            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+                            //Method for getting the values of the Images to delete:
+                            DatabaseReference databaseReferenceImages = database.getReference()
+                                    .child("users")
+                                    .child(firebaseUser.getUid())
+                                    .child("images");
+                            databaseReferenceImages.addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
-                                    //System.out.println("Dah: " + dataSnapshot.getChildren().iterator().next());
-                                    Iterator <DataSnapshot> iterator = dataSnapshot.getChildren().iterator();
-                                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                        //System.out.println("Key: " + deleteListImages);
-                                        if (iterator.hasNext()) {
-                                            System.out.println("Dah: " + iterator.next());
-                                            if (data.getKey().equals(iterator.next().toString())) {
-
+                                    for (int a = 0; a < deleteListImages.size(); a++){
+                                        for (DataSnapshot data: dataSnapshot.getChildren()){
+                                            if (deleteListImages.get(a).equals(data.getKey())) {
+                                                System.out.println("Image found!: " + data.getValue());
+                                                keyOfImage.add(data.getValue().toString());
                                             }
+
                                         }
-                                        System.out.println("Deh: " + data);
                                     }
 
                                 }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
 
+                                }
+                            });
+                            //Method for getting the values of the Thumbs to delete:
+                            DatabaseReference databaseReferenceThumbs = database.getReference()
+                                    .child("users")
+                                    .child(firebaseUser.getUid())
+                                    .child("thumbs");
+                            databaseReferenceThumbs.addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    for (int a = 0; a < deleteListImages.size(); a++){
+                                        for (DataSnapshot data: dataSnapshot.getChildren()){
+                                            if (deleteListImages.get(a).equals(data.getKey())) {
+                                                System.out.println("Thumb found!: " + data.getValue());
+                                                keyOfThumb.add(data.getValue().toString());
+                                            }
+
+                                        }
+                                    }
+
+                                }
                                 @Override
                                 public void onCancelled(DatabaseError databaseError) {
 
@@ -398,6 +423,8 @@ public class ImageBrowserFragment extends Fragment {
         imThumbSelected.clear();
         deleteListImages.clear();
         deleteListThumbs.clear();
+        keyOfImage.clear();
+        keyOfThumb.clear();
     }
 
 }

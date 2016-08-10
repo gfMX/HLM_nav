@@ -131,8 +131,8 @@ public class ImageBrowser extends AppCompatActivity {
         }
         if (id == R.id.action_delete_image){
             Log.i(TAG, "Delete");
-            deleteListImages = ImageBrowserFragment.deleteListImages;
-            deleteListThumbs = ImageBrowserFragment.deleteListThumbs;
+            deleteListImages = ImageBrowserFragment.keyOfImage;
+            deleteListThumbs = ImageBrowserFragment.keyOfThumb;
             if (deleteListImages.size()>0){
                 Integer numberOfImages = deleteListImages.size();
                 String deleteText =
@@ -140,13 +140,16 @@ public class ImageBrowser extends AppCompatActivity {
                         numberOfImages.toString() +
                         getResources().getString(R.string.text_deleting_selected_images_2);
 
-                ImageSaver deleteImages = new ImageSaver();
-                deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs);
-
                 Snackbar.make(getWindow().getDecorView(),
                         deleteText,
                         Snackbar.LENGTH_LONG)
-                        .setAction("Action", null)
+                        .setAction("DELETE", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                ImageSaver deleteImages = new ImageSaver();
+                                deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs);
+                            }
+                        })
                         .show();
             } else {
                 Snackbar.make(getWindow().getDecorView(),
