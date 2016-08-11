@@ -1,6 +1,5 @@
 package com.mezcaldev.hotlikeme;
 
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -109,18 +108,10 @@ public class ImageBrowserFragment extends Fragment {
             }
         });
 
-        getFbPhotos fbPhotos = new getFbPhotos();
-        fbPhotos.execute();
+        getFbPhotos();
     }
 
-    private class getFbPhotos extends AsyncTask <Void, Void, Void>{
-        @Override
-        protected void onPreExecute(){
-            cleaningVars();
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
-
+    private void getFbPhotos(){
             GraphRequest request = GraphRequest.newGraphPathRequest(
                     accessToken,
                     "/me/photos",
@@ -138,13 +129,6 @@ public class ImageBrowserFragment extends Fragment {
             parameters.putString("limit", limitParams);
             request.setParameters(parameters);
             request.executeAsync();
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
     }
     public void photoSelectionFace (JSONObject photoObject){
         try {
@@ -193,7 +177,7 @@ public class ImageBrowserFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        imageAdapter.clear();
     }
 
 }

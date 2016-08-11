@@ -2,7 +2,6 @@ package com.mezcaldev.hotlikeme;
 
 import android.app.DialogFragment;
 import android.net.Uri;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -37,12 +36,15 @@ public class FireBrowser extends Fragment {
     AccessToken accessToken;
 
     //Firebase//Initialize Firebase
+    FirebaseAuth mAuth;
     FirebaseUser firebaseUser;
     FirebaseDatabase database;
     FirebaseStorage storage;
     StorageReference storageRef;
     DatabaseReference fireRef;
-    FirebaseAuth mAuth;
+    DatabaseReference databaseReference;
+    DatabaseReference databaseReferenceImages;
+    DatabaseReference databaseReferenceThumbs;
     String firebaseThumbStorage;
     String firebaseImageStorage;
     List<String> imageKeyList = new ArrayList<>();
@@ -51,17 +53,20 @@ public class FireBrowser extends Fragment {
     static List<String> deleteListThumbs = new ArrayList<>();
     static List<String> keyOfImage = new ArrayList<>();
     static List<String> keyOfThumb = new ArrayList<>();
+    ValueEventListener valueEventListener;
+    ValueEventListener valueEventListenerThumbs;
+    ValueEventListener valueEventListenerImages;
 
     //Internal parameters
     GridView gridView;
-    static List<String> imUrls = new ArrayList<>();
+    static List<String> imThumbs = new ArrayList<>();
     static List<String> imImages = new ArrayList<>();
-    static List<String> imIds = new ArrayList<>();
+
     static List<Integer> imIdsSelected = new ArrayList<>();     //Actual Position
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
-    ImageAdapter imageAdapter;
+    ImageAdapter imageAdapterFire;
 
     Boolean breakFlag = false;
     int finished = 0;
@@ -98,9 +103,9 @@ public class FireBrowser extends Fragment {
     public void onViewCreated(View view, Bundle savedInstances){
         cleaningVars();
 
-        imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
+        imageAdapterFire = new ImageAdapter(getActivity(), imThumbs, imIdsSelected);
         gridView = (GridView) view.findViewById(R.id.gridViewFire);
-        gridView.setAdapter(imageAdapter);
+        gridView.setAdapter(imageAdapterFire);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Uri imageUri = Uri.parse(imImages.get(position));
@@ -125,91 +130,66 @@ public class FireBrowser extends Fragment {
                 }
 
                 getValuesOfKeys(deleteListImages, deleteListThumbs);
-                imageAdapter.notifyDataSetChanged();
+                imageAdapterFire.notifyDataSetChanged();
 
                 return true;
             }
         });
 
-        getFirePhotos firePhotos = new getFirePhotos();
-        firePhotos.execute();
+        getFirePhotos();
     }
 
-    private class getFirePhotos extends AsyncTask<Void, Void, Void>{
-        @Override
-        protected void onPreExecute (){
-            cleaningVars();
-        }
-        @Override
-        protected Void doInBackground(Void... params) {
+    private void getFirePhotos() {
+        String userId = firebaseUser.getUid();
+        databaseReference = database.getReference().child("users").child(userId);
 
-            String userId = firebaseUser.getUid();
-            final DatabaseReference dbTotalImagesRef =
-                    database.getReference().child("users").child(userId).child("/total_images");
+        valueEventListener = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int nElements = (int) dataSnapshot.child("images").getChildrenCount();
+                Log.i(TAG, "Total Images: " + nElements);
+                databaseReference.child("/total_images").setValue(nElements);
+                imagesFromFire(dataSnapshot);
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+                Log.w(TAG, "Cancelled: ",databaseError.toException());
+            }
+        };
 
-            database.getReference().child("users").child(userId).addValueEventListener(
-                    new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-
-                            int nElements = (int) dataSnapshot.child("images").getChildrenCount();
-
-                            Log.i(TAG, "Total Images: " + nElements);
-                            dbTotalImagesRef.setValue(nElements);
-
-                            imagesFromFire(dataSnapshot);
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-                            Log.w(TAG, "Cancelled: ",databaseError.toException());
-                        }
-
-                    }
-            );
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
+        databaseReference.addListenerForSingleValueEvent(valueEventListener);
     }
+
     private void imagesFromFire (DataSnapshot dataSnapshot){
-        //Start changes
-        DataSnapshot snapThumbs = dataSnapshot.child("thumbs");
-        for (DataSnapshot data : snapThumbs.getChildren()) {
-            thumbKeyList.add(data.getKey());
-        }
         DataSnapshot snapImages = dataSnapshot.child("images");
         for (DataSnapshot data : snapImages.getChildren()) {
             imageKeyList.add(data.getKey());
+            imImages.add("");
+            imThumbs.add("");
         }
 
-        uriFromFirebase(dataSnapshot, imageKeyList, thumbKeyList);
+        uriFromFirebase(dataSnapshot, imageKeyList);
     }
-    private void uriFromFirebase(final DataSnapshot dataSnapshot, final List<String> imageList, final List<String> thumbList){
+    private void uriFromFirebase(final DataSnapshot dataSnapshot, final List<String> imageList){
         final int size = imageList.size();
-        for (int i= 0; i < size; i++){
-            imUrls.add("");
-            imImages.add("");
-        }
 
         for (int i = 0; i < size; i++) {
             finished = i;
             if (!breakFlag) {
                 final int position = i;
                 String imageKey = imageList.get(i);
-                String thumbKey = thumbList.get(i);
 
                 System.out.println("Key: " + imageKey);
-                firebaseThumbStorage = dataSnapshot.child("thumbs").child(thumbKey).getValue().toString();
+                firebaseThumbStorage = dataSnapshot.child("thumbs").child(imageKey).getValue().toString();
                 firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
                 System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
                 storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        imUrls.set(position, uri.toString());
-                        imageAdapter.notifyDataSetChanged();
+                        if(imThumbs.size() == size) {
+                            imThumbs.set(position, uri.toString());
+                            imageAdapterFire.notifyDataSetChanged();
+                        }
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -222,9 +202,10 @@ public class FireBrowser extends Fragment {
                 storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
-                        imImages.set(position, uri.toString());
-                        //photoSelectionFire(imUrls, imImages);
-                        imageAdapter.notifyDataSetChanged();
+                        if(imThumbs.size() == size) {
+                            imImages.set(position, uri.toString());
+                            imageAdapterFire.notifyDataSetChanged();
+                        }
                     }
                 }).addOnFailureListener(new OnFailureListener() {
                     @Override
@@ -245,12 +226,7 @@ public class FireBrowser extends Fragment {
             keyOfImage.clear();
             keyOfThumb.clear();
 
-            //Method for getting the values of the Images to delete:
-            DatabaseReference databaseReferenceImages = database.getReference()
-                    .child("users")
-                    .child(firebaseUser.getUid())
-                    .child("images");
-            databaseReferenceImages.addValueEventListener(new ValueEventListener() {
+            valueEventListenerImages = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (int a = 0; a < listImages.size(); a++){
@@ -270,13 +246,8 @@ public class FireBrowser extends Fragment {
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            });
-            //Method for getting the values of the Thumbs to delete:
-            DatabaseReference databaseReferenceThumbs = database.getReference()
-                    .child("users")
-                    .child(firebaseUser.getUid())
-                    .child("thumbs");
-            databaseReferenceThumbs.addValueEventListener(new ValueEventListener() {
+            };
+            valueEventListenerThumbs = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     for (int a = 0; a < listThumbs.size(); a++){
@@ -296,7 +267,20 @@ public class FireBrowser extends Fragment {
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            });
+            };
+
+            //Method for getting the values of the Images and Thumbs to delete:
+            databaseReferenceImages = database.getReference()
+                    .child("users")
+                    .child(firebaseUser.getUid())
+                    .child("images");
+            databaseReferenceThumbs = database.getReference()
+                    .child("users")
+                    .child(firebaseUser.getUid())
+                    .child("thumbs");
+
+            databaseReferenceImages.addValueEventListener(valueEventListenerImages);
+            databaseReferenceThumbs.addValueEventListener(valueEventListenerThumbs);
 
         } else {
             keyOfImage.clear();
@@ -312,9 +296,8 @@ public class FireBrowser extends Fragment {
     //General Functions:
     private void cleaningVars () {
         //Cleaning Arrays before proceed
-        imUrls.clear();
+        imThumbs.clear();
         imImages.clear();
-        imIds.clear();
         imIdsSelected.clear();
         imUrlsSelected.clear();
         imThumbSelected.clear();
@@ -327,7 +310,10 @@ public class FireBrowser extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-
+        databaseReference.removeEventListener(valueEventListener);
+        //databaseReferenceImages.removeEventListener(valueEventListenerImages);
+        //databaseReferenceThumbs.removeEventListener(valueEventListenerThumbs);
+        imageAdapterFire.clear();
     }
 
 }
