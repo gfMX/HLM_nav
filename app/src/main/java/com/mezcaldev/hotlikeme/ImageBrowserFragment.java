@@ -58,7 +58,6 @@ public class ImageBrowserFragment extends Fragment {
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
     ImageAdapter imageAdapter;
-    getFbPhotos fbPhotos = new getFbPhotos();
 
     public ImageBrowserFragment() {
 
@@ -110,6 +109,7 @@ public class ImageBrowserFragment extends Fragment {
             }
         });
 
+        getFbPhotos fbPhotos = new getFbPhotos();
         fbPhotos.execute();
     }
 
