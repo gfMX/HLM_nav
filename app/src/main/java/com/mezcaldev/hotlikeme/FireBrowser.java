@@ -41,7 +41,6 @@ public class FireBrowser extends Fragment {
     FirebaseDatabase database;
     FirebaseStorage storage;
     StorageReference storageRef;
-    DatabaseReference fireRef;
     DatabaseReference databaseReference;
     DatabaseReference databaseReferenceImages;
     DatabaseReference databaseReferenceThumbs;
@@ -61,14 +60,10 @@ public class FireBrowser extends Fragment {
     GridView gridView;
     static List<String> imThumbs = new ArrayList<>();
     static List<String> imImages = new ArrayList<>();
-
     static List<Integer> imIdsSelected = new ArrayList<>();     //Actual Position
-    static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
-    static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
     ImageAdapter imageAdapterFire;
 
-    Boolean breakFlag = false;
     int finished = 0;
     MenuItem item;
 
@@ -85,7 +80,6 @@ public class FireBrowser extends Fragment {
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         mAuth = FirebaseAuth.getInstance();
         firebaseUser = MainActivityFragment.user;
-        fireRef = database.getReference();
 
         accessToken = AccessToken.getCurrentAccessToken();
         Log.i(TAG, "AccessToken"+ accessToken.toString());
@@ -121,15 +115,13 @@ public class FireBrowser extends Fragment {
 
                 if (!deleteListImages.contains(imageKeyList.get(position)) && !imIdsSelected.contains(position)) {
                     deleteListImages.add(imageKeyList.get(position));
-                    deleteListThumbs.add(thumbKeyList.get(position));
                     imIdsSelected.add(position);
                 } else {
                     deleteListImages.remove(imIdsSelected.indexOf(position));
-                    deleteListThumbs.remove(imIdsSelected.indexOf(position));
                     imIdsSelected.remove(imIdsSelected.indexOf(position));
                 }
 
-                getValuesOfKeys(deleteListImages, deleteListThumbs);
+                getValuesOfKeys(deleteListImages);
                 imageAdapterFire.notifyDataSetChanged();
 
                 return true;
@@ -175,53 +167,48 @@ public class FireBrowser extends Fragment {
 
         for (int i = 0; i < size; i++) {
             finished = i;
-            if (!breakFlag) {
-                final int position = i;
-                String imageKey = imageList.get(i);
+            final int position = i;
+            String imageKey = imageList.get(i);
 
-                System.out.println("Key: " + imageKey);
-                firebaseThumbStorage = dataSnapshot.child("thumbs").child(imageKey).getValue().toString();
-                firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
-                System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
-                storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        if(imThumbs.size() == size) {
-                            imThumbs.set(position, uri.toString());
-                            imageAdapterFire.notifyDataSetChanged();
-                        }
+            System.out.println("Key: " + imageKey);
+            firebaseThumbStorage = dataSnapshot.child("thumbs").child(imageKey).getValue().toString();
+            firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
+            System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
+            storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    if(imThumbs.size() == size) {
+                        imThumbs.set(position, uri.toString());
+                        imageAdapterFire.notifyDataSetChanged();
                     }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Log.w(TAG, "Something went wrong getting the Thumbnail.");
-                        exception.printStackTrace();
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Log.w(TAG, "Something went wrong getting the Thumbnail.");
+                    exception.printStackTrace();
+                }
+            });
+            storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                @Override
+                public void onSuccess(Uri uri) {
+                    if(imThumbs.size() == size) {
+                        imImages.set(position, uri.toString());
+                        imageAdapterFire.notifyDataSetChanged();
                     }
-                });
-
-                storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        if(imThumbs.size() == size) {
-                            imImages.set(position, uri.toString());
-                            imageAdapterFire.notifyDataSetChanged();
-                        }
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        Log.w(TAG, "Something went wrong getting the Full Image.");
-                        exception.printStackTrace();
-                    }
-                });
-            }
+                }
+            }).addOnFailureListener(new OnFailureListener() {
+                @Override
+                public void onFailure(@NonNull Exception exception) {
+                    Log.w(TAG, "Something went wrong getting the Full Image.");
+                    exception.printStackTrace();
+                }
+            });
         }
-
     }
-    private  void  getValuesOfKeys (final List <String> listImages, final List<String> listThumbs){
-        if (listImages.size() > 0 && listThumbs.size() > 0){
+    private  void  getValuesOfKeys (final List <String> listImages){
+        if (listImages.size() > 0 ){
             System.out.println("Images Keys: " + listImages);
-            System.out.println("Thumbs Keys: " + listThumbs);
 
             keyOfImage.clear();
             keyOfThumb.clear();
@@ -250,9 +237,9 @@ public class FireBrowser extends Fragment {
             valueEventListenerThumbs = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (int a = 0; a < listThumbs.size(); a++){
+                    for (int a = 0; a < listImages.size(); a++){
                         for (DataSnapshot data: dataSnapshot.getChildren()){
-                            if (listThumbs.get(a).equals(data.getKey())) {
+                            if (listImages.get(a).equals(data.getKey())) {
                                 System.out.println("Thumb found!: " + data.getValue());
                                 if (!keyOfThumb.contains(data.getValue().toString())) {
                                     keyOfThumb.add(data.getValue().toString());
@@ -299,8 +286,6 @@ public class FireBrowser extends Fragment {
         imThumbs.clear();
         imImages.clear();
         imIdsSelected.clear();
-        imUrlsSelected.clear();
-        imThumbSelected.clear();
         deleteListImages.clear();
         deleteListThumbs.clear();
         keyOfImage.clear();

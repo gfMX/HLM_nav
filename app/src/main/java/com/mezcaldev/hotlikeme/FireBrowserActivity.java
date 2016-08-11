@@ -63,8 +63,8 @@ public class FireBrowserActivity extends AppCompatActivity {
         }
         if (id == R.id.action_delete_image){
             Log.i(TAG, "Delete");
-            deleteListImages = ImageBrowserFragment.keyOfImage;
-            deleteListThumbs = ImageBrowserFragment.keyOfThumb;
+            deleteListImages = FireBrowser.keyOfImage;
+            deleteListThumbs = FireBrowser.keyOfThumb;
 
             if (deleteListImages.size()>0){
                 Integer numberOfImages = deleteListImages.size();
