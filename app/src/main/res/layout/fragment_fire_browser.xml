@@ -1,4 +1,3 @@
-
 <LinearLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
@@ -9,12 +8,12 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="com.mezcaldev.hotlikeme.ImageBrowserFragment"
-    tools:showIn="@layout/activity_image_browser">
+    tools:context="com.mezcaldev.hotlikeme.FireBrowser"
+    tools:showIn="@layout/activity_fire_browser">
 
 
     <GridView
-        android:id="@+id/gridViewFace"
+        android:id="@+id/gridViewFire"
         android:drawSelectorOnTop="true"
         android:gravity="center"
         android:stretchMode="columnWidth"

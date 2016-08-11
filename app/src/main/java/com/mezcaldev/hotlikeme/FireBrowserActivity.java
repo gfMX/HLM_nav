@@ -51,7 +51,7 @@ public class FireBrowserActivity extends AppCompatActivity {
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
-        getMenuInflater().inflate(R.menu.menu_image_browser, menu);
+        getMenuInflater().inflate(R.menu.menu_fire_browser, menu);
         MenuItem trashCan = menu.findItem(R.id.action_delete_image);
 
         trashCan.setVisible(true);
@@ -104,6 +104,11 @@ public class FireBrowserActivity extends AppCompatActivity {
             return true;
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
 }

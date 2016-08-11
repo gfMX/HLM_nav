@@ -1,12 +1,10 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
@@ -39,7 +37,6 @@ public class ImageBrowserFragment extends Fragment {
     String limitParams = "120";
 
     //Firebase//Initialize Firebase
-    Thread fireUris;
     FirebaseUser firebaseUser;
     FirebaseDatabase database;
     FirebaseStorage storage;
@@ -60,10 +57,8 @@ public class ImageBrowserFragment extends Fragment {
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
+    ImageAdapter imageAdapter;
     getFbPhotos fbPhotos = new getFbPhotos();
-
-    MenuItem item;
-    String browseImages;
 
     public ImageBrowserFragment() {
 
@@ -89,23 +84,32 @@ public class ImageBrowserFragment extends Fragment {
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_image_browser, container, false);
 
-        item = (MenuItem) view.findViewById(R.id.action_delete_image);
-
-        Intent intent = getActivity().getIntent();
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
-            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
-            Log.i(TAG, "Browsing: " + browseImages);
-        } else {
-            Log.i(TAG, "No Extras");
-        }
 
         return view;
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstances){
-        Log.i(TAG, "Browse Images Current Value: " + browseImages);
-
         cleaningVars();
+
+        imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
+        gridView = (GridView) view.findViewById(R.id.gridViewFace);
+        gridView.setAdapter(imageAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+
+                if (!imIdsSelected.contains(position)) {
+                    imIdsSelected.add(position);
+                    imUrlsSelected.add(imImages.get(position));
+                    imThumbSelected.add(imUrls.get(position));
+                } else {
+                    imUrlsSelected.remove(imIdsSelected.indexOf(position));
+                    imThumbSelected.remove(imIdsSelected.indexOf(position));
+                    imIdsSelected.remove(imIdsSelected.indexOf(position));
+                }
+                imageAdapter.notifyDataSetChanged();
+            }
+        });
+
         fbPhotos.execute();
     }
 
@@ -161,25 +165,7 @@ public class ImageBrowserFragment extends Fragment {
                     imIds.add(sObject2);
                 }
 
-                final ImageAdapter imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
-                gridView = (GridView) getActivity().findViewById(R.id.gridView);
-                gridView.setAdapter(imageAdapter);
-                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-
-                        if (!imIdsSelected.contains(position)) {
-                            imIdsSelected.add(position);
-                            imUrlsSelected.add(imImages.get(position));
-                            imThumbSelected.add(imUrls.get(position));
-                        } else {
-                            imUrlsSelected.remove(imIdsSelected.indexOf(position));
-                            imThumbSelected.remove(imIdsSelected.indexOf(position));
-                            imIdsSelected.remove(imIdsSelected.indexOf(position));
-                        }
-                        imageAdapter.notifyDataSetChanged();
-                    }
-                });
-
+                imageAdapter.notifyDataSetChanged();
 
             } else {
                 Log.w(TAG, "Nothing to do here!");
@@ -207,15 +193,6 @@ public class ImageBrowserFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        try {
-            if (fireUris != null) {
-                if (fireUris.isAlive()) {
-                    fireUris.interrupt();
-                }
-            }
-        } catch (NullPointerException e){
-            e.printStackTrace();
-        }
 
     }
 

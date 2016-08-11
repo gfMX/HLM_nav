@@ -102,9 +102,6 @@ public class ImageBrowser extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         getMenuInflater().inflate(R.menu.menu_image_browser, menu);
-        MenuItem trashCan = menu.findItem(R.id.action_delete_image);
-
-        trashCan.setVisible(false);
         return true;
     }
     @Override

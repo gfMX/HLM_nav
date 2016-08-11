@@ -1,7 +1,6 @@
 package com.mezcaldev.hotlikeme;
 
 import android.app.DialogFragment;
-import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -16,7 +15,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 
 import com.facebook.AccessToken;
-import com.facebook.FacebookSdk;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -36,12 +34,9 @@ public class FireBrowser extends Fragment {
 
     //Facebook parameters
     private static final String TAG = "Image Browser: ";
-    private AccessToken accessToken;
-    String fieldsParams = "picture,images";
-    String limitParams = "120";
+    AccessToken accessToken;
 
     //Firebase//Initialize Firebase
-    Thread fireUris;
     FirebaseUser firebaseUser;
     FirebaseDatabase database;
     FirebaseStorage storage;
@@ -58,7 +53,7 @@ public class FireBrowser extends Fragment {
     static List<String> keyOfThumb = new ArrayList<>();
 
     //Internal parameters
-    private GridView gridView;
+    GridView gridView;
     static List<String> imUrls = new ArrayList<>();
     static List<String> imImages = new ArrayList<>();
     static List<String> imIds = new ArrayList<>();
@@ -66,12 +61,11 @@ public class FireBrowser extends Fragment {
     static List<String> imUrlsSelected = new ArrayList<>();     //URL Image full resolution
     static List<String> imThumbSelected = new ArrayList<>();    //URL Image Thumbnail
 
-    getFirePhotos firePhotos = new getFirePhotos();
+    ImageAdapter imageAdapter;
 
     Boolean breakFlag = false;
-
+    int finished = 0;
     MenuItem item;
-    String browseImages;
 
     public FireBrowser() {
 
@@ -80,7 +74,6 @@ public class FireBrowser extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -95,25 +88,50 @@ public class FireBrowser extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_image_browser, container, false);
+        View view = inflater.inflate(R.layout.fragment_fire_browser, container, false);
 
         item = (MenuItem) view.findViewById(R.id.action_delete_image);
-
-        Intent intent = getActivity().getIntent();
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)){
-            browseImages = intent.getStringExtra(Intent.EXTRA_TEXT);
-            Log.i(TAG, "Browsing: " + browseImages);
-        } else {
-            Log.i(TAG, "No Extras");
-        }
 
         return view;
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstances){
-        Log.i(TAG, "Browse Images Current Value: " + browseImages);
-
         cleaningVars();
+
+        imageAdapter = new ImageAdapter(getActivity(), imUrls, imIdsSelected);
+        gridView = (GridView) view.findViewById(R.id.gridViewFire);
+        gridView.setAdapter(imageAdapter);
+        gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
+                Uri imageUri = Uri.parse(imImages.get(position));
+                showSelectedImage(imageUri);
+            }
+        });
+
+        gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+            @Override
+            public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
+                //System.out.println("Key List1: " + imageKeyList);
+                //System.out.println("Key List2: " + thumbKeyList);
+
+                if (!deleteListImages.contains(imageKeyList.get(position)) && !imIdsSelected.contains(position)) {
+                    deleteListImages.add(imageKeyList.get(position));
+                    deleteListThumbs.add(thumbKeyList.get(position));
+                    imIdsSelected.add(position);
+                } else {
+                    deleteListImages.remove(imIdsSelected.indexOf(position));
+                    deleteListThumbs.remove(imIdsSelected.indexOf(position));
+                    imIdsSelected.remove(imIdsSelected.indexOf(position));
+                }
+
+                getValuesOfKeys(deleteListImages, deleteListThumbs);
+                imageAdapter.notifyDataSetChanged();
+
+                return true;
+            }
+        });
+
+        getFirePhotos firePhotos = new getFirePhotos();
         firePhotos.execute();
     }
 
@@ -176,91 +194,48 @@ public class FireBrowser extends Fragment {
             imImages.add("");
         }
 
-        fireUris = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                for (int i = 0; i < size; i++) {
-                    final int position = i;
-                    String imageKey = imageList.get(i);
-                    String thumbKey = thumbList.get(i);
-
-                    System.out.println("Key: " + imageKey);
-                    firebaseThumbStorage = dataSnapshot.child("thumbs").child(thumbKey).getValue().toString();
-                    firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
-                    System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
-                    storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            imUrls.set(position, uri.toString());
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            Log.w(TAG, "Something went wrong getting the Thumbnail.");
-                            exception.printStackTrace();
-                        }
-                    });
-
-                    storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
-                        @Override
-                        public void onSuccess(Uri uri) {
-                            imImages.set(position,uri.toString());
-                            photoSelectionFire(imUrls, imImages);
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            Log.w(TAG, "Something went wrong getting the Full Image.");
-                            exception.printStackTrace();
-                        }
-                    });
-                }
-            }
-        });
-        fireUris.start();
-    }
-    public void photoSelectionFire (List<String> thumbs, final List<String> images){
-        try {
+        for (int i = 0; i < size; i++) {
+            finished = i;
             if (!breakFlag) {
-                final ImageAdapter imageAdapter = new ImageAdapter(getActivity(), thumbs, imIdsSelected);
-                gridView = (GridView) getActivity().findViewById(R.id.gridView);
-                gridView.setAdapter(imageAdapter);
+                final int position = i;
+                String imageKey = imageList.get(i);
+                String thumbKey = thumbList.get(i);
 
-                gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-                    public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
-                        Uri imageUri = Uri.parse(images.get(position));
-                        showSelectedImage(imageUri);
+                System.out.println("Key: " + imageKey);
+                firebaseThumbStorage = dataSnapshot.child("thumbs").child(thumbKey).getValue().toString();
+                firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
+                System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
+                storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        imUrls.set(position, uri.toString());
+                        imageAdapter.notifyDataSetChanged();
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Log.w(TAG, "Something went wrong getting the Thumbnail.");
+                        exception.printStackTrace();
                     }
                 });
 
-                gridView.setOnItemLongClickListener(new AdapterView.OnItemLongClickListener() {
+                storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
-                    public boolean onItemLongClick(AdapterView<?> parent, View view, int position, long id) {
-                        //System.out.println("Key List1: " + imageKeyList);
-                        //System.out.println("Key List2: " + thumbKeyList);
-
-                        if (!deleteListImages.contains(imageKeyList.get(position)) && !imIdsSelected.contains(position)) {
-                            deleteListImages.add(imageKeyList.get(position));
-                            deleteListThumbs.add(thumbKeyList.get(position));
-                            imIdsSelected.add(position);
-                        } else {
-                            deleteListImages.remove(imIdsSelected.indexOf(position));
-                            deleteListThumbs.remove(imIdsSelected.indexOf(position));
-                            imIdsSelected.remove(imIdsSelected.indexOf(position));
-                        }
-
-                        getValuesOfKeys(deleteListImages, deleteListThumbs);
+                    public void onSuccess(Uri uri) {
+                        imImages.set(position, uri.toString());
+                        //photoSelectionFire(imUrls, imImages);
                         imageAdapter.notifyDataSetChanged();
-
-                        return true;
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        Log.w(TAG, "Something went wrong getting the Full Image.");
+                        exception.printStackTrace();
                     }
                 });
             }
-        } catch (NullPointerException e) {
-            e.printStackTrace();
-            breakFlag = true;
-            firePhotos.cancel(true);
         }
+
     }
     private  void  getValuesOfKeys (final List <String> listImages, final List<String> listThumbs){
         if (listImages.size() > 0 && listThumbs.size() > 0){
@@ -352,15 +327,6 @@ public class FireBrowser extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
-        try {
-            if (fireUris != null) {
-                if (fireUris.isAlive()) {
-                    fireUris.interrupt();
-                }
-            }
-        } catch (NullPointerException e){
-            e.printStackTrace();
-        }
 
     }
 
