@@ -62,7 +62,7 @@ public class FireBrowser extends Fragment {
     static List<String> imImages = new ArrayList<>();
     static List<Integer> imIdsSelected = new ArrayList<>();     //Actual Position
 
-    ImageAdapter imageAdapterFire;
+    ImageAdapter imageAdapter;
 
     int finished = 0;
     MenuItem item;
@@ -97,9 +97,9 @@ public class FireBrowser extends Fragment {
     public void onViewCreated(View view, Bundle savedInstances){
         cleaningVars();
 
-        imageAdapterFire = new ImageAdapter(getActivity(), imThumbs, imIdsSelected);
+        imageAdapter = new ImageAdapter(getActivity(), imThumbs, imIdsSelected);
         gridView = (GridView) view.findViewById(R.id.gridViewFire);
-        gridView.setAdapter(imageAdapterFire);
+        gridView.setAdapter(imageAdapter);
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Uri imageUri = Uri.parse(imImages.get(position));
@@ -122,7 +122,7 @@ public class FireBrowser extends Fragment {
                 }
 
                 getValuesOfKeys(deleteListImages);
-                imageAdapterFire.notifyDataSetChanged();
+                imageAdapter.notifyDataSetChanged();
 
                 return true;
             }
@@ -145,7 +145,7 @@ public class FireBrowser extends Fragment {
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
-                Log.w(TAG, "Cancelled: ",databaseError.toException());
+                Log.w(TAG, "Cancelled: ", databaseError.toException());
             }
         };
 
@@ -179,7 +179,7 @@ public class FireBrowser extends Fragment {
                 public void onSuccess(Uri uri) {
                     if(imThumbs.size() == size) {
                         imThumbs.set(position, uri.toString());
-                        imageAdapterFire.notifyDataSetChanged();
+                        imageAdapter.notifyDataSetChanged();
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -194,7 +194,7 @@ public class FireBrowser extends Fragment {
                 public void onSuccess(Uri uri) {
                     if(imThumbs.size() == size) {
                         imImages.set(position, uri.toString());
-                        imageAdapterFire.notifyDataSetChanged();
+                        imageAdapter.notifyDataSetChanged();
                     }
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -298,7 +298,7 @@ public class FireBrowser extends Fragment {
         databaseReference.removeEventListener(valueEventListener);
         //databaseReferenceImages.removeEventListener(valueEventListenerImages);
         //databaseReferenceThumbs.removeEventListener(valueEventListenerThumbs);
-        imageAdapterFire.clear();
+        imageAdapter.clear();
     }
 
 }

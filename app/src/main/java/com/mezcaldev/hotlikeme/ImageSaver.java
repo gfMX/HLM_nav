@@ -335,58 +335,45 @@ public class ImageSaver {
                 }
         );
     }
-    public void DeleteImagesOnFire (final List <String> imagesToDelete, final  List<String> thumbsToDelete) {
-        Thread thread = new Thread(new Runnable() {
+    public void DeleteImagesOnFire (final List <String> imagesToDelete, final  List<String> thumbsToDelete, final List<String> keys, final int imageNumber) {
+        final DatabaseReference imageReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathImages).child(keys.get(imageNumber));
+        final DatabaseReference thumbReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs).child(keys.get(imageNumber));
+
+        System.out.println("Keys to delete: " + keys);
+        System.out.println("Images to delete: " + imagesToDelete);
+        System.out.println("Thumbs to delete: " + thumbsToDelete);
+
+
+        StorageReference deletetRefImage = storageRef
+                .child(imagesToDelete.get(imageNumber));
+        final StorageReference deletetRefThumb = storageRef
+                .child(thumbsToDelete.get(imageNumber));
+
+        deletetRefImage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
             @Override
-            public void run() {
-
-                DatabaseReference imageReference =
-                        database.getReference().child("users").child(firebaseUser.getUid()).child(pathImages);
-                DatabaseReference thumbReference =
-                        database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs);
-
-                System.out.println("Images to delete: " + imagesToDelete);
-                System.out.println("Thumbs to delete: " + thumbsToDelete);
-
-                /*for (int i = 0; i < imagesToDelete.size(); i++){
-                    System.out.println("References: " );
-                }*/
-                // On the works
-                /*for (int i = 0; i < deleteList.size(); i++) {
-                    StorageReference deletetRefImage = storageRef
-                            .child(firebaseUser.getUid())
-                            .child("images")
-                            .child(deleteList.get(i).toString());
-                    final StorageReference deletetRefThumb = storageRef
-                            .child(firebaseUser.getUid())
-                            .child("images/thumbs/")
-                            .child(deleteList.get(i).toString());
-
-                    deletetRefImage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                        @Override
-                        public void onSuccess(Void aVoid) {
-                            deletetRefThumb.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                                @Override
-                                public void onSuccess(Void aVoid) {
-
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                                @Override
-                                public void onFailure(@NonNull Exception exception) {
-                                    // Uh-oh, an error occurred!
-                                }
-                            });
+            public void onSuccess(Void aVoid) {
+                deletetRefThumb.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        imageReference.setValue(null);
+                        thumbReference.setValue(null);
+                        if (imageNumber < imagesToDelete.size()-1) {
+                            DeleteImagesOnFire(imagesToDelete, thumbsToDelete, keys, (imageNumber + 1));
                         }
-                    }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception exception) {
-                            // Uh-oh, an error occurred!
-                        }
-                    });
-                }*/
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Uh-oh, an error occurred!
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Uh-oh, an error occurred!
             }
         });
-        thread.start();
     }
 
 }

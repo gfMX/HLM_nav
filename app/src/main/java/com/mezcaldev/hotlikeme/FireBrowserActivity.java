@@ -25,6 +25,7 @@ public class FireBrowserActivity extends AppCompatActivity {
 
     List<String> deleteListImages = new ArrayList<>();
     List<String> deleteListThumbs = new ArrayList<>();
+    List<String> deleteKeys = new ArrayList<>();
 
 
     @Override
@@ -63,6 +64,7 @@ public class FireBrowserActivity extends AppCompatActivity {
         }
         if (id == R.id.action_delete_image){
             Log.i(TAG, "Delete");
+            deleteKeys = FireBrowser.deleteListImages;
             deleteListImages = FireBrowser.keyOfImage;
             deleteListThumbs = FireBrowser.keyOfThumb;
 
@@ -80,7 +82,7 @@ public class FireBrowserActivity extends AppCompatActivity {
                             @Override
                             public void onClick(View v) {
                                 ImageSaver deleteImages = new ImageSaver();
-                                deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs);
+                                deleteImages.DeleteImagesOnFire(deleteListImages, deleteListThumbs, deleteKeys, 0);
                                 Snackbar.make(getWindow().getDecorView(),
                                         getResources().getString(R.string.text_deleting_images),
                                         Snackbar.LENGTH_LONG)
