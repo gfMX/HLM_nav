@@ -9,6 +9,7 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
+import android.widget.Toast;
 
 import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -46,6 +47,7 @@ public class ImageSaver {
 
     String pathImages = "/images/";
     String pathThumbs = "/images/thumbs/";
+    static boolean imagesDeleted = false;
 
     final FirebaseUser firebaseUser = MainActivityFragment.user;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -136,11 +138,7 @@ public class ImageSaver {
         }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                // taskSnapshot.getMetadata() contains file metadata such as size, content-type, and download URL.
-                //Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                //Log.i(TAG, "Download URL: " + downloadUrl);
                 Log.v(TAG,"Image uploaded to Firebase");
-                //Log.v(TAG,"URL: " + downloadUrl);
             }
         });
     }
@@ -335,7 +333,7 @@ public class ImageSaver {
                 }
         );
     }
-    public void DeleteImagesOnFire (final List <String> imagesToDelete, final  List<String> thumbsToDelete, final List<String> keys, final int imageNumber) {
+    public void DeleteImagesOnFire (final List <String> imagesToDelete, final  List<String> thumbsToDelete, final List<String> keys, final int imageNumber, final Context context) {
         final DatabaseReference imageReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathImages).child(keys.get(imageNumber));
         final DatabaseReference thumbReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs).child(keys.get(imageNumber));
 
@@ -358,7 +356,10 @@ public class ImageSaver {
                         imageReference.setValue(null);
                         thumbReference.setValue(null);
                         if (imageNumber < imagesToDelete.size()-1) {
-                            DeleteImagesOnFire(imagesToDelete, thumbsToDelete, keys, (imageNumber + 1));
+                            DeleteImagesOnFire(imagesToDelete, thumbsToDelete, keys, (imageNumber + 1), context);
+                        } else {
+                            Toast.makeText(context, "Images Successfully Deleted", Toast.LENGTH_SHORT).show();
+                            imagesDeleted = true;
                         }
                     }
                 }).addOnFailureListener(new OnFailureListener() {

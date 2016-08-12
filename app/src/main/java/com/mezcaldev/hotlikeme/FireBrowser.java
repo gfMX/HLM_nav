@@ -4,14 +4,18 @@ import android.app.DialogFragment;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import com.facebook.AccessToken;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -31,6 +35,9 @@ import java.util.List;
 
 public class FireBrowser extends Fragment {
 
+    String pathImages = "/images/";
+    String pathThumbs = "/images/thumbs/";
+
     //Facebook parameters
     private static final String TAG = "Image Browser: ";
     AccessToken accessToken;
@@ -47,7 +54,6 @@ public class FireBrowser extends Fragment {
     String firebaseThumbStorage;
     String firebaseImageStorage;
     List<String> imageKeyList = new ArrayList<>();
-    List<String> thumbKeyList = new ArrayList<>();
     static List<String> deleteListImages = new ArrayList<>();
     static List<String> deleteListThumbs = new ArrayList<>();
     static List<String> keyOfImage = new ArrayList<>();
@@ -63,9 +69,8 @@ public class FireBrowser extends Fragment {
     static List<Integer> imIdsSelected = new ArrayList<>();     //Actual Position
 
     ImageAdapter imageAdapter;
-
+    MenuItem trashCan;
     int finished = 0;
-    MenuItem item;
 
     public FireBrowser() {
 
@@ -74,6 +79,7 @@ public class FireBrowser extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
 
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
@@ -85,13 +91,59 @@ public class FireBrowser extends Fragment {
         Log.i(TAG, "AccessToken"+ accessToken.toString());
     }
     @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
+        inflater.inflate(R.menu.menu_fire_fragment, menu);
+        trashCan = menu.findItem(R.id.action_delete_image);
+        trashCan.setVisible(false);
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if (id == R.id.action_delete_image){
+            Log.i(TAG, "Delete");
+            System.out.println("Keys: " + deleteListImages);
+            System.out.println("Images: " + keyOfImage);
+            System.out.println("Thumbs: " + keyOfThumb);
+
+
+            if (keyOfImage.size()>0){
+                Integer numberOfImages = keyOfImage.size();
+                String deleteText =
+                        getResources().getString(R.string.text_deleting_selected_images_1) +
+                                numberOfImages.toString() +
+                                getResources().getString(R.string.text_deleting_selected_images_2);
+
+                Snackbar.make(getActivity().getWindow().getDecorView(),
+                        deleteText,
+                        Snackbar.LENGTH_LONG)
+                        .setAction("DELETE", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v) {
+                                DeleteImagesOnFire(keyOfImage, keyOfThumb, deleteListImages, 0);
+                                Snackbar.make(getActivity().getWindow().getDecorView(),
+                                        getResources().getString(R.string.text_deleting_images),
+                                        Snackbar.LENGTH_LONG)
+                                        .setAction("Action", null)
+                                        .show();
+                            }
+                        })
+                        .show();
+            } else {
+                Snackbar.make(getActivity().getWindow().getDecorView(),
+                        getResources().getString(R.string.text_delete_images_no_selected),
+                        Snackbar.LENGTH_LONG)
+                        .setAction("Action", null)
+                        .show();
+            }
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
+    }
+    @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_fire_browser, container, false);
-
-        item = (MenuItem) view.findViewById(R.id.action_delete_image);
-
-        return view;
+        return inflater.inflate(R.layout.fragment_fire_browser, container, false);
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstances){
@@ -119,6 +171,11 @@ public class FireBrowser extends Fragment {
                 } else {
                     deleteListImages.remove(imIdsSelected.indexOf(position));
                     imIdsSelected.remove(imIdsSelected.indexOf(position));
+                }
+                if (imIdsSelected.size() > 0){
+                    trashCan.setVisible(true);
+                } else{
+                    trashCan.setVisible(false);
                 }
 
                 getValuesOfKeys(deleteListImages);
@@ -275,6 +332,51 @@ public class FireBrowser extends Fragment {
         }
     }
 
+    public void DeleteImagesOnFire (final List <String> imagesToDelete, final  List<String> thumbsToDelete, final List<String> keys, final int imageNumber) {
+        final DatabaseReference imageReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathImages).child(keys.get(imageNumber));
+        final DatabaseReference thumbReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs).child(keys.get(imageNumber));
+
+        System.out.println("Keys to delete: " + keys);
+        System.out.println("Images to delete: " + imagesToDelete);
+        System.out.println("Thumbs to delete: " + thumbsToDelete);
+
+
+        StorageReference deletetRefImage = storageRef
+                .child(imagesToDelete.get(imageNumber));
+        final StorageReference deletetRefThumb = storageRef
+                .child(thumbsToDelete.get(imageNumber));
+
+        deletetRefImage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+            @Override
+            public void onSuccess(Void aVoid) {
+                deletetRefThumb.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        imageReference.setValue(null);
+                        thumbReference.setValue(null);
+                        if (imageNumber < imagesToDelete.size()-1) {
+                            DeleteImagesOnFire(imagesToDelete, thumbsToDelete, keys, (imageNumber + 1));
+                        } else {
+                            Toast.makeText(getContext(), "Images Successfully deleted!", Toast.LENGTH_SHORT).show();
+                            trashCan.setVisible(false);
+                            cleanDeleteVars();
+                        }
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception exception) {
+                        // Uh-oh, an error occurred!
+                    }
+                });
+            }
+        }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Uh-oh, an error occurred!
+            }
+        });
+    }
+
     private void showSelectedImage(Uri urImage){
         DialogFragment newFragment = imageSelected.newInstance(urImage);
         newFragment.show(getActivity().getFragmentManager(), "Image");
@@ -285,6 +387,9 @@ public class FireBrowser extends Fragment {
         //Cleaning Arrays before proceed
         imThumbs.clear();
         imImages.clear();
+        cleanDeleteVars();
+    }
+    private void cleanDeleteVars () {
         imIdsSelected.clear();
         deleteListImages.clear();
         deleteListThumbs.clear();
