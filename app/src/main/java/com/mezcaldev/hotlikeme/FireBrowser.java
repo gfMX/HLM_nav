@@ -371,14 +371,6 @@ public class FireBrowser extends Fragment {
                             trashCan.setVisible(false);
                             cleanDeleteVars();
                             imageAdapter.notifyDataSetChanged();
-                            /*Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    //startActivity(new Intent(getActivity(), FireBrowserActivity.class));
-                                    imageAdapter.notifyDataSetChanged();
-                                }
-                            }, 2000);*/
                         }
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -420,8 +412,6 @@ public class FireBrowser extends Fragment {
     public void onDestroy() {
         super.onDestroy();
         databaseReference.removeEventListener(valueEventListener);
-        //databaseReferenceImages.removeEventListener(valueEventListenerImages);
-        //databaseReferenceThumbs.removeEventListener(valueEventListenerThumbs);
         imageAdapter.clear();
     }
 
