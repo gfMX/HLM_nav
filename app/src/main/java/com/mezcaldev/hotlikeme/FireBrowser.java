@@ -36,7 +36,7 @@ import java.util.List;
 public class FireBrowser extends Fragment {
 
     String pathImages = "/images/";
-    String pathThumbs = "/images/thumbs/";
+    String pathThumbs = "/thumbs/";
 
     //Facebook parameters
     private static final String TAG = "Image Browser: ";
@@ -70,7 +70,6 @@ public class FireBrowser extends Fragment {
 
     ImageAdapter imageAdapter;
     MenuItem trashCan;
-    int finished = 0;
 
     public FireBrowser() {
 
@@ -223,14 +222,12 @@ public class FireBrowser extends Fragment {
         final int size = imageList.size();
 
         for (int i = 0; i < size; i++) {
-            finished = i;
             final int position = i;
             String imageKey = imageList.get(i);
 
             System.out.println("Key: " + imageKey);
+
             firebaseThumbStorage = dataSnapshot.child("thumbs").child(imageKey).getValue().toString();
-            firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
-            System.out.println("Reference to an Image: " + storageRef.child(firebaseThumbStorage));
             storageRef.child(firebaseThumbStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
@@ -246,6 +243,8 @@ public class FireBrowser extends Fragment {
                     exception.printStackTrace();
                 }
             });
+
+            firebaseImageStorage = dataSnapshot.child("images").child(imageKey).getValue().toString();
             storageRef.child(firebaseImageStorage).getDownloadUrl().addOnSuccessListener(new OnSuccessListener<Uri>() {
                 @Override
                 public void onSuccess(Uri uri) {
@@ -354,12 +353,32 @@ public class FireBrowser extends Fragment {
                     public void onSuccess(Void aVoid) {
                         imageReference.setValue(null);
                         thumbReference.setValue(null);
+                        if (imageKeyList.contains(keys.get(imageNumber))){
+                            int currentIndex = imageKeyList.indexOf(keys.get(imageNumber));
+
+                            System.out.println("Key to remove: " + keys.get(imageNumber));
+                            System.out.println("Key removed:" + imageKeyList.get(currentIndex));
+                            imageKeyList.remove(currentIndex);
+                            imImages.remove(currentIndex);
+                            imThumbs.remove(currentIndex);
+
+                            imageAdapter.notifyDataSetChanged();
+                        }
                         if (imageNumber < imagesToDelete.size()-1) {
                             DeleteImagesOnFire(imagesToDelete, thumbsToDelete, keys, (imageNumber + 1));
                         } else {
                             Toast.makeText(getContext(), "Images Successfully deleted!", Toast.LENGTH_SHORT).show();
                             trashCan.setVisible(false);
                             cleanDeleteVars();
+                            imageAdapter.notifyDataSetChanged();
+                            /*Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    //startActivity(new Intent(getActivity(), FireBrowserActivity.class));
+                                    imageAdapter.notifyDataSetChanged();
+                                }
+                            }, 2000);*/
                         }
                     }
                 }).addOnFailureListener(new OnFailureListener() {

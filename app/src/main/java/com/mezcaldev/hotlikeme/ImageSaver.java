@@ -9,7 +9,6 @@ import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
@@ -332,49 +331,6 @@ public class ImageSaver {
                     }
                 }
         );
-    }
-    public void DeleteImagesOnFire (final List <String> imagesToDelete, final  List<String> thumbsToDelete, final List<String> keys, final int imageNumber, final Context context) {
-        final DatabaseReference imageReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathImages).child(keys.get(imageNumber));
-        final DatabaseReference thumbReference = database.getReference().child("users").child(firebaseUser.getUid()).child(pathThumbs).child(keys.get(imageNumber));
-
-        System.out.println("Keys to delete: " + keys);
-        System.out.println("Images to delete: " + imagesToDelete);
-        System.out.println("Thumbs to delete: " + thumbsToDelete);
-
-
-        StorageReference deletetRefImage = storageRef
-                .child(imagesToDelete.get(imageNumber));
-        final StorageReference deletetRefThumb = storageRef
-                .child(thumbsToDelete.get(imageNumber));
-
-        deletetRefImage.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-            @Override
-            public void onSuccess(Void aVoid) {
-                deletetRefThumb.delete().addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        imageReference.setValue(null);
-                        thumbReference.setValue(null);
-                        if (imageNumber < imagesToDelete.size()-1) {
-                            DeleteImagesOnFire(imagesToDelete, thumbsToDelete, keys, (imageNumber + 1), context);
-                        } else {
-                            Toast.makeText(context, "Images Successfully Deleted", Toast.LENGTH_SHORT).show();
-                            imagesDeleted = true;
-                        }
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception exception) {
-                        // Uh-oh, an error occurred!
-                    }
-                });
-            }
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Uh-oh, an error occurred!
-            }
-        });
     }
 
 }
