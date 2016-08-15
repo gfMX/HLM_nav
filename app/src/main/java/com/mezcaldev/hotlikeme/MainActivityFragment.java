@@ -458,8 +458,9 @@ public class MainActivityFragment extends Fragment {
                     imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
                 } else {
                     fireProfilePic();
+                } if (user != null) {
+                    itemSettings.setVisible(true);
                 }
-                itemSettings.setVisible(true);
             }
         }, delayTime);
     }
