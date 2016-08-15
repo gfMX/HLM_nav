@@ -146,6 +146,7 @@
         Sample text for slide pages.\nHere will see the user profile pics.
     </string>
     <string name="text_hlm_users">Profile pics of HotLikeMe Users</string>
+    <string name="text_network_access_required">Network not available. Please check it and try again.</string>
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>

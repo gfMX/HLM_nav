@@ -6,14 +6,20 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -86,6 +92,9 @@ public class MainActivityFragment extends Fragment {
     private Button btn_image;
     private Button btn_start;
     private Button btn_settings;
+    Snackbar snackNetworkRequired;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor editor;
 
     //Firebase
     static FirebaseUser user;
@@ -98,8 +107,8 @@ public class MainActivityFragment extends Fragment {
     Boolean flagImagesOnFirebase = false;
 
     //Other elements
-    String strValue;
     ImageSaver imageSaver = new ImageSaver();
+    MenuItem itemSettings;
     File profileImageCheck;
 
 
@@ -110,7 +119,14 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
+
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
+
+        snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(), getResources().getString(R.string.text_network_access_required), Snackbar.LENGTH_LONG);
+        if(!isNetworkAvailable()){
+            snackNetworkRequired.show();
+        }
 
         //Path to save and load images locally:
         Context context = getContext();
@@ -124,6 +140,24 @@ public class MainActivityFragment extends Fragment {
         fireRef = database.getReference();
         mAuth = FirebaseAuth.getInstance();
 
+    }
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.menu_main, menu);
+
+        itemSettings = menu.findItem(R.id.action_settings);
+        itemSettings.setVisible(false);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            startActivity(new Intent(getActivity(), SettingsActivity.class));
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -206,27 +240,35 @@ public class MainActivityFragment extends Fragment {
         btn_settings.setOnClickListener(settingsButtons);
 
         //Image Profile Behavior
-        imageProfileHLM.isClickable();
         imageProfileHLM.setOnClickListener(settingsButtons);
     }
 
     //Buttons for different settings
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
       public void onClick (View v){
+          boolean networkAvailable = isNetworkAvailable();
           switch (v.getId()){
               case R.id.btn_choose_img:
-                  Toast.makeText(getActivity(),
-                          getResources().getString(R.string.text_choose_images),
-                          Toast.LENGTH_LONG)
-                          .show();
+                  if (networkAvailable) {
+                      Toast.makeText(getActivity(),
+                              getResources().getString(R.string.text_choose_images),
+                              Toast.LENGTH_LONG)
+                              .show();
 
-                  Intent ib = new Intent(getActivity(), ImageBrowser.class);
-                  startActivity(ib);
+                      Intent ib = new Intent(getActivity(), ImageBrowser.class);
+                      startActivity(ib);
+                  } else {
+                      snackNetworkRequired.show();
+                  }
                   break;
               case R.id.btn_start:
-                  Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
-                          Toast.LENGTH_LONG).show();
-                  startActivity(new Intent(getActivity(), HLMSlidePagerActivity.class));
+                  if (networkAvailable) {
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
+                              Toast.LENGTH_LONG).show();
+                      startActivity(new Intent(getActivity(), HLMSlidePagerActivity.class));
+                  } else {
+                      snackNetworkRequired.show();
+                  }
                   break;
               case R.id.btn_settings:
                   Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
@@ -234,15 +276,19 @@ public class MainActivityFragment extends Fragment {
                   startActivity(new Intent(getActivity(), SettingsActivity.class));
                   break;
               case R.id.hlm_image:
-                  if (flagImagesOnFirebase) {
-                      Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
-                              Toast.LENGTH_LONG).show();
+                  if (networkAvailable){
+                      if (flagImagesOnFirebase) {
+                          Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
+                                  Toast.LENGTH_LONG).show();
 
-                      Intent ic = new Intent(getActivity(), FireBrowserActivity.class);
-                      startActivity(ic);
+                          Intent ic = new Intent(getActivity(), FireBrowserActivity.class);
+                          startActivity(ic);
+                      } else {
+                          Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
+                                  Toast.LENGTH_LONG).show();
+                      }
                   } else {
-                      Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
-                              Toast.LENGTH_LONG).show();
+                      snackNetworkRequired.show();
                   }
                   break;
           }
@@ -269,6 +315,7 @@ public class MainActivityFragment extends Fragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_see_you_soon),
                                 Toast.LENGTH_SHORT).show();
+                        itemSettings.setVisible(false);
 
                         FirebaseAuth.getInstance().signOut();
                         Log.i(TAG, "Firebase: " + FirebaseAuth.getInstance().toString());
@@ -277,6 +324,7 @@ public class MainActivityFragment extends Fragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_welcome_again),
                                 Toast.LENGTH_SHORT).show();
+                        itemSettings.setVisible(true);
                     }
                     updateUI(currentAccessToken);
                 }
@@ -410,6 +458,7 @@ public class MainActivityFragment extends Fragment {
                 } else {
                     fireProfilePic();
                 }
+                itemSettings.setVisible(true);
             }
         }, delayTime);
     }
@@ -451,8 +500,8 @@ public class MainActivityFragment extends Fragment {
                             System.out.println("Gender: " + gender);
                             DatabaseReference databaseReference = database.getReference().child("users").child(user.getUid());
                             //DatabaseReference databaseReferenceUsers= database.getReference();
-                            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-                            SharedPreferences.Editor editor = sharedPreferences.edit();
+                            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+                            editor = sharedPreferences.edit();
                             editor.putString("gender", gender);
                             editor.putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true));
                             editor.apply();
@@ -489,6 +538,13 @@ public class MainActivityFragment extends Fragment {
         protected void onPostExecute(Void result){
 
         }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     @Override
