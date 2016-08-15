@@ -64,7 +64,7 @@ import java.io.File;
  */
 public class MainActivityFragment extends Fragment {
 
-    private static final String TAG = "FacebookLogin";
+    private static final String TAG = "Login Details";
     //Delay Time to load Profile Picture if exists.
     Integer minDelayTime =100;
     Integer delayTime = 2000;
@@ -123,8 +123,11 @@ public class MainActivityFragment extends Fragment {
 
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
-        snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(), getResources().getString(R.string.text_network_access_required), Snackbar.LENGTH_LONG);
-        if(!isNetworkAvailable()){
+        snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(),
+                getResources().getString(R.string.text_network_access_required),
+                Snackbar.LENGTH_LONG);
+
+        if (!isNetworkAvailable()) {
             snackNetworkRequired.show();
         }
 
@@ -177,7 +180,6 @@ public class MainActivityFragment extends Fragment {
         callbackManager = CallbackManager.Factory.create();
 
         profileImageCheck = new File(pathProfileImage + "/" + imageProfileFileName);
-        //Log.i(TAG, "Profile check path: " + profileImageCheck.getAbsolutePath());
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -208,16 +210,13 @@ public class MainActivityFragment extends Fragment {
                         getResources().getString(R.string.text_welcome),
                         Toast.LENGTH_SHORT)
                         .show();
-
                 handleFacebookAccessToken(accessToken);
             }
-
             @Override
             public void onCancel() {
                 // App code
                 Log.d(TAG, "FB: onCancel");
             }
-
             @Override
             public void onError(FacebookException exception) {
                 // App code
@@ -241,6 +240,8 @@ public class MainActivityFragment extends Fragment {
 
         //Image Profile Behavior
         imageProfileHLM.setOnClickListener(settingsButtons);
+
+        updateUI();
     }
 
     //Buttons for different settings
@@ -326,7 +327,7 @@ public class MainActivityFragment extends Fragment {
                                 Toast.LENGTH_SHORT).show();
                         itemSettings.setVisible(true);
                     }
-                    updateUI(currentAccessToken);
+                    updateUI();
                 }
             };
             profileTracker = new ProfileTracker() {
@@ -362,8 +363,6 @@ public class MainActivityFragment extends Fragment {
                         fireRef = database.getReference().child("users").child(user.getUid()).child("/preferences/name");
                         fireRef.setValue(user.getDisplayName());
 
-                        //fireRef = database.getReference().child("groups").child("both").child(user.getUid());
-                        //fireRef.setValue(true);
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
                         }
@@ -372,7 +371,7 @@ public class MainActivityFragment extends Fragment {
                         Log.d(TAG, "Firebase: Signed Out");
                     }
                     //UpdateUI
-                    updateUI(accessToken);
+                    updateUI();
                 }
             };
 
@@ -408,16 +407,18 @@ public class MainActivityFragment extends Fragment {
     }
 
     //UI Status Updater
-    private void updateUI (AccessToken accessToken) {
+    private void updateUI () {
         //Update UI Elements according to the Given Token
-        if (accessToken != null && user != null){
+        if (user != null){
             fb_welcome_text.setText(welcomeText);
 
             loadProfileDetails(minDelayTime);
 
             text_instruct.setText(instructionText);
             profilePic.setVisibility(View.VISIBLE);
-            profilePic.setProfileId(accessToken.getUserId());
+            if (accessToken !=null) {
+                profilePic.setProfileId(accessToken.getUserId());
+            }
             imageProfileHLM.setClickable(true);
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
@@ -507,8 +508,6 @@ public class MainActivityFragment extends Fragment {
                             editor.apply();
 
                             databaseReference.child("/preferences/gender/").setValue(gender);
-                            //databaseReference.child("groups").child(gender).child(user.getUid()).setValue(true);
-                            //databaseReferenceUsers.child("groups").child("both").child(user.getUid()).setValue(true);
 
                             Log.i(TAG, "We got the gender: " + gender);
                         } catch (JSONException e){
@@ -537,6 +536,16 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(Void result){
 
+        }
+    }
+
+    private void cleanLocalData(){
+        if (mAuth.getCurrentUser() == null) {
+            editor.clear();
+            editor.apply();
+            System.out.println("User data cleared on Device" + sharedPreferences.getAll());
+        } else {
+            System.out.println("User Still Logged in: " + mAuth.getCurrentUser() + " Token: " + accessToken);
         }
     }
 
