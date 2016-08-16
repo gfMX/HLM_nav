@@ -62,7 +62,7 @@ import java.io.File;
 /**
  * A placeholder fragment containing a simple view.
  */
-public class MainActivityFragment extends Fragment {
+public class LoginFragment extends Fragment {
 
     private static final String TAG = "Login Details";
     //Delay Time to load Profile Picture if exists.
@@ -112,7 +112,7 @@ public class MainActivityFragment extends Fragment {
     File profileImageCheck;
 
 
-    public MainActivityFragment() {
+    public LoginFragment() {
 
     }
 

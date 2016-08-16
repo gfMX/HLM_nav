@@ -10,7 +10,6 @@ import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.facebook.Profile;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
@@ -46,39 +45,14 @@ public class ImageSaver {
 
     String pathImages = "/images/";
     String pathThumbs = "/images/thumbs/";
-    static boolean imagesDeleted = false;
 
-    final FirebaseUser firebaseUser = MainActivityFragment.user;
+    final FirebaseUser firebaseUser = LoginFragment.user;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage  storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
     public ImageSaver() {
 
-    }
-    //Create Image as object
-    public void iCreateBitmap (final Profile user, final String imageProfileFileName, final Context context){
-        if (user != null) {
-            Thread thread = new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        URL imgUrl = new URL("https://graph.facebook.com/"
-                                + user.getId() + "/picture?type=large");
-                        //Log.d(TAG, "Image URL: " + imgUrl);
-                        InputStream inputStream = (InputStream) imgUrl.getContent();
-                        Bitmap pImage = BitmapFactory.decodeStream(inputStream);
-                        if (pImage != null) {
-                            iSaveToInternalStorage(pImage, imageProfileFileName, context);
-                        }
-                        Log.v(TAG, "Everything Ok in here! We got the Image");
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
-                }
-            });
-            thread.start();
-        }
     }
 
     //Save Image
@@ -98,6 +72,7 @@ public class ImageSaver {
         Log.i(TAG,"Image found at: " + directory.getAbsolutePath());
         return directory.getAbsolutePath();
     }
+
     //Load Image
     public Bitmap iLoadImageFromStorage(String path, String imageName) {
         try {
@@ -110,6 +85,7 @@ public class ImageSaver {
             return null;
         }
     }
+
     //Upload Image to Firebase
     public void iUploadProfileImageToFirebase(String path, FirebaseUser user){
         UploadTask uploadTask;
@@ -173,7 +149,6 @@ public class ImageSaver {
         Thread thread = new Thread(new Runnable() {
             @Override
             public void run() {
-
                 String fName = "image_" + uniqueID;
                 String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
@@ -248,6 +223,7 @@ public class ImageSaver {
         });
         thread.start();
     }
+
     public void iUploadThumbsToFirebase(final List<String> path,
                                         final FirebaseUser user,
                                         final int nUploads,

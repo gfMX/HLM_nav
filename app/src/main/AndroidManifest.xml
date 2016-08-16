@@ -12,7 +12,7 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name=".LoginActivity"
             android:label="@string/app_name"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
@@ -39,37 +39,37 @@
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
-            android:parentActivityName=".MainActivity">
+            android:parentActivityName=".LoginActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
+                android:value=".LoginActivity" />
         </activity>
         <activity
             android:name=".ImageBrowser"
             android:label="@string/title_activity_image_browser"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
+                android:value=".LoginActivity" />
         </activity>
         <activity
             android:name=".HLMSlidePagerActivity"
             android:label="@string/title_activity_pager_hlm"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
+                android:value=".LoginActivity" />
         </activity>
         <activity
             android:name=".FireBrowserActivity"
             android:label="@string/title_activity_fire_browser"
-            android:parentActivityName=".MainActivity"
+            android:parentActivityName=".LoginActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value="MainActivity" />
+                android:value=".LoginActivity" />
 
         </activity>
     </application>

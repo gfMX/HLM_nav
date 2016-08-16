@@ -37,7 +37,7 @@ public class ImageBrowser extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        fireUser = MainActivityFragment.user;
+        fireUser = LoginFragment.user;
         database = FirebaseDatabase.getInstance();
 
 
@@ -83,7 +83,7 @@ public class ImageBrowser extends AppCompatActivity {
                             handler.postDelayed(new Runnable() {
                                 @Override
                                 public void run() {
-                                    startActivity(new Intent(getApplication(), MainActivity.class));
+                                    startActivity(new Intent(getApplication(), LoginActivity.class));
                                     //finish();
                                 }
                             }, 1500);

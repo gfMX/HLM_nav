@@ -75,7 +75,7 @@ public class HLMPageFragment extends ListFragment {
 
 
     //Firebase Initialization
-    final FirebaseUser firebaseUser = MainActivityFragment.user;
+    final FirebaseUser firebaseUser = LoginFragment.user;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");

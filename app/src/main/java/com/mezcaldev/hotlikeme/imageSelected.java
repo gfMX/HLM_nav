@@ -26,7 +26,7 @@ import java.net.URL;
 
 public class imageSelected extends DialogFragment {
     static final String TAG = "Saving the Image: ";
-    static String imageProfileFileName = MainActivityFragment.imageProfileFileName;
+    static String imageProfileFileName = LoginFragment.imageProfileFileName;
     static Uri uriImage;
 
     File localStorage;
@@ -49,8 +49,8 @@ public class imageSelected extends DialogFragment {
 
         getDialog().setTitle("Selected Image");
 
-        localStorage = new File(MainActivityFragment.pathProfileImage + "/" + imageProfileFileName);
-        firebaseUser = MainActivityFragment.user;
+        localStorage = new File(LoginFragment.pathProfileImage + "/" + imageProfileFileName);
+        firebaseUser = LoginFragment.user;
 
         btn_ok = (Button) view.findViewById(R.id.btn_ok_image);
         btn_cancel = (Button) view.findViewById(R.id.btn_cancel_image);
@@ -126,7 +126,7 @@ public class imageSelected extends DialogFragment {
                 @Override
                 public void run() {
                     getDialog().dismiss();
-                    startActivity(new Intent(getActivity(), MainActivity.class));
+                    startActivity(new Intent(getActivity(), LoginActivity.class));
                 }
             }, 2500);
         }

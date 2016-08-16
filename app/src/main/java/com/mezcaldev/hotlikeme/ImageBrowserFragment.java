@@ -71,7 +71,7 @@ public class ImageBrowserFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         mAuth = FirebaseAuth.getInstance();
-        firebaseUser = MainActivityFragment.user;
+        firebaseUser = LoginFragment.user;
         fireRef = database.getReference();
 
         accessToken = AccessToken.getCurrentAccessToken();

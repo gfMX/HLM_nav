@@ -29,7 +29,7 @@ import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    FirebaseUser firebaseUser = MainActivityFragment.user;
+    FirebaseUser firebaseUser = LoginFragment.user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference databaseReferenceZero = database.getReference();
     DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid());

@@ -33,7 +33,7 @@ import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 import java.util.List;
 
-public class FireBrowser extends Fragment {
+public class FireBrowserFragment extends Fragment {
 
     String pathImages = "/images/";
     String pathThumbs = "/thumbs/";
@@ -71,7 +71,7 @@ public class FireBrowser extends Fragment {
     ImageAdapter imageAdapter;
     MenuItem trashCan;
 
-    public FireBrowser() {
+    public FireBrowserFragment() {
 
     }
 
@@ -84,7 +84,7 @@ public class FireBrowser extends Fragment {
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         mAuth = FirebaseAuth.getInstance();
-        firebaseUser = MainActivityFragment.user;
+        firebaseUser = LoginFragment.user;
 
         accessToken = AccessToken.getCurrentAccessToken();
         Log.i(TAG, "AccessToken"+ accessToken.toString());
