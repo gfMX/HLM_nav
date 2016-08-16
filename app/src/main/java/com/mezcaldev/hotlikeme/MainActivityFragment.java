@@ -459,7 +459,9 @@ public class MainActivityFragment extends Fragment {
                 } else {
                     fireProfilePic();
                 } if (user != null) {
-                    itemSettings.setVisible(true);
+                    if (itemSettings != null) {
+                        itemSettings.setVisible(true);
+                    }
                 }
             }
         }, delayTime);

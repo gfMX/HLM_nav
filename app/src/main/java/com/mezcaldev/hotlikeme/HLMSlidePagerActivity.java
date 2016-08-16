@@ -1,6 +1,5 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -11,8 +10,6 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -33,15 +30,12 @@ import java.util.List;
 public class HLMSlidePagerActivity extends AppCompatActivity {
 
     public static String userKey;
-    public static int oldKey;
-    public static List<String> leKeys = new ArrayList<>(3);
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     int x;
     int y;
 
     String gender;
-    static int currentPage;
     static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
@@ -99,30 +93,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        // Inflate the menu; this adds items to the action bar if it is present.
-        getMenuInflater().inflate(R.menu.menu_main, menu);
-        return true;
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the HomeActivity/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-
-        //noinspection SimplifiableIfStatement
-
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
     public void onBackPressed() {
         if (mPager.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
@@ -142,9 +112,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
 
         @Override
         public Fragment getItem(int position) {
-            currentPage = position;
             userKey = users.get(position);
-            return new HLMPageFragment();
+            return HLMPageFragment.newInstance(userKey);
         }
 
         @Override
@@ -185,7 +154,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             }
         });
     }
-
 
     public class RotatePageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.75f;

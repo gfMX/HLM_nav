@@ -5,7 +5,7 @@ import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v4.app.Fragment;
+import android.support.v4.app.ListFragment;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -28,12 +28,19 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.List;
+public class HLMPageFragment extends ListFragment {
+    String userKey;
 
-public class HLMPageFragment extends Fragment {
+    static HLMPageFragment newInstance(String key) {
+        HLMPageFragment f = new HLMPageFragment();
 
-    List<String> userList = HLMSlidePagerActivity.users;
-    String userKey = HLMSlidePagerActivity.userKey;
+        // Supply num input as an argument.
+        Bundle args = new Bundle();
+        args.putString("key", key);
+        f.setArguments(args);
+
+        return f;
+    }
 
     TextView viewUserAlias;
     ImageView viewUserImage;
@@ -53,8 +60,6 @@ public class HLMPageFragment extends Fragment {
 
     boolean flagOne = false;
     boolean flagTwo = false;
-    boolean flagThree = false;
-    boolean flagFour = false;
 
     UserRating userRating = new UserRating();
 
@@ -73,6 +78,12 @@ public class HLMPageFragment extends Fragment {
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
     DatabaseReference referenceLikeUser;
     DatabaseReference referenceUserRated;
+
+    @Override
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        userKey = getArguments() != null ? getArguments().getString("key"): "None key given";
+    }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -120,10 +131,8 @@ public class HLMPageFragment extends Fragment {
 
         ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-
                 starsRating = rating;
                 referenceUserRated.setValue(starsRating);
-
             }
         });
 
@@ -307,8 +316,6 @@ public class HLMPageFragment extends Fragment {
     private void resetFlags (){
         flagOne = false;
         flagTwo = false;
-        flagThree = false;
-        flagFour = false;
     }
 
     @Override
