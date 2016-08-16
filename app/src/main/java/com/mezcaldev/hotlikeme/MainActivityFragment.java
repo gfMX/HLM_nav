@@ -67,7 +67,7 @@ public class MainActivityFragment extends Fragment {
     private static final String TAG = "Login Details";
     //Delay Time to load Profile Picture if exists.
     Integer minDelayTime =100;
-    Integer delayTime = 2000;
+    Integer delayTime = 1500;
 
     //Facebook
     LoginButton loginButton;

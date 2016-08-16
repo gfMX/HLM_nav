@@ -28,8 +28,11 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.List;
+
 public class HLMPageFragment extends Fragment {
 
+    List<String> userList = HLMSlidePagerActivity.users;
     String userKey = HLMSlidePagerActivity.userKey;
 
     TextView viewUserAlias;

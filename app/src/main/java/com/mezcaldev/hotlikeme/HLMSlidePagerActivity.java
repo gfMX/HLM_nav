@@ -33,6 +33,8 @@ import java.util.List;
 public class HLMSlidePagerActivity extends AppCompatActivity {
 
     public static String userKey;
+    public static int oldKey;
+    public static List<String> leKeys = new ArrayList<>(3);
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     int x;
@@ -81,23 +83,18 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
                                        public boolean onTouch(View view, MotionEvent event) {
                                            x = (int) event.getX();
                                            y = (int) event.getY();
-                                           switch (event.getAction()) {
-                                               case MotionEvent.ACTION_DOWN:
 
-                                                   break;
-                                               case MotionEvent.ACTION_MOVE:
-                                                   //System.out.println("Position X: " + x +" Y: " + y);
-                                                   break;
-                                               case MotionEvent.ACTION_UP:
-
-                                                   break;
-                                           }
                                            return false;
                                        }
                                    }
         );
 
-        getUriProfilePics(gender);
+        if (users.size() <= 0) {
+            System.out.println("Getting Users");
+            getUriProfilePics(gender);
+        } else {
+            System.out.println("User list OK");
+        }
 
     }
 
@@ -158,9 +155,15 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
         }
+        /*@Override
+        public Parcelable saveState() {
+            return null;
+        }*/
     }
 
     public void getUriProfilePics (String gender){
+        //users.clear();
+        //mPagerAdapter.notifyDataSetChanged();
         DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -184,47 +187,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     }
 
 
-
-    public void selectPage(int page) {
-        mPager.setCurrentItem(page);
-    }
-
-    public class DepthPageTransformer implements ViewPager.PageTransformer {
-        private static final float MIN_SCALE = 0.75f;
-
-        public void transformPage(View view, float position) {
-            int pageWidth = view.getWidth();
-
-            if (position < -1) { // [-Infinity,-1)
-                // This page is way off-screen to the left.
-                view.setAlpha(0);
-
-            } else if (position <= 0) { // [-1,0]
-                // Use the default slide transition when moving to the left page
-                view.setAlpha(1);
-                view.setTranslationX(0);
-                view.setScaleX(1);
-                view.setScaleY(1);
-
-            } else if (position <= 1) { // (0,1]
-                // Fade the page out.
-                view.setAlpha(1 - position);
-
-                // Counteract the default slide transition
-                view.setTranslationX(pageWidth * -position);
-
-                // Scale the page down (between MIN_SCALE and 1)
-                float scaleFactor = MIN_SCALE
-                        + (1 - MIN_SCALE) * (1 - Math.abs(position));
-                view.setScaleX(scaleFactor);
-                view.setScaleY(scaleFactor);
-
-            } else { // (1,+Infinity]
-                // This page is way off-screen to the right.
-                view.setAlpha(0);
-            }
-        }
-    }
     public class RotatePageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.75f;
 
