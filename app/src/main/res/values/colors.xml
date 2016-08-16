@@ -6,6 +6,6 @@
     <color name="colorTransparent">#00FFFFFF</color>
     <color name="colorGray">#FF666666</color>
     <color name="colorColdGray">#FF999999</color>
-    <color name="colorPink">#FFFF5EFF</color>
-    <color name="colorWhite">#FFFFFFFF</color>
+    <color name="colorPink">#FF5EFF</color>
+    <color name="colorWhite">#FFFFFF</color>
 </resources>

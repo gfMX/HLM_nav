@@ -2,10 +2,13 @@ package com.mezcaldev.hotlikeme;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.graphics.PorterDuff;
+import android.graphics.drawable.LayerDrawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -113,7 +116,10 @@ public class HLMPageFragment extends ListFragment {
         viewUserAlias = (TextView) view.findViewById(R.id.textView);
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
+
         ratingBar = (RatingBar) view.findViewById(R.id.rating);
+        LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
+        stars.getDrawable(2).setColorFilter(ContextCompat.getColor(getContext(), R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
 
         dropZone1 = (ImageView) view.findViewById(R.id.dropZone1);
         dropZone2 = (ImageView) view.findViewById(R.id.dropZone2);
