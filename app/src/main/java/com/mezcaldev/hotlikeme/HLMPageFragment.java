@@ -32,14 +32,14 @@ public class HLMPageFragment extends ListFragment {
     String userKey;
 
     static HLMPageFragment newInstance(String key) {
-        HLMPageFragment f = new HLMPageFragment();
+        HLMPageFragment newFragment = new HLMPageFragment();
 
         // Supply num input as an argument.
         Bundle args = new Bundle();
         args.putString("key", key);
-        f.setArguments(args);
+        newFragment.setArguments(args);
 
-        return f;
+        return newFragment;
     }
 
     TextView viewUserAlias;
