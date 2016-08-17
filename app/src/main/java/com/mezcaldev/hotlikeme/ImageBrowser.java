@@ -19,14 +19,11 @@ import java.util.List;
 
 public class ImageBrowser extends AppCompatActivity {
 
-    final static String TAG = "IB: ";
-
-    FirebaseUser fireUser;
+    FirebaseUser fireUser = FireConnection.getInstance().getUser();
     FirebaseDatabase database;
 
     List<String> uploadUrls = new ArrayList<>();
     List<String> uploadTiny = new ArrayList<>();
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -37,7 +34,6 @@ public class ImageBrowser extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        fireUser = LoginFragment.user;
         database = FirebaseDatabase.getInstance();
 
 

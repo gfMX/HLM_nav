@@ -16,7 +16,6 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.view.MenuItem;
@@ -29,7 +28,7 @@ import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    FirebaseUser firebaseUser = MainActivity.user;
+    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference databaseReferenceZero = database.getReference();
     DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid());
@@ -157,7 +156,8 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         int id = item.getItemId();
         if (id == android.R.id.home) {
             if (!super.onMenuItemSelected(featureId, item)) {
-                NavUtils.navigateUpFromSameTask(this);
+                //NavUtils.navigateUpFromSameTask(this);
+                startActivity(new Intent(this, HLMSlidePagerActivity.class));
             }
             return true;
         }
@@ -199,6 +199,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             startActivity(new Intent(getActivity(), LoginActivity.class));
+            getActivity().finish();
         }
     }
     /**

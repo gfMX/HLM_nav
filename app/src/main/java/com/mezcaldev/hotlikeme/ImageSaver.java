@@ -46,7 +46,7 @@ public class ImageSaver {
     String pathImages = "/images/";
     String pathThumbs = "/images/thumbs/";
 
-    final FirebaseUser firebaseUser = LoginFragment.user;
+    final FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage  storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");

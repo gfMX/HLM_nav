@@ -30,7 +30,7 @@ public class imageSelected extends DialogFragment {
     static Uri uriImage;
 
     File localStorage;
-    FirebaseUser firebaseUser;
+    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
 
     Button btn_ok;
     Button btn_cancel;
@@ -50,7 +50,6 @@ public class imageSelected extends DialogFragment {
         getDialog().setTitle("Selected Image");
 
         localStorage = new File(LoginFragment.pathProfileImage + "/" + imageProfileFileName);
-        firebaseUser = LoginFragment.user;
 
         btn_ok = (Button) view.findViewById(R.id.btn_ok_image);
         btn_cancel = (Button) view.findViewById(R.id.btn_cancel_image);

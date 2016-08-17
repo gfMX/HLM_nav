@@ -20,7 +20,6 @@ import android.widget.Toast;
 import com.facebook.AccessToken;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -43,8 +42,7 @@ public class FireBrowserFragment extends Fragment {
     AccessToken accessToken;
 
     //Firebase//Initialize Firebase
-    FirebaseAuth mAuth;
-    FirebaseUser firebaseUser;
+    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     FirebaseDatabase database;
     FirebaseStorage storage;
     StorageReference storageRef;
@@ -83,8 +81,6 @@ public class FireBrowserFragment extends Fragment {
         database = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
-        mAuth = FirebaseAuth.getInstance();
-        firebaseUser = LoginFragment.user;
 
         accessToken = AccessToken.getCurrentAccessToken();
         Log.i(TAG, "AccessToken"+ accessToken.toString());

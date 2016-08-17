@@ -75,7 +75,7 @@ public class HLMPageFragment extends ListFragment {
 
 
     //Firebase Initialization
-    FirebaseUser firebaseUser = MainActivity.user;
+    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
@@ -86,11 +86,8 @@ public class HLMPageFragment extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         userKey = getArguments() != null ? getArguments().getString("key"): "None key given";
-        if (MainActivity.user != null){
-            firebaseUser = MainActivity.user;
-        } else if (LoginActivity.user != null){
-            firebaseUser = LoginActivity.user;
-        }
+
+        System.out.println("Actual user: " + firebaseUser.getUid());
     }
 
     @Override

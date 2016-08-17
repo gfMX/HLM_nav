@@ -366,8 +366,9 @@ public class LoginFragment extends Fragment {
                     } else {
                         // User signed out
                         Log.d(TAG, "Firebase: Signed Out");
+                        System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
                     }
-                    //UpdateUI
+                    FireConnection.getInstance().getUser();
                     updateUI();
                 }
             };
