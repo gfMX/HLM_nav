@@ -3,6 +3,10 @@
     <!-- These settings headers are only used on tablets. -->
 
     <header
+        android:fragment="com.mezcaldev.hotlikeme.SettingsActivity$ProfileImageFragment"
+        android:icon="@drawable/ic_account_circle_black_24dp"
+        android:title="@string/pref_header_image" />
+    <header
         android:fragment="com.mezcaldev.hotlikeme.SettingsActivity$GeneralPreferenceFragment"
         android:icon="@drawable/ic_info_black_24dp"
         android:title="@string/pref_header_general" />

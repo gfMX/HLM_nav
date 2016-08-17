@@ -29,7 +29,7 @@ import java.util.List;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
 
-    FirebaseUser firebaseUser = LoginFragment.user;
+    FirebaseUser firebaseUser = MainActivity.user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     DatabaseReference databaseReferenceZero = database.getReference();
     DatabaseReference databaseReference = database.getReference().child("users").child(firebaseUser.getUid());
@@ -103,6 +103,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
+
+        if (MainActivity.user != null){
+            firebaseUser = MainActivity.user;
+        } else if (LoginActivity.user != null){
+            firebaseUser = LoginActivity.user;
+        }
+        
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String gender = sharedPreferences.getString("gender", "Not defined").toLowerCase();
 
@@ -137,9 +144,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         }
     }
 
-    /**
-     * Set up the {@link android.app.ActionBar}, if the API is available.
-     */
     private void setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
@@ -183,11 +187,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
      */
     protected boolean isValidFragment(String fragmentName) {
         return PreferenceFragment.class.getName().equals(fragmentName)
+                || ProfileImageFragment.class.getName().equals(fragmentName)
                 || GeneralPreferenceFragment.class.getName().equals(fragmentName)
                 || DataSyncPreferenceFragment.class.getName().equals(fragmentName)
                 || NotificationPreferenceFragment.class.getName().equals(fragmentName);
     }
 
+    @TargetApi(Build.VERSION_CODES.HONEYCOMB)
+    public static class ProfileImageFragment extends PreferenceFragment {
+        @Override
+        public void onCreate(Bundle savedInstanceState) {
+            super.onCreate(savedInstanceState);
+            startActivity(new Intent(getActivity(), LoginActivity.class));
+        }
+    }
     /**
      * This fragment shows general preferences only. It is used when the
      * activity is showing a two-pane settings UI.

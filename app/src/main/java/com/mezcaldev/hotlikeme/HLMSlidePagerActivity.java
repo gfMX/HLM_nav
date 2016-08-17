@@ -1,5 +1,6 @@
 package com.mezcaldev.hotlikeme;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -10,19 +11,18 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,12 +39,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
-    final FirebaseUser firebaseUser = LoginFragment.user;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
-    final FirebaseStorage storage = FirebaseStorage.getInstance();
-    final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
-
-
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -59,9 +54,9 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        if (getSupportActionBar() != null) {
+        /*if (getSupportActionBar() != null) {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }
+        }*/
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
@@ -70,6 +65,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
+        mPager.setOffscreenPageLimit(3);
         mPager.setAdapter(mPagerAdapter);
         mPager.setPageTransformer(true, new RotatePageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
@@ -83,6 +79,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
                                    }
         );
 
+        System.out.println("Users: " + users);
+
         if (users.size() <= 0) {
             System.out.println("Getting Users");
             getUriProfilePics(gender);
@@ -90,6 +88,33 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             System.out.println("User list OK");
         }
 
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_hlm, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if (id == R.id.action_settings) {
+            startActivity(new Intent(this, SettingsActivity.class));
+            clearInfo();
+            finish();
+            return true;
+        }
+        if (id == R.id.action_profile_settings) {
+            startActivity(new Intent(this, LoginActivity.class));
+            clearInfo();
+            finish();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -124,15 +149,9 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
         }
-        /*@Override
-        public Parcelable saveState() {
-            return null;
-        }*/
     }
 
     public void getUriProfilePics (String gender){
-        //users.clear();
-        //mPagerAdapter.notifyDataSetChanged();
         DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
@@ -192,7 +211,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             }
         }
     }
-
+    private void clearInfo(){
+        users.clear();
+        mPagerAdapter.notifyDataSetChanged();
+    }
     @Override
     public void onDestroy(){
         super.onDestroy();

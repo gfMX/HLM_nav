@@ -9,6 +9,7 @@
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
+    <string name="action_profile_settings">Profile Image</string>
     <string name="action_settings">Settings</string>
 
     <string name="app_description">Hello Hot Users</string>
@@ -27,6 +28,7 @@
 
     <!-- Example General settings -->
     <string name="pref_header_general">Personal Info</string>
+    <string name="pref_header_image">Profile Image</string>
 
     <string name="pref_title_social_recommendations">Visible to others</string>
     <string name="pref_description_social_recommendations">Other people can see you, see your profile
@@ -123,14 +125,14 @@
     <string name="text_choose_images">Please choose a few Images for Hot Like Me!</string>
     <string name="text_first_select_images">Please, first Choose a few images for HotLikeMe</string>
     <string name="text_no_images_selected">No images selected, please select at least one.</string>
-    <string name="text_sign_in">"Welcome to HotLikeMe \n Please Log In"</string>
+    <string name="text_sign_in">"Welcome to HotLikeMe \n Please log in"</string>
     <string name="text_hlm_start_button">Bla, bla bla&#8230; Let\'s Go!</string>
     <string name="text_cancel_selection">"Bla, bla bla&#8230;"</string>
     <string name="text_hlm_change_profile_pic">Bla, bla bla&#8230; Change your profile Pic</string>
     <string name="text_profile_picture_selected">New Profile Picture selected!</string>
     <string name="text_settings_activity">your display name, synchronization options, and more</string>
     <string name="text_start_HLM">
-        Please choose a few of your images for Hot Like Me. After that, click on your image profile
+        Please choose a few of your images for HotLikeMe. After that, click on your image profile
         to change it for one of your choice.
     </string>
     <string name="text_uploading">Uploading&#160;</string>
@@ -147,7 +149,5 @@
     </string>
     <string name="text_hlm_users">Profile pics of HotLikeMe Users</string>
     <string name="text_network_access_required">Network not available. Please check your Internet Connection and try again.</string>
-
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="text_app_introduction">Here you will find New Friends, New Relations, New Experiences</string>
 </resources>

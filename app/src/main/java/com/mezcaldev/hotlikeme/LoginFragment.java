@@ -59,9 +59,6 @@ import org.json.JSONObject;
 
 import java.io.File;
 
-/**
- * A placeholder fragment containing a simple view.
- */
 public class LoginFragment extends Fragment {
 
     private static final String TAG = "Login Details";
@@ -145,7 +142,7 @@ public class LoginFragment extends Fragment {
 
     }
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_main, menu);
+        inflater.inflate(R.menu.menu_login, menu);
 
         itemSettings = menu.findItem(R.id.action_settings);
         itemSettings.setVisible(false);
