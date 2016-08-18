@@ -74,6 +74,18 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
                                            x = (int) event.getX();
                                            y = (int) event.getY();
 
+                                           switch (event.getAction() & MotionEvent.ACTION_MASK) {
+                                               case MotionEvent.ACTION_DOWN:
+
+                                                   break;
+                                               case MotionEvent.ACTION_UP:
+                                                   //mPager.endFakeDrag();
+                                                   break;
+                                               case MotionEvent.ACTION_MOVE:
+                                                   //mPager.setY((mPager.getY() + mPager.getWidth()/2) + y);
+                                               break;
+                                           }
+
                                            return false;
                                        }
                                    }
@@ -198,6 +210,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
                 // Counteract the default slide transition
                 page.setTranslationX(page.getWidth() * -position);
                 page.setTranslationY(y/2 * position);
+                //page.setTranslationY(page.getHeight()/2 * -position);
 
                 // Scale the page down (between MIN_SCALE and 1)
                 float scaleFactor = MIN_SCALE

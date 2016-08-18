@@ -214,7 +214,7 @@ public class HLMPageFragment extends ListFragment {
 
                         if (yRaw < screenPart){
                             //Upper limit of the screen
-                            System.out.println("None");
+                            //System.out.println("None");
                         } else if (yRaw < screenPart * 2) {
                             starsRating = 5;
                         } else if (yRaw < screenPart * 3) {
@@ -227,7 +227,7 @@ public class HLMPageFragment extends ListFragment {
                             starsRating = 1;
                         } else if (yRaw < screenPart * 7) {
                             //Null zone doesn't add or change Rating
-                            System.out.println("None");
+                            //System.out.println("None");
                             starsRating = 0;
                         } else if (yRaw < screenPart * 8) {
                             starsRating = 5;
@@ -241,7 +241,7 @@ public class HLMPageFragment extends ListFragment {
                             starsRating = 1;
                         } else if (yRaw < screenPart * 13) {
                             //Way too low of the screen
-                            System.out.println("None");
+                            //System.out.println("None");
                         }
                         ratingBar.setRating(starsRating);
                         break;
