@@ -34,9 +34,11 @@
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true" />
         <ImageView
-            android:layout_height="360dp"
-            android:layout_margin="10dp"
+            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
+            android:maxHeight="360dp"
+            android:maxWidth="360dp"
+            android:layout_margin="10dp"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
             android:src="@drawable/ic_person_black"

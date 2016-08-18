@@ -47,7 +47,7 @@ public class imageSelected extends DialogFragment {
         View view = inflater.inflate(R.layout.fragment_image_selected, container, false);
         ImageView imageView = (ImageView) view.findViewById(R.id.fb_prof_image);
 
-        getDialog().setTitle("Selected Image");
+        getDialog().setTitle("HotLikeMe Profile Pic:");
 
         localStorage = new File(LoginFragment.pathProfileImage + "/" + imageProfileFileName);
 

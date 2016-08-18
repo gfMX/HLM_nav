@@ -29,17 +29,24 @@
         android:layout_alignParentTop="true"
         android:layout_toRightOf="@+id/fb_textWelcome"
         android:layout_toEndOf="@+id/fb_textWelcome"
-        android:layout_marginLeft="15dp"/>
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="15dp"/>
 
     <ImageView
         android:id="@+id/hlm_image"
         android:src="@drawable/ic_person_black"
         android:visibility="visible"
-        android:layout_width="280dp"
-        android:layout_height="255dp"
+        android:layout_height="wrap_content"
+        android:layout_width="wrap_content"
+        android:maxHeight="255dp"
+        android:maxWidth="280dp"
+        android:adjustViewBounds="true"
+        android:scaleType="fitXY"
         android:layout_below="@+id/fb_image"
         android:layout_centerHorizontal="true"
         android:layout_margin="10dp"
+        android:padding="10dp"
+        android:background="@color/colorWhite"
         android:contentDescription="@string/text_profile_pic" />
 
     <Button
@@ -50,7 +57,8 @@
         android:layout_gravity="center_horizontal"
         android:layout_below="@id/hlm_image"
         android:layout_centerHorizontal="true"
-        android:id="@+id/btn_choose_img" />
+        android:id="@+id/btn_choose_img"
+        style="?android:attr/borderlessButtonStyle"/>
 
     <Button
         android:text="@string/btn_start"
@@ -59,7 +67,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/btn_start"
         android:layout_below="@+id/btn_choose_img"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        style="?android:attr/borderlessButtonStyle"/>
 
     <Button
         android:text="@string/btn_settings"
@@ -68,7 +77,8 @@
         android:layout_height="wrap_content"
         android:id="@+id/btn_settings"
         android:layout_below="@+id/btn_start"
-        android:layout_centerHorizontal="true" />
+        android:layout_centerHorizontal="true"
+        style="?android:attr/borderlessButtonStyle"/>
 
     <com.facebook.login.widget.LoginButton
         android:id="@+id/login_button"

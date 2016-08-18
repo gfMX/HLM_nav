@@ -386,6 +386,7 @@ public class FireBrowserFragment extends Fragment {
 
     private void showSelectedImage(Uri urImage){
         DialogFragment newFragment = imageSelected.newInstance(urImage);
+        //newFragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         newFragment.show(getActivity().getFragmentManager(), "Image");
     }
 

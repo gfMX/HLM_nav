@@ -17,7 +17,7 @@ public class MainActivity extends AppCompatActivity {
 
     Intent intent;
     Handler handler;
-    Integer delayTime = 2500;
+    Integer delayTime = 2000;
     Snackbar snackNetworkRequired;
     static FirebaseUser user;
     FireConnection fireConnection = FireConnection.getInstance();

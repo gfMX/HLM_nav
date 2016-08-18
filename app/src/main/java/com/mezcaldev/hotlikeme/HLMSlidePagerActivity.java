@@ -1,7 +1,11 @@
 package com.mezcaldev.hotlikeme;
 
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Location;
+import android.location.LocationListener;
+import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -32,6 +36,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     public static String userKey;
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
+    SharedPreferences sharedPreferences;
+    LocationManager locationManager;
+    LocationListener locationListener;
+
     int x;
     int y;
 
@@ -58,7 +66,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }*/
 
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
         System.out.println("Looking for: " + gender);
 
@@ -98,6 +106,24 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             getUriProfilePics(gender);
         } else {
             System.out.println("User list OK");
+        }
+
+        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+
+        locationListener = new LocationListener() {
+            public void onLocationChanged(Location location) {
+                // Called when a new location is found by the network location provider.
+                System.out.println("Current Location: " + location);
+            }
+            public void onStatusChanged(String provider, int status, Bundle extras) {}
+            public void onProviderEnabled(String provider) {}
+            public void onProviderDisabled(String provider) {}
+        };
+        if (sharedPreferences.getBoolean("gps_enabled", false)) {
+            System.out.println("Requesting Location...");
+            //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,0,locationListener);
+        } else {
+            System.out.println("Location not available");
         }
 
     }
@@ -231,5 +257,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     @Override
     public void onDestroy(){
         super.onDestroy();
+        //locationManager.removeUpdates(locationListener);
+
     }
 }

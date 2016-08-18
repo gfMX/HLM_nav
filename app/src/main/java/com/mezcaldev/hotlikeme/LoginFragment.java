@@ -182,6 +182,7 @@ public class LoginFragment extends Fragment {
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
         imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
+        imageProfileHLM.setRotation(5 * ((float) Math.random() * 2 - 1));
 
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
         btn_start = (Button) view.findViewById(R.id.btn_start);
