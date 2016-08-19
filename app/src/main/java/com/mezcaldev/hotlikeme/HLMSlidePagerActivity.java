@@ -1,6 +1,8 @@
 package com.mezcaldev.hotlikeme;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
@@ -22,12 +24,20 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.Toast;
 
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.common.api.PendingResult;
+import com.google.android.gms.common.api.ResultCallback;
+import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.LocationListener;
 import com.google.android.gms.location.LocationRequest;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.location.LocationSettingsRequest;
+import com.google.android.gms.location.LocationSettingsResult;
+import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -54,17 +64,18 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
 
     /* Position */
-    int fastInterval = 1 * 5 * 1000; // 5s
-    int minInterval = 1 * 10 * 1000; // 10s
+    int fastInterval = 1000 * 30; // 30s
+    int minInterval = 1000 * 60;
+    private static final int TWO_MINUTES = 1000 * 60 * 2;
 
     /* Location with Google API */
-    Location mLastLocation;
     Location mCurrentLocation;
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     Boolean mRequestingLocationUpdates;
-
     String mLastUpdateTime;
+    String mLastUpdateDay;
+    final int REQUEST_CHECK_SETTINGS = 2543;
 
     // Others
     int x;
@@ -74,6 +85,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
+    FirebaseUser user = FireConnection.getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
     @Override
@@ -230,42 +242,20 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         });
     }
 
-    private void clearInfo(){
-        users.clear();
-        mPagerAdapter.notifyDataSetChanged();
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // TODO Auto-generated method stub
-    }
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            if (mLastLocation != null) {
-                System.out.println("Last Location (Google Api): " + mLastLocation);
-            } else {
-                System.out.println("There's Not known location right now.");
-            }
-        } else {
-            ActivityCompat.requestPermissions(this,
-                    new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
-                    MY_PERMISSION_ACCESS_FINE_LOCATION);
-        }
-        if (mRequestingLocationUpdates) {
-            startLocationUpdates();
-        }
-    }
-    @Override
-    public void onConnectionSuspended(int cause) {
-        mGoogleApiClient.connect();
-    }
     @Override
     public void onLocationChanged(Location location) {
-        mCurrentLocation = location;
-        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        Log.i(TAG, "Current Location: " + mCurrentLocation);
+        if (isBetterLocation(location, mCurrentLocation)) {
+            mCurrentLocation = location;
+            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+            mLastUpdateDay = DateFormat.getDateInstance().format(new Date());
+            DatabaseReference databaseReference = database.getReference().child("users").child(user.getUid()).child("last_location");
+            databaseReference.child("loc_longitude").setValue(mCurrentLocation.getLongitude());
+            databaseReference.child("loc_latitude").setValue(mCurrentLocation.getLatitude());
+            databaseReference.child("loc_accuracy").setValue(mCurrentLocation.getAccuracy());
+            databaseReference.child("time").setValue(mLastUpdateTime);
+            databaseReference.child("day").setValue(mLastUpdateDay);
+            Log.i(TAG, "Current BEST " + mCurrentLocation + " Time: " + mLastUpdateTime + " Day: " + mLastUpdateDay);
+        }
     }
 
     @Override
@@ -289,21 +279,115 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         mLocationRequest.setInterval(minInterval);
         mLocationRequest.setFastestInterval(fastInterval);
         mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        LocationSettingsRequest.Builder builder = new LocationSettingsRequest.Builder()
+                .addLocationRequest(mLocationRequest);
+
+        PendingResult<LocationSettingsResult> result =
+                LocationServices.SettingsApi.checkLocationSettings(mGoogleApiClient,
+                        builder.build());
+
+        result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
+            @Override
+            public void onResult(LocationSettingsResult result) {
+                final Status status = result.getStatus();
+                //final LocationSettingsStates locationSettingsStates = result.getLocationSettingsStates();
+                switch (status.getStatusCode()) {
+                    case LocationSettingsStatusCodes.SUCCESS:
+                        // All location settings are satisfied. The client can
+                        // initialize location requests here.
+                        System.out.println("Access GRANTED by the User!");
+                        //startLocationUpdates();
+                        break;
+                    case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
+                        // Location settings are not satisfied, but this can be fixed
+                        // by showing the user a dialog.
+                        try {
+                            // Show the dialog by calling startResolutionForResult(),
+                            // and check the result in onActivityResult().
+                            status.startResolutionForResult(HLMSlidePagerActivity.this, REQUEST_CHECK_SETTINGS);
+                            System.out.println("Access requested.");
+                        } catch (IntentSender.SendIntentException e) {
+                            // Ignore the error.
+                        }
+                        break;
+                    case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
+                        // Location settings are not satisfied. However, we have no way
+                        // to fix the settings so we won't show the dialog.
+                        System.out.println("Nothing to do.");
+                        break;
+                }
+            }
+        });
     }
     protected void startLocationUpdates() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     mGoogleApiClient, mLocationRequest, this);
+            System.out.println("Permission GRANTED! Start tracking Location!");
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
                     MY_PERMISSION_ACCESS_FINE_LOCATION);
+            System.out.println("Access Location services NOT ALLOWED! Requesting permission.");
         }
     }
     protected void stopLocationUpdates() {
         LocationServices.FusedLocationApi.removeLocationUpdates(
                 mGoogleApiClient, this);
     }
+    private void clearInfo(){
+        users.clear();
+        mPagerAdapter.notifyDataSetChanged();
+    }
+    protected boolean isBetterLocation(Location location, Location currentBestLocation) {
+        if (currentBestLocation == null) {
+            // A new location is always better than no location
+            return true;
+        }
+
+        // Check whether the new location fix is newer or older
+        long timeDelta = location.getTime() - currentBestLocation.getTime();
+        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
+        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+        boolean isNewer = timeDelta > 0;
+
+        // If it's been more than two minutes since the current location, use the new location
+        // because the user has likely moved
+        if (isSignificantlyNewer) {
+            return true;
+            // If the new location is more than two minutes older, it must be worse
+        } else if (isSignificantlyOlder) {
+            return false;
+        }
+
+        // Check whether the new location fix is more or less accurate
+        int accuracyDelta = (int) (location.getAccuracy() - currentBestLocation.getAccuracy());
+        boolean isLessAccurate = accuracyDelta > 0;
+        boolean isMoreAccurate = accuracyDelta < 0;
+        boolean isSignificantlyLessAccurate = accuracyDelta > 200;
+
+        // Check if the old and new location are from the same provider
+        boolean isFromSameProvider = isSameProvider(location.getProvider(),
+                currentBestLocation.getProvider());
+
+        // Determine location quality using a combination of timeliness and accuracy
+        if (isMoreAccurate) {
+            return true;
+        } else if (isNewer && !isLessAccurate) {
+            return true;
+        } else if (isNewer && !isSignificantlyLessAccurate && isFromSameProvider) {
+            return true;
+        }
+        return false;
+    }
+    private boolean isSameProvider(String provider1, String provider2) {
+        if (provider1 == null) {
+            return provider2 == null;
+        }
+        return provider1.equals(provider2);
+    }
+
     public class RotatePageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.75f;
 
@@ -341,6 +425,52 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 page.setAlpha(0);
             }
         }
+    }
+
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("onActivityResult()", Integer.toString(resultCode));
+        //final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+        switch (requestCode)
+        {
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode)
+                {
+                    case Activity.RESULT_OK:
+                    {
+                        // All required changes were successfully made
+                        Toast.makeText(this, "Location enabled by user!", Toast.LENGTH_LONG).show();
+                        startLocationUpdates();
+                        break;
+                    }
+                    case Activity.RESULT_CANCELED:
+                    {
+                        // The user was asked to change settings, but chose not to
+                        Toast.makeText(this, "Location not enabled, user cancelled.", Toast.LENGTH_LONG).show();
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                break;
+        }
+    }
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        // TODO Auto-generated method stub
+    }
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        if (mRequestingLocationUpdates) {
+            System.out.println("Requesting Location");
+            startLocationUpdates();
+        }
+    }
+    @Override
+    public void onConnectionSuspended(int cause) {
+        mGoogleApiClient.connect();
     }
     @Override
     protected void onStart() {

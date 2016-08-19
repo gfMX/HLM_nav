@@ -102,12 +102,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
-
-        if (MainActivity.user != null){
-            firebaseUser = MainActivity.user;
-        } else if (LoginActivity.user != null){
-            firebaseUser = LoginActivity.user;
-        }
         
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         String gender = sharedPreferences.getString("gender", "Not defined").toLowerCase();
@@ -125,7 +119,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             databaseReference.child("/preferences/sync_freq/")
                     .setValue(Integer.valueOf(sharedPreferences.getString("sync_frequency", "0")));
             databaseReference.child("/preferences/sync_distance/")
-                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_distance", "100")));
+                    .setValue(sharedPreferences.getString("sync_distance", "100"));
 
             databaseReference.child("/preferences/visible/")
                     .setValue(sharedPreferences.getBoolean("visible_switch", true));
@@ -199,7 +193,6 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             startActivity(new Intent(getActivity(), LoginActivity.class));
-            getActivity().finish();
         }
     }
     /**

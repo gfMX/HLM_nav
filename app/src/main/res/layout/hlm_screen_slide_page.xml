@@ -41,7 +41,7 @@
             android:layout_margin="10dp"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:src="@drawable/ic_person_black"
+            android:src="@drawable/ic_person_gray"
             android:contentDescription="@string/text_hlm_users"
             android:layout_below="@+id/textView"
             android:layout_centerHorizontal="true"

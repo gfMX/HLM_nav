@@ -16,7 +16,6 @@ public class FireConnection {
     FirebaseAuth mAuth;
     FirebaseAuth.AuthStateListener mAuthListener;
 
-
     private static FireConnection ourInstance = new FireConnection();
 
     public static FireConnection getInstance() {
