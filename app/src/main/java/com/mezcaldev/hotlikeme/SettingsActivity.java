@@ -123,9 +123,9 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             databaseReference.child("/preferences/looking_for/")
                     .setValue(sharedPreferences.getString("looking_for", "Not specified"));
             databaseReference.child("/preferences/sync_freq/")
-                    .setValue(sharedPreferences.getString("sync_frequency", "0"));
+                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_frequency", "0")));
             databaseReference.child("/preferences/sync_distance/")
-                    .setValue(sharedPreferences.getString("sync_distance", "100"));
+                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_distance", "100")));
 
             databaseReference.child("/preferences/visible/")
                     .setValue(sharedPreferences.getBoolean("visible_switch", true));

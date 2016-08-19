@@ -1,16 +1,11 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.location.Criteria;
 import android.location.Location;
-import android.location.LocationListener;
-import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
-import android.provider.Settings;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -20,6 +15,7 @@ import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -27,16 +23,26 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationListener;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationServices;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.text.DateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
-public class HLMSlidePagerActivity extends AppCompatActivity {
+public class HLMSlidePagerActivity extends AppCompatActivity implements
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+
+    private static final String TAG = "Location";
 
     public static String userKey;
     private ViewPager mPager;
@@ -48,15 +54,19 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
 
     /* Position */
-    private static final int MINIMUM_TIME = 20000;  // 20s
-    private static final int MINIMUM_DISTANCE = 50; // 50m
+    int fastInterval = 1 * 5 * 1000; // 5s
+    int minInterval = 1 * 10 * 1000; // 10s
 
-    /* GPS */
-    Location mLocation;
-    String mProviderName;
-    LocationManager mLocationManager;
-    LocationListener mLocationListener;
+    /* Location with Google API */
+    Location mLastLocation;
+    Location mCurrentLocation;
+    LocationRequest mLocationRequest;
+    GoogleApiClient mGoogleApiClient;
+    Boolean mRequestingLocationUpdates;
 
+    String mLastUpdateTime;
+
+    // Others
     int x;
     int y;
 
@@ -83,9 +93,18 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }*/
 
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
+
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
         System.out.println("Looking for: " + gender);
+        mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
@@ -125,60 +144,9 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             System.out.println("User list OK");
         }
 
-        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        // Get the best provider between gps, network and passive
-        Criteria criteria = new Criteria();
-        mProviderName = mLocationManager.getBestProvider(criteria, true);
-        System.out.println("Location Provider: " + mProviderName);
-
-        mLocationListener = new LocationListener() {
-            public void onLocationChanged(Location location) {
-                // Called when a new location is found by the network location provider.
-                System.out.println("Current Location: " + location);
-                mLocation = location;
-            }
-            public void onStatusChanged(String provider, int status, Bundle extras) {}
-            public void onProviderEnabled(String provider) {}
-            public void onProviderDisabled(String provider) {}
-        };
-
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            // No provider activated: prompt GPS
-            if (mProviderName == null || mProviderName.equals("")) {
-                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-            }
-
-            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MINIMUM_TIME, MINIMUM_DISTANCE, mLocationListener);
-            //mLocation = mLocationManager.getLastKnownLocation(mProviderName);
-            // At least one provider activated. Get the coordinates
-            /*switch (mProviderName) {
-                case "passive":
-                    mLocationManager.requestLocationUpdates(mProviderName, MINIMUM_TIME, MINIMUM_DISTANCE, mLocationListener);
-                    location = mLocationManager.getLastKnownLocation(mProviderName);
-                    break;
-
-                case "network":
-                    break;
-
-                case "gps":
-                    break;
-
-            }*/
-
-            // One or both permissions are denied.
-        } else {
-            // The ACCESS_FINE_LOCATION is denied, then I request it and manage the result in
-            // onRequestPermissionsResult() using the constant MY_PERMISSION_ACCESS_FINE_LOCATION
-            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
-                ActivityCompat.requestPermissions(this,
-                        new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
-                        MY_PERMISSION_ACCESS_FINE_LOCATION);
-            }
-
-        }
+        createLocationRequest();
 
     }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         super.onCreateOptionsMenu(menu);
@@ -217,7 +185,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             mPager.setCurrentItem(mPager.getCurrentItem() - 1);
         }
     }
-
     //A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in sequence.
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
@@ -237,23 +204,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
-        switch (requestCode) {
-            case MY_PERMISSION_ACCESS_FINE_LOCATION: {
-                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted
-                    System.out.println("Need GPS Access");
-                } else {
-                    // permission denied
-                    System.out.println("There's No Permission for FINE Location");
-                }
-                break;
-            }
-
         }
     }
 
@@ -280,6 +230,80 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         });
     }
 
+    private void clearInfo(){
+        users.clear();
+        mPagerAdapter.notifyDataSetChanged();
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        // TODO Auto-generated method stub
+    }
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            if (mLastLocation != null) {
+                System.out.println("Last Location (Google Api): " + mLastLocation);
+            } else {
+                System.out.println("There's Not known location right now.");
+            }
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
+                    MY_PERMISSION_ACCESS_FINE_LOCATION);
+        }
+        if (mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+    @Override
+    public void onConnectionSuspended(int cause) {
+        mGoogleApiClient.connect();
+    }
+    @Override
+    public void onLocationChanged(Location location) {
+        mCurrentLocation = location;
+        mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        Log.i(TAG, "Current Location: " + mCurrentLocation);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSION_ACCESS_FINE_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted
+                    System.out.println("Permission Granted!");
+                } else {
+                    // permission denied
+                    System.out.println("Permission NOT Granted!");
+                }
+                break;
+            }
+
+        }
+    }
+    protected void createLocationRequest() {
+        mLocationRequest = new LocationRequest();
+        mLocationRequest.setInterval(minInterval);
+        mLocationRequest.setFastestInterval(fastInterval);
+        mLocationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+    }
+    protected void startLocationUpdates() {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(
+                    mGoogleApiClient, mLocationRequest, this);
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
+                    MY_PERMISSION_ACCESS_FINE_LOCATION);
+        }
+    }
+    protected void stopLocationUpdates() {
+        LocationServices.FusedLocationApi.removeLocationUpdates(
+                mGoogleApiClient, this);
+    }
     public class RotatePageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.75f;
 
@@ -318,14 +342,32 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             }
         }
     }
-    private void clearInfo(){
-        users.clear();
-        mPagerAdapter.notifyDataSetChanged();
+    @Override
+    protected void onStart() {
+        mGoogleApiClient.connect();
+        super.onStart();
     }
+    @Override
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+    @Override
+    protected void onResume(){
+        super.onResume();
+        if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
+            startLocationUpdates();
+        }
+    }
+    @Override
+    protected void onPause() {
+        super.onPause();
+        stopLocationUpdates();
+    }
+
     @Override
     public void onDestroy(){
         super.onDestroy();
-        //locationManager.removeUpdates(locationListener);
 
     }
 }
