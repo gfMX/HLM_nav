@@ -3,14 +3,19 @@ package com.mezcaldev.hotlikeme;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
+import android.location.Criteria;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.provider.Settings;
+import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
@@ -37,8 +42,20 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     SharedPreferences sharedPreferences;
-    LocationManager locationManager;
-    LocationListener locationListener;
+
+    //Location variables Initialization
+    /* GPS Constant Permission */
+    private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
+
+    /* Position */
+    private static final int MINIMUM_TIME = 20000;  // 20s
+    private static final int MINIMUM_DISTANCE = 50; // 50m
+
+    /* GPS */
+    Location mLocation;
+    String mProviderName;
+    LocationManager mLocationManager;
+    LocationListener mLocationListener;
 
     int x;
     int y;
@@ -108,22 +125,56 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
             System.out.println("User list OK");
         }
 
-        locationManager = (LocationManager) this.getSystemService(Context.LOCATION_SERVICE);
+        mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        // Get the best provider between gps, network and passive
+        Criteria criteria = new Criteria();
+        mProviderName = mLocationManager.getBestProvider(criteria, true);
+        System.out.println("Location Provider: " + mProviderName);
 
-        locationListener = new LocationListener() {
+        mLocationListener = new LocationListener() {
             public void onLocationChanged(Location location) {
                 // Called when a new location is found by the network location provider.
                 System.out.println("Current Location: " + location);
+                mLocation = location;
             }
             public void onStatusChanged(String provider, int status, Bundle extras) {}
             public void onProviderEnabled(String provider) {}
             public void onProviderDisabled(String provider) {}
         };
-        if (sharedPreferences.getBoolean("gps_enabled", false)) {
-            System.out.println("Requesting Location...");
-            //locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 5000,0,locationListener);
+
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            // No provider activated: prompt GPS
+            if (mProviderName == null || mProviderName.equals("")) {
+                startActivity(new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+            }
+
+            mLocationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, MINIMUM_TIME, MINIMUM_DISTANCE, mLocationListener);
+            //mLocation = mLocationManager.getLastKnownLocation(mProviderName);
+            // At least one provider activated. Get the coordinates
+            /*switch (mProviderName) {
+                case "passive":
+                    mLocationManager.requestLocationUpdates(mProviderName, MINIMUM_TIME, MINIMUM_DISTANCE, mLocationListener);
+                    location = mLocationManager.getLastKnownLocation(mProviderName);
+                    break;
+
+                case "network":
+                    break;
+
+                case "gps":
+                    break;
+
+            }*/
+
+            // One or both permissions are denied.
         } else {
-            System.out.println("Location not available");
+            // The ACCESS_FINE_LOCATION is denied, then I request it and manage the result in
+            // onRequestPermissionsResult() using the constant MY_PERMISSION_ACCESS_FINE_LOCATION
+            if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED ) {
+                ActivityCompat.requestPermissions(this,
+                        new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
+                        MY_PERMISSION_ACCESS_FINE_LOCATION);
+            }
+
         }
 
     }
@@ -186,6 +237,23 @@ public class HLMSlidePagerActivity extends AppCompatActivity {
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+        switch (requestCode) {
+            case MY_PERMISSION_ACCESS_FINE_LOCATION: {
+                if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    // permission was granted
+                    System.out.println("Need GPS Access");
+                } else {
+                    // permission denied
+                    System.out.println("There's No Permission for FINE Location");
+                }
+                break;
+            }
+
         }
     }
 
