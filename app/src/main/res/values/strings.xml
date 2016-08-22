@@ -59,9 +59,7 @@
     <string name="pref_header_data_sync">Sync &amp; Localization</string>
 
     <string name="pref_title_localization">Enable GPS Localization</string>
-    <string name="pref_localization_description">Allow other users see your position, and see the position
-    of others users.
-    </string>
+    <string name="pref_localization_description">Allow other users see your current position. If you disable it your actual position won\'t be updated!</string>
     <string name="pref_title_sync_frequency">Sync frequency</string>
     <string-array name="pref_sync_frequency_titles">
         <item>5 minutes</item>
@@ -86,19 +84,21 @@
 
     <string name="pref_title_discovery_distance">Discovery Distance:</string>
     <string-array name="pref_discovery_distance_titles">
-        <item>100 meters</item>
         <item>250 meters</item>
         <item>500 meters</item>
         <item>1 kilometer</item>
-        <item>2.5 kilometers</item>
+        <item>5 kilometers</item>
+        <item>10 kilometers</item>
+        <item>50 kilometers</item>
         <item>Any</item>
     </string-array>
     <string-array name="pref_discovery_distance_values">
-        <item>100</item>
         <item>250</item>
         <item>500</item>
         <item>1000</item>
-        <item>2500</item>
+        <item>5000</item>
+        <item>10000</item>
+        <item>50000</item>
         <item>0</item>
     </string-array>
 

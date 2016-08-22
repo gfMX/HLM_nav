@@ -22,8 +22,8 @@
             android:dialogIcon="@drawable/ic_sync_black_24dp"/>
 
         <ListPreference
-            android:dependency="gps_enabled"
-            android:defaultValue="250"
+            android:dependency="sync_distance"
+            android:defaultValue="1000"
             android:entries="@array/pref_discovery_distance_titles"
             android:entryValues="@array/pref_discovery_distance_values"
             android:key="sync_distance"
