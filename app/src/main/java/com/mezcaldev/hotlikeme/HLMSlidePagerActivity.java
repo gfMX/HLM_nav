@@ -8,6 +8,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -58,6 +59,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     SharedPreferences sharedPreferences;
+    SharedPreferences.Editor preferencesEditor;
 
     //Location variables Initialization
     /* GPS Constant Permission */
@@ -97,14 +99,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     FirebaseUser user = FireConnection.getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
-                mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
-        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -117,20 +111,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-
-        /*if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-        }*/
-
-        updateValuesFromBundle(savedInstanceState);
-
-        if (mGoogleApiClient == null) {
-            mGoogleApiClient = new GoogleApiClient.Builder(this)
-                    .addConnectionCallbacks(this)
-                    .addOnConnectionFailedListener(this)
-                    .addApi(LocationServices.API)
-                    .build();
-        }
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
@@ -156,10 +136,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
                                                    break;
                                                case MotionEvent.ACTION_UP:
-                                                   //mPager.endFakeDrag();
+
                                                    break;
                                                case MotionEvent.ACTION_MOVE:
-                                                   //mPager.setY((mPager.getY() + mPager.getWidth()/2) + y);
+
                                                break;
                                            }
 
@@ -177,8 +157,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             System.out.println("User list OK");
         }
 
-        createLocationRequest();
-
+        buildGoogleApiClient();
+        updateValuesFromBundle(savedInstanceState);
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -218,7 +198,16 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             mPager.setCurrentItem(mPager.getCurrentItem() - 1);
         }
     }
-    //A simple pager adapter that represents 5 ScreenSlidePageFragment objects, in sequence.
+    protected synchronized void buildGoogleApiClient() {
+        Log.i(TAG, "Building GoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        createLocationRequest();
+    }
+    //A simple pager adapter
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         public ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
@@ -229,7 +218,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             userKey = users.get(position);
             return HLMPageFragment.newInstance(userKey);
         }
-
         @Override
         public int getCount() {
             return users.size();
@@ -240,7 +228,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         }
     }
 
-    public void getUriProfilePics (String gender){
+    public void getUriProfilePics (final String gender){
         DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
         final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
         databaseReference.addValueEventListener(new ValueEventListener() {
@@ -252,39 +240,69 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
                 for (DataSnapshot data: dataSnapshot.getChildren()){
                     final String dataKey = data.getKey();
-                    databaseReferenceLocation.child(dataKey).addListenerForSingleValueEvent(new ValueEventListener() {
+                    databaseReferenceLocation.child(dataKey).addListenerForSingleValueEvent(
+                            new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             Location remoteUserLocation;
                             if (dataSnapshot.child("location_last").child("loc_longitude").getValue() != null
                                     && dataSnapshot.child("location_last").child("loc_latitude").getValue() != null) {
-                                double userLongitude = Double.parseDouble(dataSnapshot.child("location_last").child("loc_longitude").getValue().toString());
-                                double userLatitude = Double.parseDouble(dataSnapshot.child("location_last").child("loc_latitude").getValue().toString());
-                                System.out.println("Longitude: " + userLongitude);
-                                System.out.println("Latitude: " + userLatitude);
+
+                                double userLongitude = Double.parseDouble(
+                                        dataSnapshot.child("location_last").child("loc_longitude")
+                                                .getValue().toString());
+                                double userLatitude = Double.parseDouble(
+                                        dataSnapshot.child("location_last").child("loc_latitude")
+                                                .getValue().toString());
+
+                                System.out.println("Remote User Longitude: " + userLongitude);
+                                System.out.println("Remote User Latitude: " + userLatitude);
                                 remoteUserLocation = new Location("");
                                 remoteUserLocation.setLongitude(userLongitude);
                                 remoteUserLocation.setLatitude(userLatitude);
-                                //if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance && !dataKey.equals(user.getUid())){
-                                if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance){
-                                    System.out.println("User " + dataKey + " reachable!");
+                                if(!mRequestingLocationUpdates){
+                                    System.out.println("All users are visible");
                                     users.add(dataKey);
                                     mPagerAdapter.notifyDataSetChanged();
+                                    Snackbar.make(getWindow().getDecorView(),
+                                            getResources().getString(R.string.text_enable_gps_snack),
+                                            Snackbar.LENGTH_LONG)
+                                            .setAction("Enable GPS", new View.OnClickListener(){
+                                                @Override
+                                                public void onClick(View v) {
+                                                    preferencesEditor = sharedPreferences.edit();
+                                                    preferencesEditor.putBoolean("gps_enabled", true);
+                                                    preferencesEditor.apply();
+                                                    mRequestingLocationUpdates = true;
+                                                    users.clear();
+                                                    mPagerAdapter.notifyDataSetChanged();
+                                                    Intent intent = getIntent();
+                                                    finish();
+                                                    startActivity(intent);
+                                                }
+                                            })
+                                            .show();
+                                } else if (mCurrentLocation != null) {
+                                    if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance
+                                            && !dataKey.equals(user.getUid())){
+                                    //if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance) {
+                                        System.out.println("User " + dataKey + " reachable!");
+                                        users.add(dataKey);
+                                        mPagerAdapter.notifyDataSetChanged();
+                                    }
+                                } else{
+                                    System.out.println("Location Not Reachable! Please wait...");
+                                    Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
                                 }
                             }
                         }
-
                         @Override
                         public void onCancelled(DatabaseError databaseError) {
 
                         }
                     });
-                    //System.out.println("User: " + dataKey);
-                    //users.add(dataKey);
-                    //mPagerAdapter.notifyDataSetChanged();
                 }
             }
-
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -302,7 +320,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
             mLastUpdateDay = DateFormat.getDateInstance().format(new Date());
             //New Location:
-            DatabaseReference databaseReferenceNewLocation = database.getReference().child("users").child(user.getUid()).child("location_last");
+            DatabaseReference databaseReferenceNewLocation = database.getReference()
+                    .child("users")
+                    .child(user.getUid())
+                    .child("location_last");
             databaseReferenceNewLocation.child("loc_longitude").setValue(mCurrentLocation.getLongitude());
             databaseReferenceNewLocation.child("loc_latitude").setValue(mCurrentLocation.getLatitude());
             databaseReferenceNewLocation.child("loc_accuracy").setValue(mCurrentLocation.getAccuracy());
@@ -311,7 +332,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             Log.i(TAG, "Current BEST " + mCurrentLocation + " Time: " + mLastUpdateTime + " Day: " + mLastUpdateDay);
             //Old Location:
             if (mOldLocation != null) {
-                DatabaseReference databaseReferenceOldLocation = database.getReference().child("users").child(user.getUid()).child("location_old");
+                DatabaseReference databaseReferenceOldLocation = database.getReference()
+                        .child("users")
+                        .child(user.getUid())
+                        .child("location_old");
                 databaseReferenceOldLocation.child("loc_longitude").setValue(mOldLocation.getLongitude());
                 databaseReferenceOldLocation.child("loc_latitude").setValue(mOldLocation.getLatitude());
                 databaseReferenceOldLocation.child("loc_accuracy").setValue(mOldLocation.getAccuracy());
@@ -326,10 +350,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         switch (requestCode) {
             case MY_PERMISSION_ACCESS_FINE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                    // permission was granted
                     System.out.println("Permission Granted!");
                 } else {
-                    // permission denied
                     System.out.println("Permission NOT Granted!");
                 }
                 break;
@@ -357,17 +379,11 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 //final LocationSettingsStates locationSettingsStates = result.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
-                        // All location settings are satisfied. The client can
-                        // initialize location requests here.
                         System.out.println("Access GRANTED by the User!");
                         //startLocationUpdates();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
-                        // Location settings are not satisfied, but this can be fixed
-                        // by showing the user a dialog.
                         try {
-                            // Show the dialog by calling startResolutionForResult(),
-                            // and check the result in onActivityResult().
                             status.startResolutionForResult(HLMSlidePagerActivity.this, REQUEST_CHECK_SETTINGS);
                             System.out.println("Access requested.");
                         } catch (IntentSender.SendIntentException e) {
@@ -375,8 +391,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                         }
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        // Location settings are not satisfied. However, we have no way
-                        // to fix the settings so we won't show the dialog.
                         System.out.println("Nothing to do.");
                         break;
                 }
@@ -384,7 +398,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         });
     }
     protected void startLocationUpdates() {
-        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+        if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     mGoogleApiClient, mLocationRequest, this);
             System.out.println("Permission GRANTED! Start tracking Location!");
@@ -455,21 +470,14 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (savedInstanceState != null) {
             System.out.println("Updating from Bundle.");
             // Update the value of mRequestingLocationUpdates from the Bundle, and
-            // make sure that the Start Updates and Stop Updates buttons are
-            // correctly enabled or disabled.
             if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
                 mRequestingLocationUpdates = savedInstanceState.getBoolean(
                         REQUESTING_LOCATION_UPDATES_KEY);
             }
-
-            // Update the value of mCurrentLocation from the Bundle and update the
-            // UI to show the correct latitude and longitude.
+            // Update the value of mCurrentLocation from the Bundle
             if (savedInstanceState.keySet().contains(LOCATION_KEY)) {
-                // Since LOCATION_KEY was found in the Bundle, we can be sure that
-                // mCurrentLocationis not null.
                 mCurrentLocation = savedInstanceState.getParcelable(LOCATION_KEY);
             }
-
             // Update the value of mLastUpdateTime from the Bundle and update the UI.
             if (savedInstanceState.keySet().contains(LAST_UPDATED_TIME_STRING_KEY)) {
                 mLastUpdateTime = savedInstanceState.getString(
@@ -502,7 +510,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 // Counteract the default slide transition
                 page.setTranslationX(page.getWidth() * -position);
                 page.setTranslationY(y/2 * position);
-                //page.setTranslationY(page.getHeight()/2 * -position);
 
                 // Scale the page down (between MIN_SCALE and 1)
                 float scaleFactor = MIN_SCALE
@@ -529,14 +536,16 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                     case Activity.RESULT_OK:
                     {
                         // All required changes were successfully made
-                        Toast.makeText(this, "Location enabled by user!", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Location enabled by user!", Toast.LENGTH_LONG)
+                                .show();
                         startLocationUpdates();
                         break;
                     }
                     case Activity.RESULT_CANCELED:
                     {
                         // The user was asked to change settings, but chose not to
-                        Toast.makeText(this, "Location not enabled, user cancelled.", Toast.LENGTH_LONG).show();
+                        Toast.makeText(this, "Location not enabled, user cancelled.", Toast.LENGTH_LONG)
+                                .show();
                         break;
                     }
                     default:
@@ -547,12 +556,28 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 break;
         }
     }
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
+                mRequestingLocationUpdates);
+        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
+        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
+        Log.v(TAG, "-------------------------------");
+        Log.v(TAG, "Data from Saved State Recovered");
+        Log.v(TAG, "-------------------------------");
+        super.onSaveInstanceState(savedInstanceState);
+    }
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         // TODO Auto-generated method stub
     }
     @Override
     public void onConnected(Bundle connectionHint) {
+        if (mCurrentLocation == null &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        }
         if (mRequestingLocationUpdates) {
             System.out.println("Requesting Location");
             startLocationUpdates();
@@ -564,18 +589,18 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     }
     @Override
     protected void onStart() {
-        mGoogleApiClient.connect();
         super.onStart();
+        mGoogleApiClient.connect();
     }
     @Override
     protected void onStop() {
-        mGoogleApiClient.disconnect();
         super.onStop();
+        mGoogleApiClient.disconnect();
     }
     @Override
     protected void onResume(){
         super.onResume();
-        if (mGoogleApiClient.isConnected() && !mRequestingLocationUpdates) {
+        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
         }
     }
@@ -585,11 +610,5 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (mGoogleApiClient.isConnected()) {
             stopLocationUpdates();
         }
-    }
-
-    @Override
-    public void onDestroy(){
-        super.onDestroy();
-
     }
 }
