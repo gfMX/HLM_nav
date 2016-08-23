@@ -122,8 +122,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
-        mPager.setOffscreenPageLimit(3);
         mPager.setAdapter(mPagerAdapter);
+        mPager.setOffscreenPageLimit(3);
         mPager.setPageTransformer(true, new RotatePageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
@@ -136,9 +136,13 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
                                                    break;
                                                case MotionEvent.ACTION_UP:
+                                                   //view.setTranslationX(0);
+                                                   //view.setTranslationY(0);
 
                                                    break;
                                                case MotionEvent.ACTION_MOVE:
+                                                   //view.setX(view.getX() - view.getWidth()/2 + x);
+                                                   //view.setY(view.getY() - view.getHeight()/2 + y);
 
                                                break;
                                            }
@@ -198,6 +202,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             mPager.setCurrentItem(mPager.getCurrentItem() - 1);
         }
     }
+
     protected synchronized void buildGoogleApiClient() {
         Log.i(TAG, "Building GoogleApiClient");
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -359,6 +364,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
         }
     }
+
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
         mLocationRequest.setInterval(minInterval);
@@ -397,6 +403,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             }
         });
     }
+
     protected void startLocationUpdates() {
         if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
                 == PackageManager.PERMISSION_GRANTED) {
@@ -410,14 +417,17 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             System.out.println("Access Location services NOT ALLOWED! Requesting permission.");
         }
     }
+
     protected void stopLocationUpdates() {
         LocationServices.FusedLocationApi.removeLocationUpdates(
                 mGoogleApiClient, this);
     }
+
     private void clearInfo(){
         users.clear();
         mPagerAdapter.notifyDataSetChanged();
     }
+
     protected boolean isBetterLocation(Location location, Location currentBestLocation) {
         if (currentBestLocation == null) {
             // A new location is always better than no location
@@ -459,6 +469,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         }
         return false;
     }
+
     private boolean isSameProvider(String provider1, String provider2) {
         if (provider1 == null) {
             return provider2 == null;
@@ -490,11 +501,13 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         private static final float MIN_SCALE = 0.75f;
 
         public void transformPage(View page, float position) {
+            float scaleFactor = MIN_SCALE
+                    + (1 - MIN_SCALE) * (1 - Math.abs(position));
+
             page.setPivotX(page.getWidth() + x);
             page.setPivotY(page.getHeight()/2 + y);
             page.setRotation(position * +15f);
 
-            page.setAlpha(1 - position);
             if (position < -1) { // [-Infinity,-1)
                 page.setAlpha(0);
 
@@ -504,22 +517,60 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 page.setTranslationY(0);
                 page.setScaleX(1);
                 page.setScaleY(1);
+                page.setAlpha(1 + position);
+
+                page.setTranslationX(-position/2);
+                //page.setTranslationY(y/4 * position);
 
             } else if (position <= 1) { // (0,1]
 
                 // Counteract the default slide transition
+                page.setPivotX(page.getWidth() + x);
+                page.setPivotY(page.getHeight()/2 + y);
+                page.setRotation(position * +15f);
+
                 page.setTranslationX(page.getWidth() * -position);
-                page.setTranslationY(y/2 * position);
+                //page.setTranslationY(y/2 * position);
 
                 // Scale the page down (between MIN_SCALE and 1)
-                float scaleFactor = MIN_SCALE
-                        + (1 - MIN_SCALE) * (1 - Math.abs(position));
                 page.setScaleX(scaleFactor);
                 page.setScaleY(scaleFactor);
+                page.setAlpha(1 - position);
 
             } else { // (1,+Infinity]
                 // This page is way off-screen to the right.
                 page.setAlpha(0);
+            }
+        }
+    }
+
+    public class RotatePageTransformer2 implements ViewPager.PageTransformer {
+        //Not working, pages overlapping.
+        private static final float MIN_SCALE = 0.5F;
+
+        public void transformPage(View page, float position) {
+            page.setRotation(position * + 15F);
+            float scaleFactor = MIN_SCALE
+                    + (1 - MIN_SCALE) * (1 - Math.abs(position));
+
+            if(position <= -1.0F || position >= 1.0F) {
+                page.setTranslationX(page.getWidth() * -position);
+                page.setScaleX(scaleFactor-0.3F);
+                page.setScaleY(scaleFactor-0.3F);
+                page.setAlpha(0.0F);
+            } else if( position == 0.0F ) {
+                page.setTranslationX(0);
+                page.setTranslationY(0);
+                page.setScaleX(1);
+                page.setScaleY(1);
+                page.setAlpha(1.0F);
+                page.bringToFront();
+            } else {
+                // position is between -1.0F & 0.0F OR 0.0F & 1.0F
+                page.setScaleX(scaleFactor);
+                page.setScaleY(scaleFactor);
+                page.setTranslationX(page.getWidth()/(float) 1.1 * -position);
+                page.setAlpha(1.0F - Math.abs(position));
             }
         }
     }
@@ -556,6 +607,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 break;
         }
     }
+
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
                 mRequestingLocationUpdates);
@@ -570,6 +622,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     public void onConnectionFailed(ConnectionResult result) {
         // TODO Auto-generated method stub
     }
+
     @Override
     public void onConnected(Bundle connectionHint) {
         if (mCurrentLocation == null &&
@@ -583,10 +636,12 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             startLocationUpdates();
         }
     }
+
     @Override
     public void onConnectionSuspended(int cause) {
         mGoogleApiClient.connect();
     }
+
     @Override
     protected void onStart() {
         super.onStart();

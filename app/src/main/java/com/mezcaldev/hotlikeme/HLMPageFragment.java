@@ -4,7 +4,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ListFragment;
@@ -60,11 +59,10 @@ public class HLMPageFragment extends ListFragment {
     int screenPart;
     int screenParts = 13;
     float starsRating;
+    float oldRating = 0;
 
     boolean flagOne = false;
     boolean flagTwo = false;
-
-    UserRating userRating = new UserRating();
 
     float distanceY = 0;
     float distanceX = 0;
@@ -135,12 +133,16 @@ public class HLMPageFragment extends ListFragment {
         screenPart = displayHeight / screenParts;
 
         getUserDetails(userKey);
-        userRating.execute();
+        userRating();
 
         ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
                 starsRating = rating;
-                referenceUserRated.setValue(starsRating);
+                if (starsRating == 0){
+                    referenceUserRated.setValue(null);
+                } else {
+                    referenceUserRated.setValue(starsRating);
+                }
             }
         });
 
@@ -216,19 +218,18 @@ public class HLMPageFragment extends ListFragment {
                             //Upper limit of the screen
                             //System.out.println("None");
                         } else if (yRaw < screenPart * 2) {
-                            starsRating = 5;
+                            starsRating = 1;
                         } else if (yRaw < screenPart * 3) {
-                            starsRating = 4;
+                            starsRating = 2;
                         } else if (yRaw < screenPart * 4) {
                             starsRating = 3;
                         } else if (yRaw < screenPart * 5) {
-                            starsRating = 2;
+                            starsRating = 4;
                         } else if (yRaw < screenPart * 6) {
-                            starsRating = 1;
+                            starsRating = 5;
                         } else if (yRaw < screenPart * 7) {
                             //Null zone doesn't add or change Rating
-                            //System.out.println("None");
-                            starsRating = 0;
+                            starsRating = oldRating;
                         } else if (yRaw < screenPart * 8) {
                             starsRating = 5;
                         } else if (yRaw < screenPart * 9) {
@@ -262,8 +263,6 @@ public class HLMPageFragment extends ListFragment {
 
                 viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
                 viewUserDescription.setText(dataSnapshot.child("description").getValue().toString());
-
-                //for (DataSnapshot data: dataSnapshot.getChildren()){}
             }
 
             @Override
@@ -287,38 +286,25 @@ public class HLMPageFragment extends ListFragment {
         });
     }
 
-    public class UserRating extends AsyncTask <Void, Void, Void>{
-        @Override
-        protected void onPreExecute() {
-
-        }
-        @Override
-        protected Void doInBackground(Void...params) {
-            DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("user_rate");
-            databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        if (data.getKey().equals(firebaseUser.getUid())) {
-                            starsRating = Float.valueOf(data.getValue().toString()) / dataSnapshot.getChildrenCount();
-                            ratingBar.setRating(starsRating);
-                            System.out.println("Long: " + starsRating);
-                        }
+    private void userRating (){
+        DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("user_rate");
+        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    if (data.getKey().equals(firebaseUser.getUid())) { //Shows only the rating given bye the actual User
+                        starsRating = Float.valueOf(data.getValue().toString());
+                        oldRating = starsRating;
+                        ratingBar.setRating(starsRating);
+                        System.out.println("Long: " + starsRating);
                     }
-
                 }
+             }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
 
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
+            }
+        });
     }
 
     private void resetFlags (){
