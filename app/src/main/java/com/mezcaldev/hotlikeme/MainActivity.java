@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
+import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
@@ -32,19 +33,22 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        checkAccess();
+    }
+
+    private void checkAccess (){
         snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
                 getResources().getString(R.string.text_network_access_required),
-                Snackbar.LENGTH_LONG);
+                Snackbar.LENGTH_INDEFINITE);
 
         if (!isNetworkAvailable()) {
-            snackNetworkRequired.show();
-            handler = new Handler();
-            handler.postDelayed(new Runnable() {
+            snackNetworkRequired.setAction("TRY AGAIN", new View.OnClickListener() {
                 @Override
-                public void run() {
-                    finish();
+                public void onClick(View v) {
+                    checkAccess();
                 }
-            }, delayTime);
+            });
+            snackNetworkRequired.show();
         } else {
             handler = new Handler();
             handler.postDelayed(new Runnable() {

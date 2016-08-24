@@ -66,10 +66,12 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
 
     /* Position */
+    private static final int ONE_SECOND = 1000;
+    private static final int ONE_MINUTE = ONE_SECOND * 60;
+    private static final int MINUTES = ONE_MINUTE * 5;
     int maxUserDistance = 250;
-    int fastInterval = 1000 * 30; // 30s
-    int minInterval = 1000 * 60;
-    private static final int TWO_MINUTES = 1000 * 60 * 5;
+    int fastInterval = ONE_SECOND * 30;
+    int minInterval = ONE_MINUTE;
 
     /* Location with Google API */
     Location mCurrentLocation;
@@ -115,7 +117,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
-        System.out.println("Max user distance allowed: " + maxUserDistance);
+        minInterval = (Integer.valueOf(sharedPreferences.getString("sync_frequency","1")) * ONE_MINUTE);
+        System.out.println("Max user distance allowed: " + maxUserDistance + " Sync time: " + minInterval);
         System.out.println("Looking for: " + gender);
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
@@ -436,8 +439,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
         // Check whether the new location fix is newer or older
         long timeDelta = location.getTime() - currentBestLocation.getTime();
-        boolean isSignificantlyNewer = timeDelta > TWO_MINUTES;
-        boolean isSignificantlyOlder = timeDelta < -TWO_MINUTES;
+        boolean isSignificantlyNewer = timeDelta > MINUTES;
+        boolean isSignificantlyOlder = timeDelta < -MINUTES;
         boolean isNewer = timeDelta > 0;
 
         // If it's been more than two minutes since the current location, use the new location

@@ -8,12 +8,16 @@
         android:title="@string/action_profile_settings"
         android:icon="@drawable/ic_account_circle_24dp"
         android:visible="true"
-        app:showAsAction="ifRoom"
-        />
+        app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:icon="@drawable/ic_settings_24dp"
         android:visible="true"
-        app:showAsAction="ifRoom" />
+        app:showAsAction="never" />
+    <item
+        android:id="@+id/action_help"
+        android:title="@string/action_help"
+        android:icon="@drawable/ic_settings_24dp"
+        android:visible="true" />
 </menu>

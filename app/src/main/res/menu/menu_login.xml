@@ -8,5 +8,5 @@
         android:title="@string/action_settings"
         android:icon="@drawable/ic_settings_24dp"
         android:visible="false"
-        app:showAsAction="never" />
+        app:showAsAction="ifRoom" />
 </menu>

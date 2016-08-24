@@ -144,6 +144,10 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
     }
+    /*@Override
+    public void onBackPressed() {
+        startActivity(new Intent(this, HLMSlidePagerActivity.class));
+    }*/
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {

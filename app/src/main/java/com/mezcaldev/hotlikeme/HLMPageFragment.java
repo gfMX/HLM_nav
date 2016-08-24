@@ -6,11 +6,15 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -49,6 +53,7 @@ public class HLMPageFragment extends ListFragment {
     ImageView dropZone1;
     ImageView dropZone2;
     RatingBar ratingBar;
+    MenuItem chatIcon;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -71,6 +76,8 @@ public class HLMPageFragment extends ListFragment {
     Toast toast1;
     Toast toast2;
 
+    Boolean userKeyLike = false;
+    Boolean currentUserLike = false;
 
     //Firebase Initialization
     FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
@@ -83,9 +90,29 @@ public class HLMPageFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        setHasOptionsMenu(true);
         userKey = getArguments() != null ? getArguments().getString("key"): "None key given";
 
         System.out.println("Actual user: " + firebaseUser.getUid());
+    }
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
+        inflater.inflate(R.menu.menu_hlm_page, menu);
+
+        chatIcon = menu.findItem(R.id.action_chat);
+        didWeLike();
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if (id == R.id.action_chat) {
+            Snackbar.make(getActivity().getWindow().getDecorView(),"We're almost there", Snackbar.LENGTH_LONG).show();
+            return true;
+        }
+
+
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -305,6 +332,46 @@ public class HLMPageFragment extends ListFragment {
 
             }
         });
+    }
+
+    private void didWeLike(){
+        final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(userKey).child("like_user");
+        DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(firebaseUser.getUid()).child("like_user");
+
+        databaseReferenceCurrent.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot data: dataSnapshot.getChildren()){
+                    if (data.getKey().equals(userKey)){
+                        currentUserLike = true;
+                        databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                for (DataSnapshot data: dataSnapshot.getChildren()){
+                                    if (data.getKey().equals(firebaseUser.getUid())){
+                                        userKeyLike = true;
+                                        chatIcon.setVisible(true);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+
+        //return  (currentUserLike && userKeyLike);
     }
 
     private void resetFlags (){
