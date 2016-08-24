@@ -68,6 +68,7 @@ public class HLMPageFragment extends ListFragment {
 
     boolean flagOne = false;
     boolean flagTwo = false;
+    boolean flagWeLike = false;
 
     float distanceY = 0;
     float distanceX = 0;
@@ -75,9 +76,6 @@ public class HLMPageFragment extends ListFragment {
     TextView viewUserDescription;
     Toast toast1;
     Toast toast2;
-
-    Boolean userKeyLike = false;
-    Boolean currentUserLike = false;
 
     //Firebase Initialization
     FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
@@ -194,16 +192,22 @@ public class HLMPageFragment extends ListFragment {
                         v.setTranslationY(0);
                         v.setTranslationX(0);
 
+                        //Add users to the Like List
                         if (yRaw < screenUp) {
                             System.out.println("User ID: " + userKey);
                             referenceLikeUser.setValue(true);
                             Toast.makeText(getContext(), "Added!", Toast.LENGTH_SHORT).show();
 
                         }
+
+                        //Remove users from the Like List
                         if (yRaw > screenDown) {
                             System.out.println("User ID: " + userKey);
                             referenceLikeUser.setValue(null);
                             Toast.makeText(getContext(), "Removed!", Toast.LENGTH_SHORT).show();
+                            if (chatIcon != null) {
+                                chatIcon.setVisible(false);
+                            }
                         }
 
                         referenceUserRated.setValue(starsRating);
@@ -343,13 +347,12 @@ public class HLMPageFragment extends ListFragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data: dataSnapshot.getChildren()){
                     if (data.getKey().equals(userKey)){
-                        currentUserLike = true;
+                        //currentUserLike = true;
                         databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 for (DataSnapshot data: dataSnapshot.getChildren()){
                                     if (data.getKey().equals(firebaseUser.getUid())){
-                                        userKeyLike = true;
                                         chatIcon.setVisible(true);
                                     }
                                 }
