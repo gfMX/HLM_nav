@@ -1,4 +1,108 @@
 <?xml version="1.0" encoding="utf-8"?>
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android">
+    <PreferenceCategory
+        android:title="@string/pref_header_general">
 
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="visible_switch"
+            android:summary="@string/pref_description_social_recommendations"
+            android:title="@string/pref_title_social_recommendations" />
+
+        <EditTextPreference
+            android:capitalize="words"
+            android:dependency="visible_switch"
+            android:defaultValue="@string/pref_default_display_name"
+            android:inputType="textCapWords"
+            android:key="alias"
+            android:maxLines="1"
+            android:selectAllOnFocus="true"
+            android:singleLine="true"
+            android:title="@string/pref_title_display_name" />
+
+        <ListPreference
+            android:defaultValue="Both"
+            android:entries="@array/pref_looking_for_titles"
+            android:entryValues="@array/pref_looking_for_values"
+            android:key="looking_for"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_looking_for" />
+
+        <EditTextPreference
+            android:capitalize="words"
+            android:dependency="visible_switch"
+            android:defaultValue="@string/pref_default_description"
+            android:inputType="textMultiLine"
+            android:key="description"
+            android:maxLines="6"
+            android:lines="4"
+            android:selectAllOnFocus="true"
+            android:gravity="left|top"
+            android:title="@string/pref_title_description" />
+    </PreferenceCategory>
+
+
+    <PreferenceCategory
+        android:title="@string/pref_header_data_sync">
+        <SwitchPreference
+            android:defaultValue="false"
+            android:key="gps_enabled"
+            android:title="@string/pref_title_localization"
+            android:summary="@string/pref_localization_description"/>
+        <ListPreference
+            android:dependency="gps_enabled"
+            android:defaultValue="15"
+            android:entries="@array/pref_sync_frequency_titles"
+            android:entryValues="@array/pref_sync_frequency_values"
+            android:key="sync_frequency"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_sync_frequency"
+            android:dialogIcon="@drawable/ic_sync_black_24dp"/>
+
+        <ListPreference
+            android:dependency="gps_enabled"
+            android:defaultValue="1000"
+            android:entries="@array/pref_discovery_distance_titles"
+            android:entryValues="@array/pref_discovery_distance_values"
+            android:key="sync_distance"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_discovery_distance" />
+    </PreferenceCategory>
+
+
+    <PreferenceCategory
+        android:title="@string/pref_discovery_notifications">
+
+        <SwitchPreference
+            android:defaultValue="true"
+            android:key="notifications_new_discovery"
+            android:title="@string/pref_title_new_discovery_notifications" />
+
+        <!-- Allows the user to choose a ringtone in the 'notification' category. -->
+        <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+        <!-- NOTE: RingtonePreference's summary should be set to its value by the activity code. -->
+        <RingtonePreference
+            android:defaultValue="content://settings/system/notification_sound"
+            android:dependency="notifications_new_discovery"
+            android:key="notifications_new_discovery_ringtone"
+            android:ringtoneType="notification"
+            android:title="@string/pref_discovery_ringtone" />
+
+        <!-- NOTE: This preference will be enabled only when the checkbox above is checked. -->
+        <SwitchPreference
+            android:defaultValue="true"
+            android:dependency="notifications_new_discovery"
+            android:key="notifications_new_discovery_vibrate"
+            android:title="@string/pref_title_vibrate_on_discovery" />
+
+        <!-- This preference simply launches an intent when selected. Use this UI sparingly, per
+             design guidelines. -->
+        <!--
+        <Preference android:title="@string/pref_title_system_sync_settings">
+            <intent android:action="android.settings.SYNC_SETTINGS" />
+        </Preference> -->
+    </PreferenceCategory>
 </PreferenceScreen>
