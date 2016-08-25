@@ -519,24 +519,11 @@ public class LoginFragment extends Fragment {
         request.executeAsync();
     }
 
-    private class getPreferencesFromFirebase extends AsyncTask <Void, Void, Void>{
-        @Override
-        protected void onPreExecute (){
+    private void getPreferencesFromFirebase (){
 
-        }
-
-        @Override
-        protected Void doInBackground(Void... voids) {
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
     }
 
-    private void cleanLocalData(){
+    private void cleanLocalPreferences(){
         if (mAuth.getCurrentUser() == null) {
             editor.clear();
             editor.apply();

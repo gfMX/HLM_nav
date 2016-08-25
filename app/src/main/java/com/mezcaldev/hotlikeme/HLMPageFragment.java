@@ -50,8 +50,6 @@ public class HLMPageFragment extends ListFragment {
 
     TextView viewUserAlias;
     ImageView viewUserImage;
-    ImageView dropZone1;
-    ImageView dropZone2;
     RatingBar ratingBar;
     MenuItem chatIcon;
 
@@ -145,9 +143,6 @@ public class HLMPageFragment extends ListFragment {
         ratingBar = (RatingBar) view.findViewById(R.id.rating);
         LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
         stars.getDrawable(2).setColorFilter(ContextCompat.getColor(getContext(), R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
-
-        dropZone1 = (ImageView) view.findViewById(R.id.dropZone1);
-        dropZone2 = (ImageView) view.findViewById(R.id.dropZone2);
 
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         displayHeight = metrics.heightPixels;
