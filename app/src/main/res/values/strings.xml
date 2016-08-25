@@ -151,7 +151,7 @@
         We are sorry, there are no active Hot Users in your zone, change the distance settings, or come back later.
     </string>
     <string name="text_hlm_users">Profile pics of HotLikeMe Users</string>
-    <string name="text_network_access_required">Network not available. Please check your Internet Connection and</string>
+    <string name="text_network_access_required">Network not available. Please check your Internet Connection and Try Again</string>
     <string name="text_app_introduction">Here you will find New Friends, New Relations, New Experiences</string>
     <string name="text_enable_gps_snack">"To see only users close to you, enable GPS on Settings or Here."</string>
 </resources>

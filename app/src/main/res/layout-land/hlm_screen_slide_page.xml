@@ -42,11 +42,13 @@
             android:layout_toRightOf="@id/imageView"
             android:layout_toEndOf="@+id/imageView" />
         <ImageView
-            android:layout_height="320dp"
+            android:layout_height="wrap_content"
             android:layout_width="wrap_content"
+            android:maxHeight="320dp"
+            android:maxWidth="340dp"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
-            android:src="@drawable/ic_person_black"
+            android:src="@drawable/ic_person_gray"
             android:contentDescription="@string/text_hlm_users"
             android:padding="15dp"
             android:layout_margin="20dp"

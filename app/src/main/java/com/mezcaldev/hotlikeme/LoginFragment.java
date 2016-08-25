@@ -182,7 +182,7 @@ public class LoginFragment extends Fragment {
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
         imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
-        imageProfileHLM.setRotation(5 * ((float) Math.random() * 2 - 1));
+        //imageProfileHLM.setRotation(5 * ((float) Math.random() * 2 - 1));
 
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
         btn_start = (Button) view.findViewById(R.id.btn_start);
@@ -246,50 +246,45 @@ public class LoginFragment extends Fragment {
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
       public void onClick (View v){
           boolean networkAvailable = isNetworkAvailable();
-          switch (v.getId()){
-              case R.id.btn_choose_img:
-                  if (networkAvailable) {
+          if (networkAvailable){
+              switch (v.getId()) {
+                  case R.id.btn_choose_img:
                       Toast.makeText(getActivity(),
                               getResources().getString(R.string.text_choose_images),
                               Toast.LENGTH_LONG)
                               .show();
 
-                      Intent ib = new Intent(getActivity(), ImageBrowser.class);
-                      startActivity(ib);
-                  } else {
-                      snackNetworkRequired.show();
-                  }
-                  break;
-              case R.id.btn_start:
-                  if (networkAvailable) {
+                      startActivity(new Intent(getActivity(), ImageBrowser.class));
+                      //getActivity().finish();
+                      break;
+                  case R.id.btn_start:
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                               Toast.LENGTH_LONG).show();
                       startActivity(new Intent(getActivity(), HLMSlidePagerActivity.class));
-                  } else {
-                      snackNetworkRequired.show();
-                  }
-                  break;
-              case R.id.btn_settings:
-                  Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
-                          Toast.LENGTH_LONG).show();
-                  startActivity(new Intent(getActivity(), SettingsActivity.class));
-                  break;
-              case R.id.hlm_image:
-                  if (networkAvailable){
+                      getActivity().finish();
+                      break;
+                  case R.id.btn_settings:
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
+                              Toast.LENGTH_LONG).show();
+                      startActivity(new Intent(getActivity(), SettingsActivity.class));
+                      getActivity().finish();
+                      break;
+                  case R.id.hlm_image:
+
                       if (flagImagesOnFirebase) {
                           Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
                                   Toast.LENGTH_LONG).show();
 
-                          Intent ic = new Intent(getActivity(), FireBrowserActivity.class);
-                          startActivity(ic);
+                          startActivity(new Intent(getActivity(), FireBrowserActivity.class));
+                          //getActivity().finish();
                       } else {
                           Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
                                   Toast.LENGTH_LONG).show();
                       }
-                  } else {
-                      snackNetworkRequired.show();
-                  }
-                  break;
+                      break;
+              }
+          } else {
+              snackNetworkRequired.show();
           }
       }
     };

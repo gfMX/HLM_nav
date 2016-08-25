@@ -18,6 +18,7 @@ import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.firebase.auth.FirebaseUser;
@@ -148,6 +149,25 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     public void onBackPressed() {
         startActivity(new Intent(this, HLMSlidePagerActivity.class));
     }*/
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu){
+        super.onCreateOptionsMenu(menu);
+        getMenuInflater().inflate(R.menu.menu_settings, menu);
+
+        return true;
+    }
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+        int id = item.getItemId();
+
+        if (id == R.id.action_profile_settings) {
+            startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
+    }
 
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
@@ -156,6 +176,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             if (!super.onMenuItemSelected(featureId, item)) {
                 //NavUtils.navigateUpFromSameTask(this);
                 startActivity(new Intent(this, HLMSlidePagerActivity.class));
+                finish();
             }
             return true;
         }
@@ -197,6 +218,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public void onCreate(Bundle savedInstanceState) {
             super.onCreate(savedInstanceState);
             startActivity(new Intent(getActivity(), LoginActivity.class));
+            getActivity().finish();
         }
     }
     /**
