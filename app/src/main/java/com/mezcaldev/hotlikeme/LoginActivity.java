@@ -1,7 +1,9 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.view.KeyEvent;
@@ -21,11 +23,12 @@ public class LoginActivity extends AppCompatActivity {
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        checkUser();
     }
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_MENU) {
-            if (LoginFragment.user == null){
+            if (!checkUser()){
                 System.out.println("Settings not reachable");
                 return true;
             } else {
@@ -37,9 +40,17 @@ public class LoginActivity extends AppCompatActivity {
     }
     @Override
     public void onBackPressed() {
-        if (user != null) {
+        user = FireConnection.getInstance().getUser();
+
+        if (checkUser()) {
             //super.onBackPressed();
             startActivity(new Intent(this, HLMSlidePagerActivity.class));
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                finishAndRemoveTask();
+            } else {
+                ActivityCompat.finishAffinity(this);
+            }
         }
     }
     @Override
@@ -52,5 +63,9 @@ public class LoginActivity extends AppCompatActivity {
             return true;
         }
         return true;
+    }
+    private Boolean checkUser(){
+        user = FireConnection.getInstance().getUser();
+        return user != null;
     }
 }

@@ -21,7 +21,7 @@ public class MainActivity extends AppCompatActivity {
     int delayTime = 1000 * 2;
     Snackbar snackNetworkRequired;
     static FirebaseUser user;
-    FireConnection fireConnection = FireConnection.getInstance();
+    FireConnection fireConnection;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -32,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
+
+        fireConnection = FireConnection.getInstance();
 
         checkAccess();
     }

@@ -7,6 +7,7 @@ import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -182,14 +183,14 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         int id = item.getItemId();
 
         if (id == R.id.action_settings) {
-            startActivity(new Intent(this, SettingsActivity.class));
             clearInfo();
+            startActivity(new Intent(this, SettingsActivity.class));
             finish();
             return true;
         }
         if (id == R.id.action_profile_settings) {
-            startActivity(new Intent(this, LoginActivity.class));
             clearInfo();
+            startActivity(new Intent(this, LoginActivity.class));
             finish();
             return true;
         }
@@ -211,7 +212,11 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                     {
                         @Override
                         public void onClick(DialogInterface dialog, int which) {
-                            finish();
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                                finishAndRemoveTask();
+                            } else {
+                                ActivityCompat.finishAffinity(HLMSlidePagerActivity.this);
+                            }
                         }
 
                     })

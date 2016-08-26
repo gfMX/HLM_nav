@@ -149,6 +149,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         if (id == android.R.id.home) {
             startActivity(new Intent(this, HLMSlidePagerActivity.class));
             finish();
+            //NavUtils.navigateUpFromSameTask(this);
             return true;
         }
 
