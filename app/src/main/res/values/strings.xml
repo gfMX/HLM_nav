@@ -6,6 +6,7 @@
     <string name="title_activity_fire_browser">HLM Browser</string>
     <string name="title_activity_image_browser">Image Browser</string>
     <string name="title_activity_pager_hlm">HotLikeMe</string>
+    <string name="title_activity_login">Login &amp; Profile Pic</string>
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
@@ -22,7 +23,7 @@
     <string name="text_profile_pic">Profile Pic</string>
 
     <string name="btn_choose_img">Choose your Images</string>
-    <string name="btn_settings">Settings</string>
+    <string name="btn_settings">Nickname, Looking for&#8230;</string>
     <string name="btn_start">Let\'s Start!</string>
     <string name="btn_ok">Yes!</string>
     <string name="btn_cancel">Nop</string>

@@ -116,7 +116,7 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
+        //setHasOptionsMenu(true);
 
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
@@ -144,8 +144,8 @@ public class LoginFragment extends Fragment {
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_login, menu);
 
-        itemSettings = menu.findItem(R.id.action_settings);
-        itemSettings.setVisible(false);
+        //itemSettings = menu.findItem(R.id.action_settings);
+        //itemSettings.setVisible(false);
     }
 
     @Override
@@ -309,7 +309,7 @@ public class LoginFragment extends Fragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_see_you_soon),
                                 Toast.LENGTH_SHORT).show();
-                        itemSettings.setVisible(false);
+                       // itemSettings.setVisible(false);
 
                         FirebaseAuth.getInstance().signOut();
                         Log.i(TAG, "Firebase: " + FirebaseAuth.getInstance().toString());
@@ -318,7 +318,7 @@ public class LoginFragment extends Fragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_welcome_again),
                                 Toast.LENGTH_SHORT).show();
-                        itemSettings.setVisible(true);
+                        //itemSettings.setVisible(true);
                     }
                     updateUI();
                 }
@@ -416,7 +416,7 @@ public class LoginFragment extends Fragment {
             imageProfileHLM.setClickable(true);
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
-            btn_settings.setVisibility(View.GONE);
+            btn_settings.setVisibility(View.VISIBLE);
         } else {
             profilePic.setProfileId(null);
             profilePic.setVisibility(View.INVISIBLE);
@@ -452,11 +452,12 @@ public class LoginFragment extends Fragment {
                     imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
                 } else {
                     fireProfilePic();
-                } if (user != null) {
+                }
+                /*if (user != null) {
                     if (itemSettings != null) {
                         itemSettings.setVisible(true);
                     }
-                }
+                }*/
             }
         }, delayTime);
     }

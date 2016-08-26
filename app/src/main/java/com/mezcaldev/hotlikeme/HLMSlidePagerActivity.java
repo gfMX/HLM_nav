@@ -7,6 +7,7 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -237,85 +238,104 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     }
 
     public void getUriProfilePics (final String gender){
-        DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
+        final ValueEventListener valueEventListener0;
+
+        final DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
         final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
-        databaseReference.addValueEventListener(new ValueEventListener() {
+
+        valueEventListener0 = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int numChildren = (int) dataSnapshot.getChildrenCount();
-
                 System.out.println("Number of users: " + numChildren);
 
                 for (DataSnapshot data: dataSnapshot.getChildren()){
                     final String dataKey = data.getKey();
                     databaseReferenceLocation.child(dataKey).addListenerForSingleValueEvent(
                             new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            Location remoteUserLocation;
-                            if (dataSnapshot.child("location_last").child("loc_longitude").getValue() != null
-                                    && dataSnapshot.child("location_last").child("loc_latitude").getValue() != null) {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    Location remoteUserLocation;
 
-                                double userLongitude = Double.parseDouble(
-                                        dataSnapshot.child("location_last").child("loc_longitude")
-                                                .getValue().toString());
-                                double userLatitude = Double.parseDouble(
-                                        dataSnapshot.child("location_last").child("loc_latitude")
-                                                .getValue().toString());
-
-                                System.out.println("Remote User Longitude: " + userLongitude);
-                                System.out.println("Remote User Latitude: " + userLatitude);
-                                remoteUserLocation = new Location("");
-                                remoteUserLocation.setLongitude(userLongitude);
-                                remoteUserLocation.setLatitude(userLatitude);
-                                if(!mRequestingLocationUpdates){
-                                    System.out.println("All users are visible");
-                                    users.add(dataKey);
-                                    mPagerAdapter.notifyDataSetChanged();
-                                    Snackbar.make(getWindow().getDecorView(),
-                                            getResources().getString(R.string.text_enable_gps_snack),
-                                            Snackbar.LENGTH_LONG)
-                                            .setAction("Enable GPS", new View.OnClickListener(){
-                                                @Override
-                                                public void onClick(View v) {
-                                                    preferencesEditor = sharedPreferences.edit();
-                                                    preferencesEditor.putBoolean("gps_enabled", true);
-                                                    preferencesEditor.apply();
-                                                    mRequestingLocationUpdates = true;
-                                                    users.clear();
-                                                    mPagerAdapter.notifyDataSetChanged();
-                                                    Intent intent = getIntent();
-                                                    finish();
-                                                    startActivity(intent);
-                                                }
-                                            })
-                                            .show();
-                                } else if (mCurrentLocation != null) {
-                                    if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance
-                                            && !dataKey.equals(user.getUid())){
-                                    //if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance) {
-                                        System.out.println("User " + dataKey + " reachable!");
+                                    //Check permission and proceed according to them
+                                    if(!mRequestingLocationUpdates){
+                                        System.out.println("All users are visible");
                                         users.add(dataKey);
                                         mPagerAdapter.notifyDataSetChanged();
+
+                                        Snackbar.make(getWindow().getDecorView(),
+                                                getResources().getString(R.string.text_enable_gps_snack),
+                                                Snackbar.LENGTH_LONG)
+                                                .setAction("Enable GPS", new View.OnClickListener(){
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        preferencesEditor = sharedPreferences.edit();
+                                                        preferencesEditor.putBoolean("gps_enabled", true);
+                                                        preferencesEditor.apply();
+                                                        mRequestingLocationUpdates = true;
+
+                                                        users.clear();
+                                                        mPagerAdapter.notifyDataSetChanged();
+                                                        Handler handler = new Handler();
+                                                        handler.postDelayed(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                Intent intent = getIntent();
+                                                                startActivity(intent);
+                                                            }
+                                                        },500);
+
+                                                    }
+                                                }).show();
+
+                                    } else if (mCurrentLocation != null) {
+                                        //Request location of the Remote User
+                                        if (dataSnapshot.child("location_last").child("loc_longitude").getValue() != null
+                                                && dataSnapshot.child("location_last").child("loc_latitude").getValue() != null) {
+
+                                            double userLongitude = Double.parseDouble(
+                                                    dataSnapshot.child("location_last").child("loc_longitude")
+                                                            .getValue().toString());
+                                            double userLatitude = Double.parseDouble(
+                                                    dataSnapshot.child("location_last").child("loc_latitude")
+                                                            .getValue().toString());
+
+                                            remoteUserLocation = new Location("");
+                                            remoteUserLocation.setLongitude(userLongitude);
+                                            remoteUserLocation.setLatitude(userLatitude);
+
+                                            System.out.println("Remote User Location: " + remoteUserLocation);
+
+                                            if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance
+                                                    && !dataKey.equals(user.getUid())){
+
+                                                System.out.println("User " + dataKey + " reachable!");
+                                                users.add(dataKey);
+                                                mPagerAdapter.notifyDataSetChanged();
+
+                                            }
+                                        }
+
+                                    } else{
+                                        System.out.println("Location Not Reachable! Please wait...");
+                                        Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
                                     }
-                                } else{
-                                    System.out.println("Location Not Reachable! Please wait...");
-                                    Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
+
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
                                 }
                             }
-                        }
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
+                    );
                 }
             }
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+        databaseReference.addValueEventListener(valueEventListener0);
     }
 
     @Override
@@ -654,6 +674,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
+        //clearInfo(); // Not working cause a crash if Enable GPS Request is accepted. Also restart the view at the beginning.
     }
     @Override
     protected void onResume(){
@@ -668,5 +689,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (mGoogleApiClient.isConnected()) {
             stopLocationUpdates();
         }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        //clearInfo(); // Not working cause a crash if Enable GPS Request is accepted. Also restart the view at the beginning.
     }
 }

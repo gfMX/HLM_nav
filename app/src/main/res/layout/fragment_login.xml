@@ -74,6 +74,8 @@
 
     <Button
         android:text="@string/btn_start"
+        android:textStyle="bold"
+        android:textSize="18sp"
         android:visibility="gone"
         android:layout_width="182dp"
         android:layout_height="wrap_content"

@@ -163,11 +163,11 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             databaseReference.child("/preferences/description/")
                     .setValue(sharedPreferences.getString("description", "None"));
             databaseReference.child("/preferences/looking_for/")
-                    .setValue(sharedPreferences.getString("looking_for", "Not specified"));
+                    .setValue(sharedPreferences.getString("looking_for", "both"));
             databaseReference.child("/preferences/sync_freq/")
-                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_frequency", "0")));
+                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_frequency", "1000")));
             databaseReference.child("/preferences/sync_distance/")
-                    .setValue(sharedPreferences.getString("sync_distance", "100"));
+                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_distance", "250")));
 
             databaseReference.child("/preferences/visible/")
                     .setValue(sharedPreferences.getBoolean("visible_switch", true));
@@ -205,7 +205,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             bindPreferenceSummaryToValue(findPreference("sync_frequency"));
             bindPreferenceSummaryToValue(findPreference("sync_distance"));
 
-            bindPreferenceSummaryToValue(findPreference("notifications_new_discovery_ringtone"));
+            //bindPreferenceSummaryToValue(findPreference("notifications_new_discovery_ringtone"));
         }
 
         @Override
@@ -217,5 +217,16 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
             }
             return super.onOptionsItemSelected(item);
         }
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        updateFireSettings();
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        updateFireSettings();
     }
 }
