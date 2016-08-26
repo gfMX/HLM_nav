@@ -50,7 +50,7 @@
         android:layout_alignParentStart="true"
         android:background="@color/colorWhite"/>
     -->
-    <!-- -->
+
     <de.hdodenhof.circleimageview.CircleImageView
         xmlns:app="http://schemas.android.com/apk/res-auto"
         android:id="@+id/hlm_image"
@@ -63,7 +63,7 @@
         android:layout_centerVertical="true"
         android:layout_alignParentLeft="true"
         android:layout_alignParentStart="true"/>
-    <!-- -->
+
     <Button
         android:text="@string/btn_choose_img"
         android:visibility="visible"

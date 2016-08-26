@@ -36,8 +36,8 @@
     <string name="pref_header_image">Profile Image</string>
 
     <string name="pref_title_social_recommendations">Visible to others</string>
-    <string name="pref_description_social_recommendations">Other people can see you, see your profile
-        image, and get in touch with you.
+    <string name="pref_description_social_recommendations">Users can see your profile
+        image, rate it, and get in Touch with you.
     </string>
 
     <string name="pref_title_display_name">Display name:</string>
@@ -47,7 +47,7 @@
     <string-array name="pref_looking_for_titles">
         <item>Girls</item>
         <item>Boys</item>
-        <item>Both</item>
+        <item>Boys &amp; Girls</item>
     </string-array>
     <string-array name="pref_looking_for_values">
         <item>female</item>
@@ -62,8 +62,13 @@
     <string name="pref_header_data_sync">Sync &amp; Localization</string>
 
     <string name="pref_title_localization">Enable GPS Localization</string>
-    <string name="pref_localization_description">Allow other users see your current position. If you disable it your actual position won\'t be updated!</string>
+    <string name="pref_localization_description">
+        Let other Users know if you\'re Close to them. Nobody will see your exact position. If Disable, you would not be able to see any near user
+    </string>
     <string name="pref_title_sync_frequency">Sync frequency</string>
+    <string name="pref_sync_frequency_description">
+        How often do you want to update your actual position and look for new users around you. Longer times, netter battery life, but less updates.
+    </string>
     <string-array name="pref_sync_frequency_titles">
         <item>1 minutes</item>
         <item>5 minutes</item>
@@ -85,7 +90,7 @@
         <item>360</item>
     </string-array>
 
-    <string name="pref_title_discovery_distance">Discovery Distance:</string>
+    <string name="pref_title_discovery_distance">Look for users around:</string>
     <string-array name="pref_discovery_distance_titles">
         <item>250 meters</item>
         <item>500 meters</item>

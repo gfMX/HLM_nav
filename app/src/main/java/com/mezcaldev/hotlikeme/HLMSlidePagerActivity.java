@@ -1,6 +1,7 @@
 package com.mezcaldev.hotlikeme;
 
 import android.app.Activity;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
@@ -17,6 +18,7 @@ import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -200,7 +202,21 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (mPager.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
             // Back button. This calls finish() on this activity and pops the back stack.
-            super.onBackPressed();
+            // super.onBackPressed(); //Normal Behavior
+            new AlertDialog.Builder(this)
+                    //.setIcon(android.R.drawable.ic_dialog_alert)
+                    .setTitle("Closing HotLikeMe")
+                    .setMessage("Are you sure you want to exit?")
+                    .setPositiveButton("Sure", new DialogInterface.OnClickListener()
+                    {
+                        @Override
+                        public void onClick(DialogInterface dialog, int which) {
+                            finish();
+                        }
+
+                    })
+                    .setNegativeButton("Not yet", null)
+                    .show();
         } else {
             // Otherwise, select the previous step.
             mPager.setCurrentItem(mPager.getCurrentItem() - 1);
