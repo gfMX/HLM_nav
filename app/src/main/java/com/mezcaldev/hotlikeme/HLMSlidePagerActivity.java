@@ -356,7 +356,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
             }
         };
-        databaseReference.addValueEventListener(valueEventListener0);
+        databaseReference.addListenerForSingleValueEvent(valueEventListener0);
     }
 
     @Override
