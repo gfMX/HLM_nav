@@ -503,6 +503,7 @@ public class LoginFragment extends Fragment {
                             editor = sharedPreferences.edit();
                             editor.putString("gender", gender);
                             editor.putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true));
+                            editor.putString("looking_for", sharedPreferences.getString("looking_for", "both"));
                             editor.apply();
 
                             databaseReference.child("/preferences/gender/").setValue(gender);

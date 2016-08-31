@@ -76,6 +76,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     int maxUserDistance = 250;
     int fastInterval = ONE_SECOND * 30;
     int minInterval = ONE_MINUTE;
+    int delayForUsers = ONE_SECOND;
 
     /* Location with Google API */
     Location mCurrentLocation;
@@ -170,6 +171,17 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
+
+        Handler checkUsers = new Handler();
+        checkUsers.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                if (users.size()==0){
+                    usersNull();
+                }
+            }
+        }, delayForUsers);
+
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -310,16 +322,12 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                                                 }).show();
 
                                     } else if (mCurrentLocation != null) {
+                                        Double userLongitude = (Double) dataSnapshot.child("location_last").child("loc_longitude")
+                                                .getValue();
+                                        Double userLatitude = (Double) dataSnapshot.child("location_last").child("loc_latitude")
+                                                .getValue();
                                         //Request location of the Remote User
-                                        if (dataSnapshot.child("location_last").child("loc_longitude").getValue() != null
-                                                && dataSnapshot.child("location_last").child("loc_latitude").getValue() != null) {
-
-                                            double userLongitude = Double.parseDouble(
-                                                    dataSnapshot.child("location_last").child("loc_longitude")
-                                                            .getValue().toString());
-                                            double userLatitude = Double.parseDouble(
-                                                    dataSnapshot.child("location_last").child("loc_latitude")
-                                                            .getValue().toString());
+                                        if (userLongitude != null && userLatitude != null) {
 
                                             remoteUserLocation = new Location("");
                                             remoteUserLocation.setLongitude(userLongitude);
@@ -327,17 +335,15 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
                                             System.out.println("Remote User Location: " + remoteUserLocation);
 
-                                            if (mCurrentLocation.distanceTo(remoteUserLocation) < maxUserDistance
+                                            if (mCurrentLocation.distanceTo(remoteUserLocation) <= maxUserDistance
                                                     && !dataKey.equals(user.getUid())){
 
                                                 System.out.println("User " + dataKey + " reachable!");
                                                 users.add(dataKey);
                                                 mPagerAdapter.notifyDataSetChanged();
-
                                             }
                                         }
-
-                                    } else{
+                                    } else {
                                         System.out.println("Location Not Reachable! Please wait...");
                                         Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
                                     }
@@ -469,6 +475,12 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
     private void clearInfo(){
         users.clear();
+        mPagerAdapter.notifyDataSetChanged();
+    }
+
+    private void usersNull(){
+        users.clear();
+        users.add("nullKey");
         mPagerAdapter.notifyDataSetChanged();
     }
 

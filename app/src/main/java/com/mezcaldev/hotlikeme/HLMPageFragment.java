@@ -66,7 +66,6 @@ public class HLMPageFragment extends ListFragment {
 
     boolean flagOne = false;
     boolean flagTwo = false;
-    boolean flagWeLike = false;
 
     float distanceY = 0;
     float distanceX = 0;
@@ -123,6 +122,7 @@ public class HLMPageFragment extends ListFragment {
     public void onViewCreated(final View view, Bundle savedInstanceState){
 
         //Adds the users that Current User likes
+
         referenceLikeUser = database.getReference()
                 .child("users")
                 .child(firebaseUser.getUid())
@@ -140,6 +140,8 @@ public class HLMPageFragment extends ListFragment {
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
 
+        viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
+
         ratingBar = (RatingBar) view.findViewById(R.id.rating);
         LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
         stars.getDrawable(2).setColorFilter(ContextCompat.getColor(getContext(), R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
@@ -152,130 +154,134 @@ public class HLMPageFragment extends ListFragment {
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
-        getUserDetails(userKey);
-        userRating();
+        //Only if a Key si given proceed, else Show a blank (Default) page.
+        if (!userKey.equals("nullKey")) {
+            getUserDetails(userKey);
+            userRating();
 
-        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                starsRating = rating;
-                if (starsRating == 0){
-                    referenceUserRated.setValue(null);
-                } else {
-                    referenceUserRated.setValue(starsRating);
-                }
-            }
-        });
-
-        viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
-        viewUserImage.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                int x = (int) event.getX();
-                int y = (int) event.getY();
-                //int xRaw = (int) event.getRawX();
-                int yRaw = (int) event.getRawY();
-
-                switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                    case MotionEvent.ACTION_DOWN:
-                        System.out.println("Down");
-                        distanceX = x;
-                        distanceY = y;
-
-                        break;
-                    case MotionEvent.ACTION_UP:
-                        System.out.println("Up");
-                        v.setTranslationY(0);
-                        v.setTranslationX(0);
-
-                        //Add users to the Like List
-                        if (yRaw < screenUp) {
-                            System.out.println("User ID: " + userKey);
-                            referenceLikeUser.setValue(true);
-                            Toast.makeText(getContext(), "Added!", Toast.LENGTH_SHORT).show();
-
-                        }
-
-                        //Remove users from the Like List
-                        if (yRaw > screenDown) {
-                            System.out.println("User ID: " + userKey);
-                            referenceLikeUser.setValue(null);
-                            Toast.makeText(getContext(), "Removed!", Toast.LENGTH_SHORT).show();
-                            if (chatIcon != null) {
-                                chatIcon.setVisible(false);
-                            }
-                        }
-
+            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                    starsRating = rating;
+                    if (starsRating == 0) {
+                        referenceUserRated.setValue(null);
+                    } else {
                         referenceUserRated.setValue(starsRating);
-
-                        resetFlags();
-
-                        break;
-                    case MotionEvent.ACTION_POINTER_DOWN:
-                        System.out.println("Pointer Down");
-
-                        break;
-                    case MotionEvent.ACTION_POINTER_UP:
-                        System.out.println("Pointer Up");
-
-                        break;
-                    case MotionEvent.ACTION_MOVE:
-                        v.setX((v.getX() - v.getWidth() / 2) + x);
-                        v.setY((v.getY() - v.getHeight() / 2) + y);
-                        if (yRaw < screenUp && !flagOne) {
-                            System.out.println("Up");
-                            toast1 = Toast.makeText(getContext(), "I will like to get in touch!", Toast.LENGTH_SHORT);
-                            toast1.setGravity(Gravity.CENTER,0,400);
-                            toast1.show();
-
-                            resetFlags();
-                            flagOne = true;
-                        }
-                        if (yRaw > screenDown && !flagTwo) {
-                            System.out.println("Down");
-                            toast2 = Toast.makeText(getContext(), "I don't wan't to get in touch.", Toast.LENGTH_SHORT);
-                            toast2.setGravity(Gravity.CENTER,0,-350);
-                            toast2.show();
-
-                            resetFlags();
-                            flagTwo = true;
-                        }
-
-                        if (yRaw < screenPart){
-                            //Upper limit of the screen
-                            //System.out.println("None");
-                        } else if (yRaw < screenPart * 2) {
-                            starsRating = 1;
-                        } else if (yRaw < screenPart * 3) {
-                            starsRating = 2;
-                        } else if (yRaw < screenPart * 4) {
-                            starsRating = 3;
-                        } else if (yRaw < screenPart * 5) {
-                            starsRating = 4;
-                        } else if (yRaw < screenPart * 6) {
-                            starsRating = 5;
-                        } else if (yRaw < screenPart * 7) {
-                            //Null zone doesn't add or change Rating
-                            starsRating = oldRating;
-                        } else if (yRaw < screenPart * 8) {
-                            starsRating = 5;
-                        } else if (yRaw < screenPart * 9) {
-                            starsRating = 4;
-                        } else if (yRaw < screenPart * 10) {
-                            starsRating = 3;
-                        } else if (yRaw < screenPart * 11) {
-                            starsRating = 2;
-                        } else if (yRaw < screenPart * 12) {
-                            starsRating = 1;
-                        } else if (yRaw < screenPart * 13) {
-                            //Way too low of the screen
-                            //System.out.println("None");
-                        }
-                        ratingBar.setRating(starsRating);
-                        break;
+                    }
                 }
-                return true;
-            }
-        });
+            });
+
+            viewUserImage.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    int x = (int) event.getX();
+                    int y = (int) event.getY();
+                    //int xRaw = (int) event.getRawX();
+                    int yRaw = (int) event.getRawY();
+
+                    switch (event.getAction() & MotionEvent.ACTION_MASK) {
+                        case MotionEvent.ACTION_DOWN:
+                            System.out.println("Down");
+                            distanceX = x;
+                            distanceY = y;
+
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            System.out.println("Up");
+                            v.setTranslationY(0);
+                            v.setTranslationX(0);
+
+                            //Add users to the Like List
+                            if (yRaw < screenUp) {
+                                System.out.println("User ID: " + userKey);
+                                referenceLikeUser.setValue(true);
+                                Toast.makeText(getContext(), "Added!", Toast.LENGTH_SHORT).show();
+
+                            }
+
+                            //Remove users from the Like List
+                            if (yRaw > screenDown) {
+                                System.out.println("User ID: " + userKey);
+                                referenceLikeUser.setValue(null);
+                                Toast.makeText(getContext(), "Removed!", Toast.LENGTH_SHORT).show();
+                                if (chatIcon != null) {
+                                    chatIcon.setVisible(false);
+                                }
+                            }
+
+                            referenceUserRated.setValue(starsRating);
+
+                            resetFlags();
+
+                            break;
+                        case MotionEvent.ACTION_POINTER_DOWN:
+                            System.out.println("Pointer Down");
+
+                            break;
+                        case MotionEvent.ACTION_POINTER_UP:
+                            System.out.println("Pointer Up");
+
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            v.setX((v.getX() - v.getWidth() / 2) + x);
+                            v.setY((v.getY() - v.getHeight() / 2) + y);
+                            if (yRaw < screenUp && !flagOne) {
+                                System.out.println("Up");
+                                toast1 = Toast.makeText(getContext(), "I will like to get in touch!", Toast.LENGTH_SHORT);
+                                toast1.setGravity(Gravity.CENTER, 0, 400);
+                                toast1.show();
+
+                                resetFlags();
+                                flagOne = true;
+                            }
+                            if (yRaw > screenDown && !flagTwo) {
+                                System.out.println("Down");
+                                toast2 = Toast.makeText(getContext(), "I don't wan't to get in touch.", Toast.LENGTH_SHORT);
+                                toast2.setGravity(Gravity.CENTER, 0, -350);
+                                toast2.show();
+
+                                resetFlags();
+                                flagTwo = true;
+                            }
+
+                            if (yRaw < screenPart) {
+                                //Upper limit of the screen
+                                //System.out.println("None");
+                            } else if (yRaw < screenPart * 2) {
+                                starsRating = 1;
+                            } else if (yRaw < screenPart * 3) {
+                                starsRating = 2;
+                            } else if (yRaw < screenPart * 4) {
+                                starsRating = 3;
+                            } else if (yRaw < screenPart * 5) {
+                                starsRating = 4;
+                            } else if (yRaw < screenPart * 6) {
+                                starsRating = 5;
+                            } else if (yRaw < screenPart * 7) {
+                                //Null zone doesn't add or change Rating
+                                starsRating = oldRating;
+                            } else if (yRaw < screenPart * 8) {
+                                starsRating = 5;
+                            } else if (yRaw < screenPart * 9) {
+                                starsRating = 4;
+                            } else if (yRaw < screenPart * 10) {
+                                starsRating = 3;
+                            } else if (yRaw < screenPart * 11) {
+                                starsRating = 2;
+                            } else if (yRaw < screenPart * 12) {
+                                starsRating = 1;
+                            } else if (yRaw < screenPart * 13) {
+                                //Way too low of the screen
+                                //System.out.println("None");
+                            }
+                            ratingBar.setRating(starsRating);
+                            break;
+                    }
+                    return true;
+                }
+            });
+        } else {
+            Toast.makeText(this.getActivity(), "There's no one close to you right now", Toast.LENGTH_LONG).show();
+        }
     }
 
     private void getUserDetails (String userKey){

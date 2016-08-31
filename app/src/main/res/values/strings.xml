@@ -90,11 +90,12 @@
         <item>360</item>
     </string-array>
 
-    <string name="pref_title_discovery_distance">Look for users around:</string>
+    <string name="pref_title_discovery_distance">Max. Distance to Find Users:</string>
     <string-array name="pref_discovery_distance_titles">
         <item>250 meters</item>
         <item>500 meters</item>
         <item>1 kilometer</item>
+        <item>3 kilometers</item>
         <item>5 kilometers</item>
         <item>10 kilometers</item>
         <item>50 kilometers</item>
@@ -103,6 +104,7 @@
         <item>250</item>
         <item>500</item>
         <item>1000</item>
+        <item>3000</item>
         <item>5000</item>
         <item>10000</item>
         <item>50000</item>
@@ -154,7 +156,7 @@
     <string name="text_deleting_images">Deleting Images&#8230;</string>
     <string name="text_user_name">No one Hot right now</string>
     <string name="text_slide">
-        We are sorry, there are no active Hot Users in your zone, change the distance settings, or come back later.
+        We are sorry, there are no active Hot Users in your zone, change the Distance on the Settings, or check back in a few minutes.
     </string>
     <string name="text_hlm_users">Profile pics of HotLikeMe Users</string>
     <string name="text_network_access_required">Network not available. Please check your Internet Connection and Try Again</string>
