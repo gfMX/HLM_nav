@@ -1,12 +1,12 @@
 package com.mezcaldev.hotlikeme;
 
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
@@ -102,7 +102,8 @@ public class HLMPageFragment extends ListFragment {
         int id = item.getItemId();
 
         if (id == R.id.action_chat) {
-            Snackbar.make(getActivity().getWindow().getDecorView(),"We're almost there", Snackbar.LENGTH_LONG).show();
+            startActivity(new Intent(getActivity(), ChatHLMActivity.class));
+            //Snackbar.make(getActivity().getWindow().getDecorView(),"We're almost there", Snackbar.LENGTH_LONG).show();
             return true;
         }
 

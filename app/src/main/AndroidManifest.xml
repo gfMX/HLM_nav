@@ -13,7 +13,9 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+
+        <activity
+            android:name=".MainActivity"
             android:label="@string/app_name"
             android:launchMode="singleTask"
             android:theme="@style/AppTheme.NoActionBar">
@@ -43,13 +45,17 @@
             android:label="@string/title_activity_pager_hlm"
             android:launchMode="standard"
             android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HLMSlidePagerActivity"/>
         </activity>
+
         <activity
-            android:name=".LoginActivity"
-            android:label="@string/title_activity_login"
+            android:name=".ChatHLMActivity"
+            android:label="@string/title_activity_chat"
             android:launchMode="singleTask"
-            android:theme="@style/AppTheme.NoActionBar"
-            android:parentActivityName=".HLMSlidePagerActivity">
+            android:parentActivityName=".HLMSlidePagerActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HLMSlidePagerActivity" />
@@ -64,6 +70,18 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HLMSlidePagerActivity" />
         </activity>
+
+        <activity
+            android:name=".LoginActivity"
+            android:label="@string/title_activity_login"
+            android:launchMode="singleTask"
+            android:parentActivityName=".HLMSlidePagerActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HLMSlidePagerActivity" />
+        </activity>
+
         <activity
             android:name=".ImageBrowser"
             android:label="@string/title_activity_image_browser"
@@ -74,6 +92,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LoginActivity" />
         </activity>
+
         <activity
             android:name=".FireBrowserActivity"
             android:label="@string/title_activity_fire_browser"
@@ -84,6 +103,7 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LoginActivity" />
         </activity>
+
     </application>
 
 </manifest>

@@ -7,6 +7,7 @@
     <string name="title_activity_image_browser">Image Browser</string>
     <string name="title_activity_pager_hlm">HotLikeMe</string>
     <string name="title_activity_login">Login &amp; Profile Pic</string>
+    <string name="title_activity_chat">HotLikeMe Chat</string>
 
     <!-- Strings related to Menu -->
     <string name="action_fb_logout">Basic Settings and Log out</string>
