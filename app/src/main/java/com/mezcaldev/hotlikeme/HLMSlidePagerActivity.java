@@ -76,7 +76,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     int maxUserDistance = 250;
     int fastInterval = ONE_SECOND * 30;
     int minInterval = ONE_MINUTE;
-    int delayForUsers = ONE_SECOND;
+    int delayForUsers = 1750;
 
     /* Location with Google API */
     Location mCurrentLocation;
@@ -197,13 +197,13 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (id == R.id.action_settings) {
             clearInfo();
             startActivity(new Intent(this, SettingsActivity.class));
-            finish();
+            //finish();
             return true;
         }
         if (id == R.id.action_profile_settings) {
             clearInfo();
             startActivity(new Intent(this, LoginActivity.class));
-            finish();
+            //finish();
             return true;
         }
 

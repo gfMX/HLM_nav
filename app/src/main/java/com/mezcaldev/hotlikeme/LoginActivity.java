@@ -53,7 +53,7 @@ public class LoginActivity extends AppCompatActivity {
             }
         }
     }
-    @Override
+    /*@Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
         if (id == android.R.id.home) {
@@ -63,7 +63,7 @@ public class LoginActivity extends AppCompatActivity {
             return true;
         }
         return true;
-    }
+    }*/
     private Boolean checkUser(){
         user = FireConnection.getInstance().getUser();
         return user != null;
