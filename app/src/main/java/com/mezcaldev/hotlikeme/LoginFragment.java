@@ -267,7 +267,7 @@ public class LoginFragment extends Fragment {
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
                               Toast.LENGTH_LONG).show();
                       startActivity(new Intent(getActivity(), SettingsActivity.class));
-                      getActivity().finish();
+                      //getActivity().finish();
                       break;
                   case R.id.hlm_image:
 
@@ -503,10 +503,11 @@ public class LoginFragment extends Fragment {
                             editor.putString("gender", gender);
                             editor.putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true));
                             editor.putString("looking_for", sharedPreferences.getString("looking_for", "both"));
+                            editor.putString("alias", sharedPreferences.getString("alias", user.getDisplayName()));
                             editor.apply();
 
                             databaseReference.child("preferences").child("gender").setValue(gender);
-                            databaseReference.child("my_chats").child("HotLikeMe").setValue("one");
+                            //databaseReference.child("my_chats").child("HotLikeMe").setValue("one");
 
                             Log.i(TAG, "We got the gender: " + gender);
                         } catch (JSONException e){

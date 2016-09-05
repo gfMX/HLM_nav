@@ -398,8 +398,8 @@ public class HLMPageFragment extends ListFragment {
                     databaseReferenceSetCurrentUserChat.child(userKey).setValue(uniqueChatID);
                     databaseReferenceSetRemoteUserChat.child(firebaseUser.getUid()).setValue(uniqueChatID);
 
-                    databaseReferenceChat.child(uniqueChatID).child("one").child("name").setValue(getResources().getString(R.string.app_name));
-                    databaseReferenceChat.child(uniqueChatID).child("one").child("text").setValue("Welcome Hots");
+                    databaseReferenceChat.child(uniqueChatID).child("one").child("name").setValue(getResources().getString(R.string.welcome_msg));
+                    //databaseReferenceChat.child(uniqueChatID).child("one").child("text").setValue("Welcome Hots");
                 } else {
                     for (DataSnapshot data : dataSnapshot.getChildren()) {
                         if (data.getKey().equals(userKey)){

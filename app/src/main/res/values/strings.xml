@@ -165,7 +165,7 @@
     <string name="text_enable_gps_snack">"To see only users close to you, enable GPS on Settings or Here."</string>
 
     <!-- HLM Chat Strings -->
-    <string name="welcome_msg">Welcome!</string>
+    <string name="welcome_msg">HotLikeMe: Welcome to the Chat!</string>
     <string name="sign_out">Sign Out</string>
     <string name="contacts_permission_rationale">Access to account information is required to sign in.</string>
 
