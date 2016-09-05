@@ -34,6 +34,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.UUID;
+
 public class HLMPageFragment extends ListFragment {
     String userKey;
 
@@ -66,9 +68,12 @@ public class HLMPageFragment extends ListFragment {
 
     boolean flagOne = false;
     boolean flagTwo = false;
+    boolean weLike = false;
 
     float distanceY = 0;
     float distanceX = 0;
+
+    String uniqueChatID;
 
     TextView viewUserDescription;
     Toast toast1;
@@ -102,7 +107,9 @@ public class HLMPageFragment extends ListFragment {
         int id = item.getItemId();
 
         if (id == R.id.action_chat) {
-            startActivity(new Intent(getActivity(), ChatHLMActivity.class));
+            Intent intent = new Intent(getActivity(), ChatHLMActivity.class);
+            intent.putExtra("userChat", uniqueChatID);
+            startActivity(intent);
             //Snackbar.make(getActivity().getWindow().getDecorView(),"We're almost there", Snackbar.LENGTH_LONG).show();
             return true;
         }
@@ -344,6 +351,10 @@ public class HLMPageFragment extends ListFragment {
         final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(userKey).child("like_user");
         DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(firebaseUser.getUid()).child("like_user");
 
+        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(firebaseUser.getUid()).child("my_chats");
+        final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
+        final DatabaseReference databaseReferenceChat = database.getReference().child("chats");
+
         databaseReferenceCurrent.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -356,6 +367,8 @@ public class HLMPageFragment extends ListFragment {
                                 for (DataSnapshot data: dataSnapshot.getChildren()){
                                     if (data.getKey().equals(firebaseUser.getUid())){
                                         chatIcon.setVisible(true);
+                                        weLike = true;
+
                                     }
                                 }
                             }
@@ -367,6 +380,34 @@ public class HLMPageFragment extends ListFragment {
                         });
                     }
                 }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        //Check if a chat exists already, if not a new Chat is assigned to the users.
+        databaseReferenceSetCurrentUserChat.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                System.out.println("Checking for chats");
+                if (weLike && !dataSnapshot.hasChild(userKey)){
+                    uniqueChatID = "chat_" + UUID.randomUUID();
+                    databaseReferenceSetCurrentUserChat.child(userKey).setValue(uniqueChatID);
+                    databaseReferenceSetRemoteUserChat.child(firebaseUser.getUid()).setValue(uniqueChatID);
+
+                    databaseReferenceChat.child(uniqueChatID).child("one").child("name").setValue(getResources().getString(R.string.app_name));
+                    databaseReferenceChat.child(uniqueChatID).child("one").child("text").setValue("Welcome Hots");
+                } else {
+                    for (DataSnapshot data : dataSnapshot.getChildren()) {
+                        if (data.getKey().equals(userKey)){
+                            uniqueChatID = data.getValue().toString();
+                        }
+                    }
+                }
+                System.out.println("Unique Chat ID: " + uniqueChatID);
             }
 
             @Override

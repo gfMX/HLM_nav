@@ -353,7 +353,7 @@ public class LoginFragment extends Fragment {
                         Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
                         //Stores references needed by the App on Firebase:
-                        fireRef = database.getReference().child("users").child(user.getUid()).child("/preferences/name");
+                        fireRef = database.getReference().child("users").child(user.getUid()).child("preferences").child("name");
                         fireRef.setValue(user.getDisplayName());
 
                         if (accessToken!=null) {
@@ -498,7 +498,6 @@ public class LoginFragment extends Fragment {
                             gender = response.getJSONObject().get("gender").toString();
                             System.out.println("Gender: " + gender);
                             DatabaseReference databaseReference = database.getReference().child("users").child(user.getUid());
-                            //DatabaseReference databaseReferenceUsers= database.getReference();
                             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                             editor = sharedPreferences.edit();
                             editor.putString("gender", gender);
@@ -506,7 +505,8 @@ public class LoginFragment extends Fragment {
                             editor.putString("looking_for", sharedPreferences.getString("looking_for", "both"));
                             editor.apply();
 
-                            databaseReference.child("/preferences/gender/").setValue(gender);
+                            databaseReference.child("preferences").child("gender").setValue(gender);
+                            databaseReference.child("my_chats").child("HotLikeMe").setValue("one");
 
                             Log.i(TAG, "We got the gender: " + gender);
                         } catch (JSONException e){

@@ -77,7 +77,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
     }
 
     private static final String TAG = "HLM Chat";
-    public static final String MESSAGES_CHILD = "messages";
+    String MESSAGES_CHILD = "messages";
     private static final int REQUEST_INVITE = 1;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 10;
     public static final String ANONYMOUS = "anonymous";
@@ -115,6 +115,13 @@ public class ChatHLMActivity extends AppCompatActivity implements
             getSupportActionBar().setDisplayHomeAsUpEnabled(true);
         }
 
+        Bundle bundle = getIntent().getExtras();
+
+        if (bundle.getString("userChat")!= null) {
+            MESSAGES_CHILD = "/chats/" + bundle.getString("userChat");
+        }
+
+
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
 
@@ -130,6 +137,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
         } else {
             mUsername = mFirebaseUser.getDisplayName();
             mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+
         }
 
         mGoogleApiClient = new GoogleApiClient.Builder(this)
@@ -346,7 +354,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
     private void applyRetrievedLengthLimit() {
         Long friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(friendly_msg_length.intValue())});
-        Log.d(TAG, "FML is: " + friendly_msg_length);
+        Log.d(TAG, "HLM Message Length is: " + friendly_msg_length);
     }
 
     @Override
