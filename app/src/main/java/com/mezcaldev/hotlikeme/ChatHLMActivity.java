@@ -31,10 +31,12 @@ import android.text.Editable;
 import android.text.InputFilter;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -146,9 +148,56 @@ public class ChatHLMActivity extends AppCompatActivity implements
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
         mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(
                 FriendlyMessage.class,
-                R.layout.item_message,
+                R.layout.item_message_left,
                 MessageViewHolder.class,
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD)) {
+
+            private static final int RIGHT_MSG = 0;
+            private static final int LEFT_MSG = 1;
+            private static final int RIGHT_MSG_IMG = 2;
+            private static final int LEFT_MSG_IMG = 3;
+
+            @Override
+            public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                View view;
+                if (viewType == RIGHT_MSG){
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_right,parent,false);
+                    return new MessageViewHolder(view);
+                }else /*(viewType == LEFT_MSG)*/{
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left,parent,false);
+                    return new MessageViewHolder(view);
+                }/*else if (viewType == RIGHT_MSG_IMG){
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_right_img,parent,false);
+                    return new MessageViewHolder(view);
+                }else{
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left_img,parent,false);
+                    return new MessageViewHolder(view);
+                }*/
+            }
+
+            @Override
+            public int getItemViewType(int position) {
+                FriendlyMessage model = getItem(position);
+                /*if (model.getMapModel() != null){
+                    if (model.getUserModel().getName().equals(mFirebaseUser)){
+                        return RIGHT_MSG_IMG;
+                    }else{
+                        return LEFT_MSG_IMG;
+                    }
+                }else if (model.getFile() != null){
+                    if (model.getFile().getType().equals("img") && model.getUserModel().getName().equals(mFirebaseUser)){
+                        return RIGHT_MSG_IMG;
+                    }else{
+                        return LEFT_MSG_IMG;
+                    }
+                }else*/ if (model.getName().equals(mFirebaseUser.getDisplayName())){
+                    System.out.println("Message Right");
+                    return RIGHT_MSG;
+                }else{
+                    System.out.println("Message Left");
+                    return LEFT_MSG;
+                }
+            }
 
             @Override
             protected void populateViewHolder(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage, int position) {
