@@ -14,17 +14,25 @@ import android.preference.Preference;
 import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
+import android.support.annotation.NonNull;
 import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 public class SettingsActivity extends AppCompatPreferenceActivity {
+
+    final static String TAG = "Settings: ";
 
     FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -161,6 +169,23 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         if (sharedPreferences.getAll() != null){
             databaseReference.child("/preferences/alias/")
                     .setValue(sharedPreferences.getString("alias", "None"));
+
+            FirebaseUser userToUpdate = FirebaseAuth.getInstance().getCurrentUser();
+            if (userToUpdate != null) {
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(sharedPreferences.getString("alias", userToUpdate.getDisplayName()))
+                        .build();
+
+                userToUpdate.updateProfile(profileUpdates)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d(TAG, "User profile updated.");
+                                }
+                            }
+                        });
+            }
 
             databaseReference.child("/preferences/description/")
                     .setValue(sharedPreferences.getString("description", "None"));

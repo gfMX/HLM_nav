@@ -76,7 +76,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     int maxUserDistance = 250;
     int fastInterval = ONE_SECOND * 30;
     int minInterval = ONE_MINUTE;
-    int delayForUsers = 1750;
+    int delayForUsers = 2000;
 
     /* Location with Google API */
     Location mCurrentLocation;
@@ -118,6 +118,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
+
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
@@ -239,6 +240,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             mPager.setCurrentItem(mPager.getCurrentItem() - 1);
         }
     }
+
 
     protected synchronized void buildGoogleApiClient() {
         Log.i(TAG, "Building GoogleApiClient");
@@ -436,7 +438,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
                         System.out.println("Access GRANTED by the User!");
-                        //startLocationUpdates();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {

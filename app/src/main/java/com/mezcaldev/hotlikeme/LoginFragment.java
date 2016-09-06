@@ -453,11 +453,6 @@ public class LoginFragment extends Fragment {
                 } else {
                     fireProfilePic();
                 }
-                /*if (user != null) {
-                    if (itemSettings != null) {
-                        itemSettings.setVisible(true);
-                    }
-                }*/
             }
         }, delayTime);
     }
