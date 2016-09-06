@@ -17,6 +17,7 @@ package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -198,7 +199,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 10L);
+        defaultConfigMap.put("friendly_msg_length", 60L);
 
         // Apply config settings and default values.
         mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
@@ -220,9 +221,11 @@ public class ChatHLMActivity extends AppCompatActivity implements
                 if (charSequence.toString().trim().length() > 0) {
                     fab_send.setClickable(true);
                     fab_send.setEnabled(true);
+
                 } else {
                     fab_send.setClickable(false);
                     fab_send.setEnabled(false);
+                    fab_send.setBackgroundColor(Color.GRAY);
                 }
             }
 
@@ -232,7 +235,6 @@ public class ChatHLMActivity extends AppCompatActivity implements
         });
 
         fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
-        //mSendButton = (Button) findViewById(R.id.sendButton);
         fab_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
