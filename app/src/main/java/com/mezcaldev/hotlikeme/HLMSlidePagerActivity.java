@@ -76,7 +76,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     int maxUserDistance = 250;
     int fastInterval = ONE_SECOND * 30;
     int minInterval = ONE_MINUTE;
-    int delayForUsers = 2000;
+    int delayForUsers = 2500;
 
     /* Location with Google API */
     Location mCurrentLocation;
@@ -166,22 +166,22 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (users.size() <= 0) {
             System.out.println("Getting Users");
             getUriProfilePics(gender);
+
+            Handler checkUsers = new Handler();
+            checkUsers.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (users.size()==0){
+                        usersNull();
+                    }
+                }
+            }, delayForUsers);
         } else {
             System.out.println("User list OK");
         }
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
-
-        Handler checkUsers = new Handler();
-        checkUsers.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if (users.size()==0){
-                    usersNull();
-                }
-            }
-        }, delayForUsers);
 
     }
     @Override
@@ -198,13 +198,11 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (id == R.id.action_settings) {
             clearInfo();
             startActivity(new Intent(this, SettingsActivity.class));
-            //finish();
             return true;
         }
         if (id == R.id.action_profile_settings) {
             clearInfo();
             startActivity(new Intent(this, LoginActivity.class));
-            //finish();
             return true;
         }
 
@@ -261,6 +259,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         public Fragment getItem(int position) {
             userKey = users.get(position);
             return HLMPageFragment.newInstance(userKey);
+
         }
         @Override
         public int getCount() {
@@ -480,7 +479,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     }
 
     private void usersNull(){
-        users.clear();
+        //users.clear();
         users.add("nullKey");
         mPagerAdapter.notifyDataSetChanged();
     }

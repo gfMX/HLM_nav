@@ -110,7 +110,6 @@ public class HLMPageFragment extends ListFragment {
             Intent intent = new Intent(getActivity(), ChatHLMActivity.class);
             intent.putExtra("userChat", uniqueChatID);
             startActivity(intent);
-            //Snackbar.make(getActivity().getWindow().getDecorView(),"We're almost there", Snackbar.LENGTH_LONG).show();
             return true;
         }
 
@@ -234,7 +233,7 @@ public class HLMPageFragment extends ListFragment {
                             v.setY((v.getY() - v.getHeight() / 2) + y);
                             if (yRaw < screenUp && !flagOne) {
                                 System.out.println("Up");
-                                toast1 = Toast.makeText(getContext(), "I will like to get in touch!", Toast.LENGTH_SHORT);
+                                toast1 = Toast.makeText(getContext(), "I'll like to get in touch!", Toast.LENGTH_SHORT);
                                 toast1.setGravity(Gravity.CENTER, 0, 400);
                                 toast1.show();
 

@@ -45,7 +45,7 @@ import java.util.UUID;
 public class ImageSaver {
 
     private final String TAG = "Image record: ";
-    final Integer compressRatio = 85;
+    final Integer compressRatio = 80;
 
     String pathImages = "/images/";
     String pathThumbs = "/images/thumbs/";
