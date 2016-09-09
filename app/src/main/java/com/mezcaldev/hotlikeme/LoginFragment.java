@@ -105,7 +105,6 @@ public class LoginFragment extends Fragment {
 
     //Other elements
     ImageSaver imageSaver = new ImageSaver();
-    MenuItem itemSettings;
     File profileImageCheck;
 
 
@@ -143,9 +142,6 @@ public class LoginFragment extends Fragment {
     }
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_login, menu);
-
-        //itemSettings = menu.findItem(R.id.action_settings);
-        //itemSettings.setVisible(false);
     }
 
     @Override
@@ -515,20 +511,6 @@ public class LoginFragment extends Fragment {
         parameters.putString("fields", "gender");
         request.setParameters(parameters);
         request.executeAsync();
-    }
-
-    private void getPreferencesFromFirebase (){
-
-    }
-
-    private void cleanLocalPreferences(){
-        if (mAuth.getCurrentUser() == null) {
-            editor.clear();
-            editor.apply();
-            System.out.println("User data cleared on Device" + sharedPreferences.getAll());
-        } else {
-            System.out.println("User Still Logged in: " + mAuth.getCurrentUser() + " Token: " + accessToken);
-        }
     }
 
     private boolean isNetworkAvailable() {
