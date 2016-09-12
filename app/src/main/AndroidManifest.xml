@@ -13,7 +13,6 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
@@ -21,6 +20,7 @@
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -43,13 +43,12 @@
         <activity
             android:name=".HLMSlidePagerActivity"
             android:label="@string/title_activity_pager_hlm"
-            android:launchMode="standard"
+            android:launchMode="singleTask"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HLMSlidePagerActivity"/>
+                android:value=".HLMSlidePagerActivity" />
         </activity>
-
         <activity
             android:name=".ChatHLMActivity"
             android:label="@string/title_activity_chat"
@@ -60,7 +59,15 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HLMSlidePagerActivity" />
         </activity>
-
+        <activity android:name=".ChatUserList"
+            android:label="@string/title_activity_chat"
+            android:launchMode="singleTask"
+            android:parentActivityName=".HLMSlidePagerActivity"
+            android:theme="@style/AppTheme.NoActionBar">
+            <meta-data
+                android:name="android.support.PARENT_ACTIVITY"
+                android:value=".HLMSlidePagerActivity" />
+        </activity>
         <activity
             android:name=".SettingsActivity"
             android:label="@string/title_activity_settings"
@@ -70,7 +77,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HLMSlidePagerActivity" />
         </activity>
-
         <activity
             android:name=".LoginActivity"
             android:label="@string/title_activity_login"
@@ -81,7 +87,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".HLMSlidePagerActivity" />
         </activity>
-
         <activity
             android:name=".ImageBrowser"
             android:label="@string/title_activity_image_browser"
@@ -92,7 +97,6 @@
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value=".LoginActivity" />
         </activity>
-
         <activity
             android:name=".FireBrowserActivity"
             android:label="@string/title_activity_fire_browser"
@@ -111,7 +115,6 @@
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
-
         <service
             android:name=".MyFirebaseInstanceIdService"
             android:exported="false">

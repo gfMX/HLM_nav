@@ -257,7 +257,7 @@ public class LoginFragment extends Fragment {
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                               Toast.LENGTH_LONG).show();
                       startActivity(new Intent(getActivity(), HLMSlidePagerActivity.class));
-                      getActivity().finish();
+                      //getActivity().finish();
                       break;
                   case R.id.btn_settings:
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),

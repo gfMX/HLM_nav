@@ -15,7 +15,6 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.support.annotation.NonNull;
-import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
@@ -146,19 +145,19 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    /*@Override
+    @Override
     public void onBackPressed() {
         startActivity(new Intent(this, HLMSlidePagerActivity.class));
         finish();
-    }*/
+    }
     @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         int id = item.getItemId();
 
         if (id == android.R.id.home) {
-            //startActivity(new Intent(this, HLMSlidePagerActivity.class));
-            //finish();
-            NavUtils.navigateUpFromSameTask(this);
+            startActivity(new Intent(this, HLMSlidePagerActivity.class));
+            finish();
+            //NavUtils.navigateUpFromSameTask(this);
             return true;
         }
 

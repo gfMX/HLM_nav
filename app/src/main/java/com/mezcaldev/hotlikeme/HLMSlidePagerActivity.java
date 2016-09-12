@@ -232,11 +232,19 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (id == R.id.action_settings) {
             clearInfo();
             startActivity(new Intent(this, SettingsActivity.class));
+            finish();
             return true;
         }
         if (id == R.id.action_profile_settings) {
             clearInfo();
             startActivity(new Intent(this, LoginActivity.class));
+            finish();
+            return true;
+        }
+        if (id == R.id.action_chat){
+            clearInfo();
+            startActivity(new Intent(this, ChatUserList.class));
+            finish();
             return true;
         }
 
@@ -249,9 +257,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
             drawer.closeDrawer(GravityCompat.START);
         } else if (mPager.getCurrentItem() == 0) {
-            // If the user is currently looking at the first step, allow the system to handle the
-            // Back button. This calls finish() on this activity and pops the back stack.
-            // super.onBackPressed(); //Normal Behavior
+
             new AlertDialog.Builder(this)
                     //.setIcon(android.R.drawable.ic_dialog_alert)
                     .setTitle("Closing HotLikeMe")
@@ -270,6 +276,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                     })
                     .setNegativeButton("Not yet", null)
                     .show();
+
         } else {
             // Otherwise, select the previous step.
             mPager.setCurrentItem(mPager.getCurrentItem() - 1);
@@ -289,14 +296,19 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             }
             return true;
         } else if (id == R.id.nav_chat) {
+            clearInfo();
+            startActivity(new Intent(this, ChatUserList.class));
+            finish();
 
         } else if (id == R.id.nav_profile) {
             clearInfo();
             startActivity(new Intent(this, LoginActivity.class));
+            finish();
 
         } else if (id == R.id.nav_settings) {
             clearInfo();
             startActivity(new Intent(this, SettingsActivity.class));
+            finish();
 
         } else if (id == R.id.nav_share) {
 
