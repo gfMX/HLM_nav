@@ -397,6 +397,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                                                             public void run() {
                                                                 Intent intent = getIntent();
                                                                 startActivity(intent);
+                                                                finish();
                                                             }
                                                         },500);
 
