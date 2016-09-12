@@ -11,14 +11,18 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.view.GravityCompat;
 import android.support.v4.view.PagerAdapter;
 import android.support.v4.view.ViewPager;
+import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
@@ -29,8 +33,11 @@ import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
+import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -55,7 +62,7 @@ import java.util.Date;
 import java.util.List;
 
 public class HLMSlidePagerActivity extends AppCompatActivity implements
-        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+        GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Location";
 
@@ -103,8 +110,13 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
-    FirebaseUser user = FireConnection.getInstance().getUser();
+    FirebaseUser user;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
+
+    //Drawer variables and Settings
+    ImageView drawerUserImage;
+    TextView drawerUserAlias;
+    TextView drawerUserDescription;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -119,6 +131,28 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
+                this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
+        drawer.addDrawerListener(toggle);
+        toggle.syncState();
+
+        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
+        navigationView.setNavigationItemSelectedListener(this);
+        View headerView = navigationView.getHeaderView(0);
+
+        user = FireConnection.getInstance().getUser();
+
+        drawerUserImage = (ImageView) headerView.findViewById(R.id.drawer_image);
+        drawerUserAlias = (TextView) headerView.findViewById(R.id.drawer_user);
+        drawerUserDescription = (TextView) headerView.findViewById(R.id.drawer_description);
+
+        Glide
+                .with(this.getApplicationContext())
+                .load(user.getPhotoUrl())
+                .centerCrop()
+                .into(drawerUserImage);
+        drawerUserAlias.setText(user.getDisplayName());
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
@@ -187,8 +221,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         super.onCreateOptionsMenu(menu);
+        //getMenuInflater().inflate(R.menu.menu_hlm, menu);
         getMenuInflater().inflate(R.menu.menu_hlm, menu);
-
         return true;
     }
     @Override
@@ -211,7 +245,10 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
     @Override
     public void onBackPressed() {
-        if (mPager.getCurrentItem() == 0) {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
+            drawer.closeDrawer(GravityCompat.START);
+        } else if (mPager.getCurrentItem() == 0) {
             // If the user is currently looking at the first step, allow the system to handle the
             // Back button. This calls finish() on this activity and pops the back stack.
             // super.onBackPressed(); //Normal Behavior
@@ -239,6 +276,38 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         }
     }
 
+    @SuppressWarnings("StatementWithEmptyBody")
+    @Override
+    public boolean onNavigationItemSelected(MenuItem item) {
+        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        // Handle navigation view item clicks here.
+        int id = item.getItemId();
+
+        if (id == R.id.nav_hlm) {
+            if (drawer != null) {
+                drawer.closeDrawer(GravityCompat.START);
+            }
+            return true;
+        } else if (id == R.id.nav_chat) {
+
+        } else if (id == R.id.nav_profile) {
+            clearInfo();
+            startActivity(new Intent(this, LoginActivity.class));
+
+        } else if (id == R.id.nav_settings) {
+            clearInfo();
+            startActivity(new Intent(this, SettingsActivity.class));
+
+        } else if (id == R.id.nav_share) {
+
+        } else if (id == R.id.nav_send) {
+
+        }
+        if (drawer != null) {
+            drawer.closeDrawer(GravityCompat.START);
+        }
+        return true;
+    }
 
     protected synchronized void buildGoogleApiClient() {
         Log.i(TAG, "Building GoogleApiClient");

@@ -57,7 +57,7 @@
             android:layout_below="@+id/rating"
             android:layout_toRightOf="@id/imageView"
             android:layout_toEndOf="@+id/imageView"  />
-        
+
     </RelativeLayout>
 
     <android.support.design.widget.FloatingActionButton

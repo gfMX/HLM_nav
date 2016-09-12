@@ -130,6 +130,7 @@ public class HLMPageFragment extends ListFragment {
         fabMessage.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                checkChat();
                 Intent intent = new Intent(getActivity(), ChatHLMActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
                 startActivity(intent);
@@ -336,29 +337,25 @@ public class HLMPageFragment extends ListFragment {
         });
     }
 
-    private void didWeLike(){
+    private void didWeLike() {
         final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(userKey).child("like_user");
         DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(firebaseUser.getUid()).child("like_user");
-
-        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(firebaseUser.getUid()).child("my_chats");
-        final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
-        final DatabaseReference databaseReferenceChat = database.getReference().child("chats");
 
         databaseReferenceCurrent.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot data: dataSnapshot.getChildren()){
-                    if (data.getKey().equals(userKey)){
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    if (data.getKey().equals(userKey)) {
                         //currentUserLike = true;
                         databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
-                                for (DataSnapshot data: dataSnapshot.getChildren()){
-                                    if (data.getKey().equals(firebaseUser.getUid())){
+                                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                                    if (data.getKey().equals(firebaseUser.getUid())) {
                                         //chatIcon.setVisible(true);
                                         fabMessage.setVisibility(View.VISIBLE);
                                         weLike = true;
-
+                                        checkChat();
                                     }
                                 }
                             }
@@ -377,6 +374,15 @@ public class HLMPageFragment extends ListFragment {
 
             }
         });
+
+        //checkChat();
+    }
+
+private void checkChat(){
+
+        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(firebaseUser.getUid()).child("my_chats");
+        final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
+        final DatabaseReference databaseReferenceChat = database.getReference().child("chats");
 
         //Check if a chat exists already, if not a new Chat is assigned to the users.
         databaseReferenceSetCurrentUserChat.addValueEventListener(new ValueEventListener() {
@@ -405,9 +411,6 @@ public class HLMPageFragment extends ListFragment {
 
             }
         });
-
-
-        //return  (currentUserLike && userKeyLike);
     }
 
     private void resetFlags (){
