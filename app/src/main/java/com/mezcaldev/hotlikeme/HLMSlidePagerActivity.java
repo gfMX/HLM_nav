@@ -788,7 +788,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     protected void onStop() {
         super.onStop();
         mGoogleApiClient.disconnect();
-        //clearInfo(); // Not working cause a crash if Enable GPS Request is accepted. Also restart the view at the beginning.
     }
     @Override
     protected void onResume(){
@@ -807,6 +806,5 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //clearInfo(); // Not working cause a crash if Enable GPS Request is accepted. Also restart the view at the beginning.
     }
 }
