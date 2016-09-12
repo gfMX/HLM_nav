@@ -7,13 +7,12 @@ import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ListFragment;
 import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
 import android.view.Gravity;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
@@ -54,6 +53,7 @@ public class HLMPageFragment extends ListFragment {
     ImageView viewUserImage;
     RatingBar ratingBar;
     MenuItem chatIcon;
+    FloatingActionButton fabMessage;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -90,31 +90,10 @@ public class HLMPageFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setHasOptionsMenu(true);
         userKey = getArguments() != null ? getArguments().getString("key"): "None key given";
 
-        System.out.println("Actual user: " + firebaseUser.getUid());
-    }
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
-        inflater.inflate(R.menu.menu_hlm_page, menu);
-
-        chatIcon = menu.findItem(R.id.action_chat);
         didWeLike();
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        int id = item.getItemId();
-
-        if (id == R.id.action_chat) {
-            Intent intent = new Intent(getActivity(), ChatHLMActivity.class);
-            intent.putExtra("userChat", uniqueChatID);
-            startActivity(intent);
-            return true;
-        }
-
-
-        return super.onOptionsItemSelected(item);
+        System.out.println("Actual user: " + firebaseUser.getUid());
     }
 
     @Override
@@ -146,6 +125,16 @@ public class HLMPageFragment extends ListFragment {
         viewUserAlias = (TextView) view.findViewById(R.id.textView);
         viewUserImage = (ImageView) view.findViewById(R.id.imageView);
         viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
+
+        fabMessage = (FloatingActionButton) view.findViewById(R.id.fab_message);
+        fabMessage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(getActivity(), ChatHLMActivity.class);
+                intent.putExtra("userChat", uniqueChatID);
+                startActivity(intent);
+            }
+        });
 
         viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
 
@@ -210,9 +199,10 @@ public class HLMPageFragment extends ListFragment {
                                 System.out.println("User ID: " + userKey);
                                 referenceLikeUser.setValue(null);
                                 Toast.makeText(getContext(), "Removed!", Toast.LENGTH_SHORT).show();
-                                if (chatIcon != null) {
+                                fabMessage.setVisibility(View.INVISIBLE);
+                                /*if (chatIcon != null) {
                                     chatIcon.setVisible(false);
-                                }
+                                }*/
                             }
 
                             referenceUserRated.setValue(starsRating);
@@ -365,7 +355,8 @@ public class HLMPageFragment extends ListFragment {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 for (DataSnapshot data: dataSnapshot.getChildren()){
                                     if (data.getKey().equals(firebaseUser.getUid())){
-                                        chatIcon.setVisible(true);
+                                        //chatIcon.setVisible(true);
+                                        fabMessage.setVisibility(View.VISIBLE);
                                         weLike = true;
 
                                     }

@@ -10,6 +10,13 @@
         android:visible="true"
         app:showAsAction="ifRoom" />
     <item
+        android:id="@+id/action_chat"
+        android:title="@string/action_start_chat"
+        android:icon="@drawable/ic_chat_white_24dp"
+        android:visible="true"
+        app:showAsAction="ifRoom"
+        />
+    <item
         android:id="@+id/action_settings"
         android:title="@string/action_settings"
         android:icon="@drawable/ic_settings_24dp"
