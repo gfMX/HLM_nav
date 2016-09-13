@@ -21,6 +21,14 @@
 
     </android.support.design.widget.AppBarLayout>
 
-    <include layout="@layout/content_chat_list"/>
+    <!--
+    <include layout="@layout/item_chat_user"/>
+    -->
+    <ListView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="60dp"
+        android:id="@+id/user_list">
+    </ListView>
 
 </android.support.design.widget.CoordinatorLayout>

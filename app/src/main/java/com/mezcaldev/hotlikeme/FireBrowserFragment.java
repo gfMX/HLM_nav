@@ -17,7 +17,6 @@ import android.widget.AdapterView;
 import android.widget.GridView;
 import android.widget.Toast;
 
-import com.facebook.AccessToken;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseUser;
@@ -37,9 +36,7 @@ public class FireBrowserFragment extends Fragment {
     String pathImages = "/images/";
     String pathThumbs = "/thumbs/";
 
-    //Facebook parameters
     private static final String TAG = "Image Browser: ";
-    AccessToken accessToken;
 
     //Firebase//Initialize Firebase
     FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
@@ -82,8 +79,6 @@ public class FireBrowserFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
-        accessToken = AccessToken.getCurrentAccessToken();
-        Log.i(TAG, "AccessToken"+ accessToken.toString());
     }
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater){
