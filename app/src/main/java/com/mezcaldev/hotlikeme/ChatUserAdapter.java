@@ -53,15 +53,15 @@ public class ChatUserAdapter extends ArrayAdapter {
         textView.setText(userName.get(position));
         Uri myUri = userImage.get(position);
 
-        if (myUri == null){
-            imageView.setImageResource(R.drawable.ic_person_gray);
-        } else {
-
+        if (myUri != null){
             Glide
                     .with(mContext)
                     .load(myUri)
                     .centerCrop()
                     .into(imageView);
+
+        } else {
+            imageView.setImageResource(R.drawable.ic_person_gray);
         }
 
         convertView.setId(position);

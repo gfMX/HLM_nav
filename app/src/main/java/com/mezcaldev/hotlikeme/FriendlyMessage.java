@@ -21,14 +21,16 @@ public class FriendlyMessage {
     private String text;
     private String name;
     private String photoUrl;
+    private String timeStamp;
 
     public FriendlyMessage() {
     }
 
-    public FriendlyMessage(String text, String name, String photoUrl) {
+    public FriendlyMessage(String text, String name, String photoUrl, String timeStamp) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
+        this.timeStamp = timeStamp;
     }
 
     public String getId() {
@@ -61,5 +63,13 @@ public class FriendlyMessage {
 
     public void setPhotoUrl(String photoUrl) {
         this.photoUrl = photoUrl;
+    }
+
+    public String getTimeStamp() {
+        return timeStamp;
+    }
+
+    public void setTimeStamp(String timeStamp) {
+        this.timeStamp = timeStamp;
     }
 }
