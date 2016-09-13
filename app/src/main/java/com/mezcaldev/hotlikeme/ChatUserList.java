@@ -11,7 +11,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import com.google.android.gms.tasks.OnFailureListener;
@@ -43,8 +42,6 @@ public class ChatUserList extends AppCompatActivity {
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
     ChatUserAdapter chatUserAdapter;
-
-    ArrayAdapter<String> listAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -105,56 +102,16 @@ public class ChatUserList extends AppCompatActivity {
     }
 
     private void getUsers() {
-        final DatabaseReference databaseReferenceUsers = database.getReference().child("users");
-
         DatabaseReference databaseReferenceMyUsers = database.getReference().child("users").child(user.getUid()).child("my_chats");
         databaseReferenceMyUsers.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
 
-                    final String key = data.getKey();
-
                     userKey.add(data.getKey());
                     userChatID.add(data.getValue().toString());
                     userName.add("");
                     userProfilePic.add(null);
-
-                    /*databaseReferenceUsers.child(key)
-                            .child("preferences").child("alias")
-                            .addValueEventListener(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    //Log.i(TAG, "Alias found: " + dataSnapshot.getValue());
-                                    userName.add(dataSnapshot.getValue().toString());
-                                    Log.d(TAG, "User Name: " + userName);
-                                }
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
-
-                    storageReference.child(key)
-                            .child("profile_pic")
-                            .child("profile_im.jpg")
-                            .getDownloadUrl()
-                            .addOnSuccessListener(new OnSuccessListener<Uri>() {
-                                @Override
-                                public void onSuccess(Uri uri) {
-                                    //Log.d(TAG, "Pic URL: " + uri);
-                                    userProfilePic.add(uri);
-                                    chatUserAdapter.notifyDataSetChanged();
-                                    Log.d(TAG, "Pic URL: " + userProfilePic);
-                                }
-                            }).addOnFailureListener(new OnFailureListener() {
-                        @Override
-                        public void onFailure(@NonNull Exception e) {
-                            //Log.d(TAG, "Pic Not Available");
-                            userProfilePic.add(null);
-                            chatUserAdapter.notifyDataSetChanged();
-                        }
-                    });*/
 
                     Log.i(TAG, "Chat Key: " + data.getKey());
                     Log.i(TAG, "Chat Id: " + data.getValue());
