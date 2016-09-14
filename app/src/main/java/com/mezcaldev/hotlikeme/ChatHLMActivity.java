@@ -15,6 +15,7 @@
  */
 package com.mezcaldev.hotlikeme;
 
+import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
@@ -23,6 +24,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -35,8 +37,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.TextView;
@@ -95,6 +99,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
     private FloatingActionButton fab_send;
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
+    private SwipeRefreshLayout mSwipeRefreshLayout;
     private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
     private ProgressBar mProgressBar;
     private DatabaseReference mFirebaseDatabaseReference;
@@ -126,6 +131,9 @@ public class ChatHLMActivity extends AppCompatActivity implements
             MESSAGES_CHILD = "/chats/" + bundle.getString("userChat");
             MESSAGES_RESUME = "/chats_resume/" + bundle.getString("userChat");
         }
+        if (bundle.getString("userName")!= null) {
+            setTitle(bundle.getString("userName"));
+        }
 
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -147,7 +155,35 @@ public class ChatHLMActivity extends AppCompatActivity implements
         }
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
+
+
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
+        mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        mMessageRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+                super.onScrollStateChanged(recyclerView, newState);
+                hideSoftKeyboard(ChatHLMActivity.this);
+            }
+        });
+        mMessageRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
+            @Override
+            public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
+                hideSoftKeyboard(ChatHLMActivity.this);
+                return false;
+            }
+
+            @Override
+            public void onTouchEvent(RecyclerView rv, MotionEvent e) {
+                hideSoftKeyboard(ChatHLMActivity.this);
+            }
+
+            @Override
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
+
+            }
+        });
+
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
 
@@ -416,6 +452,14 @@ public class ChatHLMActivity extends AppCompatActivity implements
         System.out.println(sdf.format(currentDate));
 
         return sdf.format(currentDate);
+    }
+
+    public static void hideSoftKeyboard(Activity activity) {
+        InputMethodManager inputMethodManager =
+                (InputMethodManager) activity.getSystemService(
+                        Activity.INPUT_METHOD_SERVICE);
+        inputMethodManager.hideSoftInputFromWindow(
+                activity.getCurrentFocus().getWindowToken(), 0);
     }
 
 }

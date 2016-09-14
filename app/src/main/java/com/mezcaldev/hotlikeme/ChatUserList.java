@@ -29,7 +29,6 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
-import java.util.TimeZone;
 
 public class ChatUserList extends AppCompatActivity {
     final static String TAG = "Chat: ";
@@ -68,9 +67,11 @@ public class ChatUserList extends AppCompatActivity {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 String uniqueChatID = userChatID.get(position);
+                String userNameChat = userName.get(position);
 
                 Intent intent = new Intent(getApplicationContext(), ChatHLMActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
+                intent.putExtra("userName", userNameChat);
                 startActivity(intent);
 
             }
