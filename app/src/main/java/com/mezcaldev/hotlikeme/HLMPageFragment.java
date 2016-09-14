@@ -33,6 +33,8 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.sql.Time;
+import java.util.Calendar;
 import java.util.UUID;
 
 public class HLMPageFragment extends ListFragment {
@@ -382,7 +384,7 @@ private void checkChat(){
 
         final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(firebaseUser.getUid()).child("my_chats");
         final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
-        final DatabaseReference databaseReferenceChat = database.getReference().child("chats");
+        final DatabaseReference databaseReferenceChat = database.getReference().child("chats_resume");
 
         //Check if a chat exists already, if not a new Chat is assigned to the users.
         databaseReferenceSetCurrentUserChat.addValueEventListener(new ValueEventListener() {
@@ -391,11 +393,12 @@ private void checkChat(){
                 System.out.println("Checking for chats");
                 if (weLike && !dataSnapshot.hasChild(userKey)){
                     uniqueChatID = "chat_" + UUID.randomUUID();
+
                     databaseReferenceSetCurrentUserChat.child(userKey).setValue(uniqueChatID);
                     databaseReferenceSetRemoteUserChat.child(firebaseUser.getUid()).setValue(uniqueChatID);
 
-                    //databaseReferenceChat.child(uniqueChatID).child("one").child("name").setValue(getResources().getString(R.string.welcome_msg));
-                    //databaseReferenceChat.child(uniqueChatID).child("one").child("text").setValue("Welcome Hots");
+                    databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(R.string.welcome_msg));
+                    databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
                 } else {
                     for (DataSnapshot data : dataSnapshot.getChildren()) {
                         if (data.getKey().equals(userKey)){
@@ -411,6 +414,19 @@ private void checkChat(){
 
             }
         });
+    }
+
+    private String timeStamp(){
+        Calendar calendar = Calendar.getInstance();
+        calendar.getTime();
+        int date = calendar.get(Calendar.DATE);
+        int month = calendar.get(Calendar.MONTH);
+        int year = calendar.get(Calendar.YEAR);
+        int hours = calendar.get(Calendar.HOUR_OF_DAY);
+        int minutes = calendar.get(Calendar.MINUTE);
+
+        //return (hours + ":" + minutes + " - " + date + "/" + month + "/" + year);
+        return String.valueOf(calendar.getTimeInMillis());
     }
 
     private void resetFlags (){

@@ -56,8 +56,11 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
+import java.text.SimpleDateFormat;
 import java.util.Calendar;
+import java.util.Date;
 import java.util.HashMap;
+import java.util.Locale;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
@@ -80,6 +83,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
 
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
+    String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
     public static final String ANONYMOUS = "anonymous";
@@ -120,6 +124,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
 
         if (bundle.getString("userChat")!= null) {
             MESSAGES_CHILD = "/chats/" + bundle.getString("userChat");
+            MESSAGES_RESUME = "/chats_resume/" + bundle.getString("userChat");
         }
 
 
@@ -204,7 +209,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
             protected void populateViewHolder(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage, int position) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 //String messengerText = friendlyMessage.getName() + " - " + friendlyMessage.getTimeStamp();
-                String messengerText = friendlyMessage.getTimeStamp();
+                String messengerText = dateFormatter(friendlyMessage.getTimeStamp());
                 viewHolder.messageTextView.setText(friendlyMessage.getText());
                 viewHolder.messengerTextView.setText(messengerText);
                 if (friendlyMessage.getPhotoUrl() == null) {
@@ -290,36 +295,17 @@ public class ChatHLMActivity extends AppCompatActivity implements
         fab_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Calendar calendar = Calendar.getInstance();
-                calendar.getTime();
-                int date = calendar.get(Calendar.DATE);
-                int month = calendar.get(Calendar.MONTH);
-                int year = calendar.get(Calendar.YEAR);
-                int hours = calendar.get(Calendar.HOUR_OF_DAY);
-                int minutes = calendar.get(Calendar.MINUTE);
-                String timeStamp = hours + ":" + minutes + " - " + date + "/" + month + "/" + year;
+
                 FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername,
-                        mPhotoUrl, timeStamp);
+                        mPhotoUrl, timeStamp());
+
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
+                mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(friendlyMessage);
+
                 mMessageEditText.setText("");
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
             }
         });
-    }
-
-    @Override
-    public void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    public void onResume() {
-        super.onResume();
-    }
-
-    @Override
-    public void onDestroy() {
-        super.onDestroy();
     }
 
     @Override
@@ -415,5 +401,21 @@ public class ChatHLMActivity extends AppCompatActivity implements
         Log.d(TAG, "onConnectionFailed:" + connectionResult);
     }
 
+    private String timeStamp(){
+        Calendar calendar = Calendar.getInstance();
+        calendar.getTime();
+
+        return String.valueOf(calendar.getTimeInMillis());
+    }
+
+    private String dateFormatter (String millis) {
+
+        Long currentDateTime = Long.parseLong(millis);
+        Date currentDate = new Date(currentDateTime);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm", Locale.US);
+        System.out.println(sdf.format(currentDate));
+
+        return sdf.format(currentDate);
+    }
 
 }

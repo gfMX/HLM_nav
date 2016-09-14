@@ -24,8 +24,12 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
+import java.util.TimeZone;
 
 public class ChatUserList extends AppCompatActivity {
     final static String TAG = "Chat: ";
@@ -39,6 +43,7 @@ public class ChatUserList extends AppCompatActivity {
     List<String> userName = new ArrayList<>();
     List<String> userKey = new ArrayList<>();
     List<String> userLastMessage = new ArrayList<>();
+    List<String> userTimeStamp = new ArrayList<>();
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
     ChatUserAdapter chatUserAdapter;
@@ -56,7 +61,7 @@ public class ChatUserList extends AppCompatActivity {
         cleanVars();
         user = FireConnection.getInstance().getUser();
 
-        chatUserAdapter = new ChatUserAdapter(getApplicationContext(), userProfilePic, userName);
+        chatUserAdapter = new ChatUserAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp);
         listView = (ListView) findViewById(R.id.user_list);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -112,6 +117,8 @@ public class ChatUserList extends AppCompatActivity {
                     userChatID.add(data.getValue().toString());
                     userName.add("");
                     userProfilePic.add(null);
+                    userLastMessage.add("");
+                    userTimeStamp.add("");
 
                     Log.i(TAG, "Chat Key: " + data.getKey());
                     Log.i(TAG, "Chat Id: " + data.getValue());
@@ -131,6 +138,7 @@ public class ChatUserList extends AppCompatActivity {
         Log.d(TAG, "Looking data for: " + userKey);
         //int size = userKey.size();
         final DatabaseReference databaseReferenceUsers = database.getReference().child("users");
+        final DatabaseReference databaseReferenceLastMessage = database.getReference().child("chats_resume");
         for(int i = 0; i < size; i++){
             final int position = i;
             Log.d(TAG, "Looking data for: " + userKey.get(position));
@@ -171,7 +179,31 @@ public class ChatUserList extends AppCompatActivity {
                     chatUserAdapter.notifyDataSetChanged();
                 }
             });
+            databaseReferenceLastMessage
+                    .child(userChatID.get(position))
+                    .addValueEventListener(new ValueEventListener() {
+                        @Override
+                        public void onDataChange(DataSnapshot dataSnapshot) {
+                            userLastMessage.set(position, dataSnapshot.child("text").getValue().toString());
+                            userTimeStamp.set(position, dateFormatter(dataSnapshot.child("timeStamp").getValue().toString()));
+                        }
+
+                        @Override
+                        public void onCancelled(DatabaseError databaseError) {
+
+                        }
+                    });
         }
+    }
+
+    private String dateFormatter (String millis) {
+
+        Long currentDateTime = Long.parseLong(millis);
+        Date currentDate = new Date(currentDateTime);
+        SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm", Locale.US);
+        System.out.println(sdf.format(currentDate));
+
+        return sdf.format(currentDate);
     }
 
     private void cleanVars(){
@@ -179,5 +211,22 @@ public class ChatUserList extends AppCompatActivity {
         userName.clear();
         userProfilePic.clear();
         userLastMessage.clear();
+        userTimeStamp.clear();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        getData(userKey.size());
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 }

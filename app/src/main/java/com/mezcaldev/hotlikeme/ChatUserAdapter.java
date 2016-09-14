@@ -12,6 +12,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
+import org.w3c.dom.Text;
+
 import java.util.List;
 
 /**
@@ -23,17 +25,22 @@ public class ChatUserAdapter extends ArrayAdapter {
 
     private List<Uri> userImage;
     private List<String> userName;
+    private List<String> userMessage;
+    private List<String> userTime;
 
     private Context mContext;
     private LayoutInflater inflater;
 
     // Constructor
-    public ChatUserAdapter(Context context, List<Uri> urls, List<String> name) {
+    public ChatUserAdapter(Context context, List<Uri> urls, List<String> name, List<String> message, List<String> time) {
         super(context, R.layout.item_chat_user, urls);
 
         mContext = context;
         userImage = urls;
         userName = name;
+        userMessage = message;
+        userTime = time;
+
 
         //Log.i(TAG_i,"URLS: " + imageUrls);
 
@@ -46,11 +53,15 @@ public class ChatUserAdapter extends ArrayAdapter {
             convertView = inflater.inflate(R.layout.item_chat_user, parent, false);
         }
 
-        TextView textView = (TextView) convertView.findViewById(R.id.user_alias);
+        TextView textName = (TextView) convertView.findViewById(R.id.user_alias);
+        TextView textMessage = (TextView) convertView.findViewById(R.id.user_last_message);
+        TextView textTime = (TextView) convertView.findViewById(R.id.user_time);
         ImageView imageView = (ImageView) convertView.findViewById(R.id.user_list_image);
         imageView.setBackgroundColor(Color.TRANSPARENT);
 
-        textView.setText(userName.get(position));
+        textName.setText(userName.get(position));
+        textMessage.setText(userMessage.get(position));
+        textTime.setText(userTime.get(position));
         Uri myUri = userImage.get(position);
 
         if (myUri != null){
