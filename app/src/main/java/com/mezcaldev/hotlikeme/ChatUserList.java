@@ -6,12 +6,11 @@ import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.LinearLayoutManager;
+import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.MenuItem;
-import android.view.View;
-import android.widget.AdapterView;
-import android.widget.ListView;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -38,14 +37,18 @@ public class ChatUserList extends AppCompatActivity {
     FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageReference = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
-    ListView listView;
+    //ListView listView;
     List<String> userName = new ArrayList<>();
     List<String> userKey = new ArrayList<>();
     List<String> userLastMessage = new ArrayList<>();
     List<String> userTimeStamp = new ArrayList<>();
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
-    ChatUserAdapter chatUserAdapter;
+    //ChatUserAdapter chatUserAdapter;
+
+    RecyclerView mRecyclerView;
+    RecyclerView.Adapter mAdapter;
+    RecyclerView.LayoutManager mLayoutManager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +63,7 @@ public class ChatUserList extends AppCompatActivity {
         cleanVars();
         user = FireConnection.getInstance().getUser();
 
-        chatUserAdapter = new ChatUserAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp);
+        /*chatUserAdapter = new ChatUserAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp);
         listView = (ListView) findViewById(R.id.user_list);
 
         listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
@@ -73,11 +76,19 @@ public class ChatUserList extends AppCompatActivity {
                 intent.putExtra("userChat", uniqueChatID);
                 intent.putExtra("userName", userNameChat);
                 startActivity(intent);
-
             }
         });
 
-        listView.setAdapter(chatUserAdapter);
+        listView.setAdapter(chatUserAdapter);*/
+
+        mRecyclerView = (RecyclerView) findViewById(R.id.user_list);
+        mLayoutManager = new LinearLayoutManager(this);
+        mRecyclerView.setLayoutManager(mLayoutManager);
+        mRecyclerView.setHasFixedSize(false);
+
+        // specify an adapter (see also next example)
+        mAdapter = new ChatRecyclerAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp);
+        mRecyclerView.setAdapter(mAdapter);
 
         if (user!= null){
             getUsers();
@@ -150,7 +161,7 @@ public class ChatUserList extends AppCompatActivity {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     //Log.i(TAG, "Alias found: " + dataSnapshot.getValue());
                     userName.set(position, dataSnapshot.getValue().toString());
-                    chatUserAdapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                     Log.d(TAG, "User Name: " + userName);
                 }
 
@@ -169,7 +180,7 @@ public class ChatUserList extends AppCompatActivity {
                 public void onSuccess(Uri uri) {
                     //Log.d(TAG, "Pic URL: " + uri);
                     userProfilePic.set(position, uri);
-                    chatUserAdapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                     Log.d(TAG, "Pic URL: " + userProfilePic);
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -177,7 +188,7 @@ public class ChatUserList extends AppCompatActivity {
                 public void onFailure(@NonNull Exception e) {
                     //Log.d(TAG, "Pic Not Available");
                     userProfilePic.set(position, null);
-                    chatUserAdapter.notifyDataSetChanged();
+                    mAdapter.notifyDataSetChanged();
                 }
             });
             databaseReferenceLastMessage
@@ -196,6 +207,37 @@ public class ChatUserList extends AppCompatActivity {
                     });
         }
     }
+
+    /*private void touched () {
+        for (int i=0; i < listView.getChildCount(); i ++){
+            listView.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    int x = (int) event.getX();
+                    int y = (int) event.getY();
+                    int xRaw = (int) event.getRawX();
+                    int yRaw = (int) event.getRawY();
+
+                    switch (event.getAction() & MotionEvent.ACTION_MASK) {
+                        case MotionEvent.ACTION_DOWN:
+
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            //v.setTranslationY(0);
+                            v.setTranslationX(0);
+
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            v.setX((v.getX() - v.getWidth() / 2) + x);
+                            //v.setY((v.getY() - v.getHeight() / 2) + y);
+
+                            break;
+                    }
+                    return false;
+                }
+            });;
+        }
+    } */
 
     private String dateFormatter (String millis) {
 

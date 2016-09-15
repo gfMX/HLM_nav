@@ -24,11 +24,10 @@
     <!--
     <include layout="@layout/item_chat_user"/>
     -->
-    <ListView
+    <android.support.v7.widget.RecyclerView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginTop="60dp"
-        android:id="@+id/user_list">
-    </ListView>
+        android:id="@+id/user_list"/>
 
 </android.support.design.widget.CoordinatorLayout>

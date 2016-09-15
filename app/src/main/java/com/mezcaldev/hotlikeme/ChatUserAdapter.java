@@ -12,8 +12,6 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
-import org.w3c.dom.Text;
-
 import java.util.List;
 
 /**
@@ -27,6 +25,7 @@ public class ChatUserAdapter extends ArrayAdapter {
     private List<String> userName;
     private List<String> userMessage;
     private List<String> userTime;
+
 
     private Context mContext;
     private LayoutInflater inflater;
