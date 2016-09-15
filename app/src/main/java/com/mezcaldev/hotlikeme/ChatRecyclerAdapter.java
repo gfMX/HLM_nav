@@ -13,6 +13,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.util.List;
 
 /**
@@ -21,6 +23,7 @@ import java.util.List;
  */
 public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapter.MyViewHolder> {
     private final String TAG_i = "Image Resource: ";
+    int MAX_LENGTH_SHOW = 42;
 
     private List<Uri> userImage;
     private List<String> userName;
@@ -77,7 +80,7 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
     public void onBindViewHolder(final MyViewHolder holder, int position) {
 
         holder.textName.setText(userName.get(position));
-        holder.textMessage.setText(userMessage.get(position));
+        holder.textMessage.setText(StringUtils.abbreviate(userMessage.get(position), MAX_LENGTH_SHOW));
         holder.textTime.setText(userTime.get(position));
         holder.imageView.setBackgroundColor(Color.TRANSPARENT);
 

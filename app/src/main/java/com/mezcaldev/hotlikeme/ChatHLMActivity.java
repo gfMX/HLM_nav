@@ -196,8 +196,6 @@ public class ChatHLMActivity extends AppCompatActivity implements
 
             private static final int RIGHT_MSG = 0;
             private static final int LEFT_MSG = 1;
-            private static final int RIGHT_MSG_IMG = 2;
-            private static final int LEFT_MSG_IMG = 3;
 
             @Override
             public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -205,34 +203,16 @@ public class ChatHLMActivity extends AppCompatActivity implements
                 if (viewType == RIGHT_MSG){
                     view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_right,parent,false);
                     return new MessageViewHolder(view);
-                }else /*(viewType == LEFT_MSG)*/{
+                } else {
                     view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left,parent,false);
                     return new MessageViewHolder(view);
-                }/*else if (viewType == RIGHT_MSG_IMG){
-                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_right_img,parent,false);
-                    return new MessageViewHolder(view);
-                }else{
-                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left_img,parent,false);
-                    return new MessageViewHolder(view);
-                }*/
+                }
             }
 
             @Override
             public int getItemViewType(int position) {
                 FriendlyMessage model = getItem(position);
-                /*if (model.getMapModel() != null){
-                    if (model.getUserModel().getName().equals(mFirebaseUser)){
-                        return RIGHT_MSG_IMG;
-                    }else{
-                        return LEFT_MSG_IMG;
-                    }
-                }else if (model.getFile() != null){
-                    if (model.getFile().getType().equals("img") && model.getUserModel().getName().equals(mFirebaseUser)){
-                        return RIGHT_MSG_IMG;
-                    }else{
-                        return LEFT_MSG_IMG;
-                    }
-                }else*/ if (model.getName().equals(mFirebaseUser.getDisplayName())){
+                if (model.getName().equals(mFirebaseUser.getDisplayName())){
                     System.out.println("Message Right");
                     return RIGHT_MSG;
                 }else{
@@ -292,7 +272,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 120L);
+        defaultConfigMap.put("friendly_msg_length", 140L);
 
         // Apply config settings and default values.
         mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
