@@ -18,11 +18,11 @@ import org.apache.commons.lang3.StringUtils;
 import java.util.List;
 
 /**
- * User Adapter for Image Selection.
- * Created by Abraham on 27/06/16.
+ * User Adapter for Chat User List.
+ * Created by Abraham on 15/09/16.
  */
 public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapter.MyViewHolder> {
-    private final String TAG_i = "Image Resource: ";
+
     int MAX_LENGTH_SHOW = 42;
 
     private List<Uri> userImage;
@@ -41,11 +41,8 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
         TextView textTime;
         ImageView imageView;
 
-        private final Context context;
-
         public MyViewHolder(View view) {
             super(view);
-            context = view.getContext();
 
             textName = (TextView) view.findViewById(R.id.user_alias);
             textMessage = (TextView) view.findViewById(R.id.user_last_message);
@@ -67,12 +64,12 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
 
     @Override
     public ChatRecyclerAdapter.MyViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        // create a new view
+
         View view = LayoutInflater.from(parent.getContext())
                 .inflate(R.layout.item_chat_user, parent, false);
 
-        MyViewHolder viewHolder = new MyViewHolder(view);
-        return viewHolder;
+        //MyViewHolder viewHolder = new MyViewHolder(view);
+        return new MyViewHolder(view);
     }
 
     // Replace the contents of a view (invoked by the layout manager)

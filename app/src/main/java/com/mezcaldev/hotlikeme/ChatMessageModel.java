@@ -20,15 +20,17 @@ public class ChatMessageModel {
     private String id;
     private String text;
     private String name;
+    private String userId;
     private String photoUrl;
     private String timeStamp;
 
     public ChatMessageModel() {
     }
 
-    public ChatMessageModel(String text, String name, String photoUrl, String timeStamp) {
+    public ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId) {
         this.text = text;
         this.name = name;
+        this.userId = userId;
         this.photoUrl = photoUrl;
         this.timeStamp = timeStamp;
     }
@@ -55,6 +57,14 @@ public class ChatMessageModel {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getUserId() {
+        return userId;
+    }
+
+    public void setUserId(String userId) {
+        this.userId = userId;
     }
 
     public String getPhotoUrl() {

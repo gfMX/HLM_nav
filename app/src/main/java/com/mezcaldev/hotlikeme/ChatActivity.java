@@ -212,7 +212,12 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public int getItemViewType(int position) {
                 ChatMessageModel model = getItem(position);
-                if (model.getName().equals(mFirebaseUser.getDisplayName())){
+
+                System.out.println("------------------------------------------------------------");
+                System.out.println(model.getUserId() + " = " + mFirebaseUser.getUid());
+
+                if (model.getName().equals(mFirebaseUser.getDisplayName())
+                        || model.getUserId().equals(mFirebaseUser.getUid())){
                     System.out.println("Message Right");
                     return RIGHT_MSG;
                 }else{
@@ -222,12 +227,14 @@ public class ChatActivity extends AppCompatActivity implements
             }
 
             @Override
-            protected void populateViewHolder(MessageViewHolder viewHolder, ChatMessageModel chatMessageModel, int position) {
+            protected void populateViewHolder(MessageViewHolder viewHolder,
+                                              ChatMessageModel chatMessageModel, int position) {
+
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                //String messengerText = chatMessageModel.getName() + " - " + chatMessageModel.getTimeStamp();
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
                 viewHolder.messageTextView.setText(chatMessageModel.getText());
                 viewHolder.messengerTextView.setText(messengerText);
+
                 if (chatMessageModel.getPhotoUrl() == null) {
                     viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
                             R.drawable.ic_account_circle_black_24dp));
@@ -313,7 +320,7 @@ public class ChatActivity extends AppCompatActivity implements
             public void onClick(View view) {
 
                 ChatMessageModel chatMessageModel = new ChatMessageModel(mMessageEditText.getText().toString(), mUsername,
-                        mPhotoUrl, timeStamp());
+                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid());
 
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
