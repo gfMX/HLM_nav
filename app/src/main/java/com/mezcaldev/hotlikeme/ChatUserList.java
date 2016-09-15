@@ -9,6 +9,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
+import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
 import android.view.MenuItem;
 
@@ -63,32 +64,30 @@ public class ChatUserList extends AppCompatActivity {
         cleanVars();
         user = FireConnection.getInstance().getUser();
 
-        /*chatUserAdapter = new ChatUserAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp);
-        listView = (ListView) findViewById(R.id.user_list);
-
-        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                String uniqueChatID = userChatID.get(position);
-                String userNameChat = userName.get(position);
-
-                Intent intent = new Intent(getApplicationContext(), ChatHLMActivity.class);
-                intent.putExtra("userChat", uniqueChatID);
-                intent.putExtra("userName", userNameChat);
-                startActivity(intent);
-            }
-        });
-
-        listView.setAdapter(chatUserAdapter);*/
-
         mRecyclerView = (RecyclerView) findViewById(R.id.user_list);
         mLayoutManager = new LinearLayoutManager(this);
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setHasFixedSize(false);
 
         // specify an adapter (see also next example)
-        mAdapter = new ChatRecyclerAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp);
+        mAdapter = new ChatRecyclerAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
         mRecyclerView.setAdapter(mAdapter);
+
+        ItemTouchHelper mIth = new ItemTouchHelper(
+                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                        ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+                    public boolean onMove(RecyclerView recyclerView,
+                                                   RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                        final int fromPos = viewHolder.getAdapterPosition();
+                        final int toPos = target.getAdapterPosition();
+                        // move item in `fromPos` to `toPos` in adapter.
+                        return true;// true if moved, false otherwise
+                    }
+                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                        // remove from adapter
+                    }
+                });
+        mIth.attachToRecyclerView(mRecyclerView);
 
         if (user!= null){
             getUsers();
@@ -198,6 +197,7 @@ public class ChatUserList extends AppCompatActivity {
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             userLastMessage.set(position, dataSnapshot.child("text").getValue().toString());
                             userTimeStamp.set(position, dateFormatter(dataSnapshot.child("timeStamp").getValue().toString()));
+                            mAdapter.notifyDataSetChanged();
                         }
 
                         @Override
@@ -207,37 +207,6 @@ public class ChatUserList extends AppCompatActivity {
                     });
         }
     }
-
-    /*private void touched () {
-        for (int i=0; i < listView.getChildCount(); i ++){
-            listView.getChildAt(i).setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    int x = (int) event.getX();
-                    int y = (int) event.getY();
-                    int xRaw = (int) event.getRawX();
-                    int yRaw = (int) event.getRawY();
-
-                    switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                        case MotionEvent.ACTION_DOWN:
-
-                            break;
-                        case MotionEvent.ACTION_UP:
-                            //v.setTranslationY(0);
-                            v.setTranslationX(0);
-
-                            break;
-                        case MotionEvent.ACTION_MOVE:
-                            v.setX((v.getX() - v.getWidth() / 2) + x);
-                            //v.setY((v.getY() - v.getHeight() / 2) + y);
-
-                            break;
-                    }
-                    return false;
-                }
-            });;
-        }
-    } */
 
     private String dateFormatter (String millis) {
 
