@@ -50,7 +50,7 @@
                 android:value=".HLMSlidePagerActivity" />
         </activity>
         <activity
-            android:name=".ChatHLMActivity"
+            android:name=".ChatActivity"
             android:label="@string/title_activity_chat"
             android:launchMode="singleTask"
             android:parentActivityName=".HLMSlidePagerActivity"

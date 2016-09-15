@@ -90,7 +90,7 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
                 String uniqueChatID = userChatID.get(holder.getAdapterPosition());
                 String userNameChat = userName.get(holder.getAdapterPosition());
 
-                Intent intent = new Intent(v.getContext(), ChatHLMActivity.class);
+                Intent intent = new Intent(v.getContext(), ChatActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
                 intent.putExtra("userName", userNameChat);
                 v.getContext().startActivity(intent);

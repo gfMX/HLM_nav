@@ -33,7 +33,6 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.sql.Time;
 import java.util.Calendar;
 import java.util.UUID;
 
@@ -133,7 +132,7 @@ public class HLMPageFragment extends ListFragment {
             @Override
             public void onClick(View v) {
                 checkChat();
-                Intent intent = new Intent(getActivity(), ChatHLMActivity.class);
+                Intent intent = new Intent(getActivity(), ChatActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
                 startActivity(intent);
             }

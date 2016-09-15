@@ -69,7 +69,7 @@ import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-public class ChatHLMActivity extends AppCompatActivity implements
+public class ChatActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
 
     public static class MessageViewHolder extends RecyclerView.ViewHolder {
@@ -100,7 +100,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private SwipeRefreshLayout mSwipeRefreshLayout;
-    private FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder> mFirebaseAdapter;
+    private FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder> mFirebaseAdapter;
     private ProgressBar mProgressBar;
     private DatabaseReference mFirebaseDatabaseReference;
     FirebaseAuth mFirebaseAuth;
@@ -163,19 +163,19 @@ public class ChatHLMActivity extends AppCompatActivity implements
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                hideSoftKeyboard(ChatHLMActivity.this);
+                hideSoftKeyboard(ChatActivity.this);
             }
         });
         mMessageRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
-                hideSoftKeyboard(ChatHLMActivity.this);
+                hideSoftKeyboard(ChatActivity.this);
                 return false;
             }
 
             @Override
             public void onTouchEvent(RecyclerView rv, MotionEvent e) {
-                hideSoftKeyboard(ChatHLMActivity.this);
+                hideSoftKeyboard(ChatActivity.this);
             }
 
             @Override
@@ -188,8 +188,8 @@ public class ChatHLMActivity extends AppCompatActivity implements
         mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<FriendlyMessage, MessageViewHolder>(
-                FriendlyMessage.class,
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder>(
+                ChatMessageModel.class,
                 R.layout.item_message_left,
                 MessageViewHolder.class,
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD)) {
@@ -211,7 +211,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
 
             @Override
             public int getItemViewType(int position) {
-                FriendlyMessage model = getItem(position);
+                ChatMessageModel model = getItem(position);
                 if (model.getName().equals(mFirebaseUser.getDisplayName())){
                     System.out.println("Message Right");
                     return RIGHT_MSG;
@@ -222,18 +222,18 @@ public class ChatHLMActivity extends AppCompatActivity implements
             }
 
             @Override
-            protected void populateViewHolder(MessageViewHolder viewHolder, FriendlyMessage friendlyMessage, int position) {
+            protected void populateViewHolder(MessageViewHolder viewHolder, ChatMessageModel chatMessageModel, int position) {
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                //String messengerText = friendlyMessage.getName() + " - " + friendlyMessage.getTimeStamp();
-                String messengerText = dateFormatter(friendlyMessage.getTimeStamp());
-                viewHolder.messageTextView.setText(friendlyMessage.getText());
+                //String messengerText = chatMessageModel.getName() + " - " + chatMessageModel.getTimeStamp();
+                String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
+                viewHolder.messageTextView.setText(chatMessageModel.getText());
                 viewHolder.messengerTextView.setText(messengerText);
-                if (friendlyMessage.getPhotoUrl() == null) {
-                    viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatHLMActivity.this,
+                if (chatMessageModel.getPhotoUrl() == null) {
+                    viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
                             R.drawable.ic_account_circle_black_24dp));
                 } else {
-                    Glide.with(ChatHLMActivity.this)
-                            .load(friendlyMessage.getPhotoUrl())
+                    Glide.with(ChatActivity.this)
+                            .load(chatMessageModel.getPhotoUrl())
                             .into(viewHolder.messengerImageView);
                 }
             }
@@ -283,7 +283,7 @@ public class ChatHLMActivity extends AppCompatActivity implements
 
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
-                .getInt(CodelabPreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
+                .getInt(ChatRemotePreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -312,11 +312,11 @@ public class ChatHLMActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
 
-                FriendlyMessage friendlyMessage = new FriendlyMessage(mMessageEditText.getText().toString(), mUsername,
+                ChatMessageModel chatMessageModel = new ChatMessageModel(mMessageEditText.getText().toString(), mUsername,
                         mPhotoUrl, timeStamp());
 
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(friendlyMessage);
-                mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(friendlyMessage);
+                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);
+                mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
 
                 mMessageEditText.setText("");
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);

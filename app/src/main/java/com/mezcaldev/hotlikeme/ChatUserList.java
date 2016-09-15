@@ -38,14 +38,12 @@ public class ChatUserList extends AppCompatActivity {
     FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageReference = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
-    //ListView listView;
     List<String> userName = new ArrayList<>();
     List<String> userKey = new ArrayList<>();
     List<String> userLastMessage = new ArrayList<>();
     List<String> userTimeStamp = new ArrayList<>();
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
-    //ChatUserAdapter chatUserAdapter;
 
     RecyclerView mRecyclerView;
     RecyclerView.Adapter mAdapter;

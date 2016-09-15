@@ -15,7 +15,7 @@
  */
 package com.mezcaldev.hotlikeme;
 
-public class FriendlyMessage {
+public class ChatMessageModel {
 
     private String id;
     private String text;
@@ -23,10 +23,10 @@ public class FriendlyMessage {
     private String photoUrl;
     private String timeStamp;
 
-    public FriendlyMessage() {
+    public ChatMessageModel() {
     }
 
-    public FriendlyMessage(String text, String name, String photoUrl, String timeStamp) {
+    public ChatMessageModel(String text, String name, String photoUrl, String timeStamp) {
         this.text = text;
         this.name = name;
         this.photoUrl = photoUrl;
