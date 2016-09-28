@@ -20,6 +20,7 @@ public class MainActivity extends AppCompatActivity {
     Intent intent;
     Handler handler;
     int delayTime = 1000 * 2;
+    int HLM_PAGES = 3;
     Snackbar snackNetworkRequired;
     static FirebaseUser user;
     FireConnection fireConnection;
@@ -59,13 +60,16 @@ public class MainActivity extends AppCompatActivity {
                 @Override
                 public void run() {
                     user = fireConnection.getUser();
+                    Bundle bundle = new Bundle();
 
                     if (user != null){
                         System.out.println("User: " + user.getUid());
-                        intent = new Intent(getApplicationContext(), HLMActivity.class);
+                        bundle.putInt("pages", HLM_PAGES);
                     } else {
-                        intent = new Intent(getApplicationContext(), HLMActivity.class);
+                        bundle.putInt("pages", 1);
                     }
+                    intent = new Intent(getApplicationContext(), HLMActivity.class);
+                    intent.putExtras(bundle);
                     startActivity(intent);
                     finish();
                 }

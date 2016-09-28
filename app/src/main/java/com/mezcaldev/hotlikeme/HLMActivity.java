@@ -65,7 +65,8 @@ public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Location";
-    int HLM_PAGES = 3;
+    int HLM_PAGES = 1;
+    int HLM_PAGES_MAX = 3;
     final int PAGE_LOGIN = 0;
     final int PAGE_HLM = 1;
     final int PAGE_CHAT = 2;
@@ -146,18 +147,31 @@ public class HLMActivity extends AppCompatActivity implements
         navigationView.setNavigationItemSelectedListener(this);
         View headerView = navigationView.getHeaderView(0);
 
+        Bundle bundle = getIntent().getExtras();
+        if (bundle != null) {
+            HLM_PAGES = bundle.getInt("pages");
+        }
+        System.out.println("Bundle: " + bundle);
+
         user = FireConnection.getInstance().getUser();
 
         drawerUserImage = (ImageView) headerView.findViewById(R.id.drawer_image);
         drawerUserAlias = (TextView) headerView.findViewById(R.id.drawer_user);
         drawerUserDescription = (TextView) headerView.findViewById(R.id.drawer_description);
 
-        Glide
-                .with(this.getApplicationContext())
-                .load(user.getPhotoUrl())
-                .centerCrop()
-                .into(drawerUserImage);
-        drawerUserAlias.setText(user.getDisplayName());
+        if (user != null) {
+            Glide
+                    .with(this.getApplicationContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(drawerUserImage);
+            drawerUserAlias.setText(user.getDisplayName());
+
+            if (HLM_PAGES == 1) {
+                HLM_PAGES = HLM_PAGES_MAX;
+                mPagerAdapter.notifyDataSetChanged();
+            }
+        }
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
@@ -171,7 +185,7 @@ public class HLMActivity extends AppCompatActivity implements
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        mPager.setOffscreenPageLimit(2);
+        mPager.setOffscreenPageLimit(HLM_PAGES-1);
         //mPager.setPageTransformer(true, new RotatePageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
@@ -202,22 +216,9 @@ public class HLMActivity extends AppCompatActivity implements
 
         System.out.println("Users: " + users);
 
-        /*if (users.size() <= 0) {
-            System.out.println("Getting Users");
-            getUriProfilePics(gender);
-
-            Handler checkUsers = new Handler();
-            checkUsers.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (users.size()==0){
-                        usersNull();
-                    }
-                }
-            }, delayForUsers);
-        } else {
-            System.out.println("User list OK");
-        } */
+        if (HLM_PAGES > 1){
+            mPager.setCurrentItem(PAGE_HLM);
+        }
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);

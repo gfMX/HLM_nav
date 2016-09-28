@@ -29,6 +29,7 @@ import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
+import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
@@ -117,9 +118,8 @@ public class LoginFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //setHasOptionsMenu(true);
 
-        //FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
+        FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
         snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(),
                 getResources().getString(R.string.text_network_access_required),
