@@ -12,6 +12,7 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
@@ -32,6 +33,8 @@ public class MainActivity extends AppCompatActivity {
                 WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         setContentView(R.layout.activity_main);
+
+        FacebookSdk.sdkInitialize(this.getApplicationContext());
 
         fireConnection = FireConnection.getInstance();
         checkAccess();
@@ -59,9 +62,9 @@ public class MainActivity extends AppCompatActivity {
 
                     if (user != null){
                         System.out.println("User: " + user.getUid());
-                        intent = new Intent(getApplicationContext(), HLMSlidePagerActivity.class);
+                        intent = new Intent(getApplicationContext(), HLMActivity.class);
                     } else {
-                        intent = new Intent(getApplicationContext(), LoginActivity.class);
+                        intent = new Intent(getApplicationContext(), HLMActivity.class);
                     }
                     startActivity(intent);
                     finish();

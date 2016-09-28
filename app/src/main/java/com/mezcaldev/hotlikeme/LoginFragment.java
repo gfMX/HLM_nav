@@ -17,9 +17,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.Menu;
-import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
@@ -32,7 +29,6 @@ import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
 import com.facebook.FacebookCallback;
 import com.facebook.FacebookException;
-import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.facebook.Profile;
@@ -60,6 +56,12 @@ import org.json.JSONObject;
 import java.io.File;
 
 public class LoginFragment extends Fragment {
+
+    static LoginFragment newInstance() {
+        LoginFragment newFragment = new LoginFragment();
+
+        return newFragment;
+    }
 
     private static final String TAG = "Login Details";
     //Delay Time to load Profile Picture if exists.
@@ -117,7 +119,7 @@ public class LoginFragment extends Fragment {
         super.onCreate(savedInstanceState);
         //setHasOptionsMenu(true);
 
-        FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
+        //FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
 
         snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(),
                 getResources().getString(R.string.text_network_access_required),
@@ -139,21 +141,6 @@ public class LoginFragment extends Fragment {
         fireRef = database.getReference();
         mAuth = FirebaseAuth.getInstance();
 
-    }
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.menu_login, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
-
-        if (id == R.id.action_settings) {
-            startActivity(new Intent(getActivity(), SettingsActivity.class));
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -256,13 +243,13 @@ public class LoginFragment extends Fragment {
                   case R.id.btn_start:
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                               Toast.LENGTH_LONG).show();
-                      startActivity(new Intent(getActivity(), HLMSlidePagerActivity.class));
+                      startActivity(new Intent(getActivity(), HLMActivity.class));
                       //getActivity().finish();
                       break;
                   case R.id.btn_settings:
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
                               Toast.LENGTH_LONG).show();
-                      startActivity(new Intent(getActivity(), SettingsActivity.class));
+                      startActivity(new Intent(getActivity(), HLMSettings.class));
                       //getActivity().finish();
                       break;
                   case R.id.hlm_image:

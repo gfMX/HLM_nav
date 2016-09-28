@@ -1,17 +1,17 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
-import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
+import android.support.v4.app.ListFragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
 import android.support.v7.widget.helper.ItemTouchHelper;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.ViewGroup;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -30,8 +30,16 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-public class ChatUserList extends AppCompatActivity {
+import static com.facebook.FacebookSdk.getApplicationContext;
+
+public class ChatUserList extends ListFragment {
     final static String TAG = "Chat: ";
+
+    static ChatUserList newInstance() {
+        ChatUserList newFragment = new ChatUserList();
+
+        return newFragment;
+    }
 
     FirebaseUser user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -50,20 +58,30 @@ public class ChatUserList extends AppCompatActivity {
     RecyclerView.LayoutManager mLayoutManager;
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_chat_user_list);
-
-        Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        setupActionBar();
 
         cleanVars();
         user = FireConnection.getInstance().getUser();
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.user_list);
-        mLayoutManager = new LinearLayoutManager(this);
+
+
+        if (user!= null){
+            getUsers();
+        }
+    }
+    @Override
+    public View onCreateView(LayoutInflater inflater, ViewGroup container,
+                             Bundle savedInstanceState) {
+        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_chat_user_list, container, false);
+
+        return rootView;
+    }
+
+    @Override
+    public void onViewCreated(final View view, Bundle savedInstanceState){
+        mRecyclerView = (RecyclerView) view.findViewById(R.id.user_list);
+        mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
         mRecyclerView.setHasFixedSize(false);
 
@@ -75,7 +93,7 @@ public class ChatUserList extends AppCompatActivity {
                 new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
                         ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
                     public boolean onMove(RecyclerView recyclerView,
-                                                   RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                                          RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                         final int fromPos = viewHolder.getAdapterPosition();
                         final int toPos = target.getAdapterPosition();
                         // move item in `fromPos` to `toPos` in adapter.
@@ -86,32 +104,12 @@ public class ChatUserList extends AppCompatActivity {
                     }
                 });
         mIth.attachToRecyclerView(mRecyclerView);
+    }
 
-        if (user!= null){
-            getUsers();
-        }
-    }
-    @Override
-    public void onBackPressed() {
-            //super.onBackPressed();
-            startActivity(new Intent(this, HLMSlidePagerActivity.class));
-            finish();
-    }
-    private void setupActionBar() {
-        ActionBar actionBar = getSupportActionBar();
-        if (actionBar != null) {
-            actionBar.setDisplayHomeAsUpEnabled(true);
-        }
-    }
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-        if (id == android.R.id.home ) {
-            //NavUtils.navigateUpFromSameTask(this);
-            startActivity(new Intent(this, HLMSlidePagerActivity.class));
-            finish();
-            return true;
-        }
+
         return true;
     }
 

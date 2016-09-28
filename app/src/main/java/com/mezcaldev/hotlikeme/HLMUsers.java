@@ -36,13 +36,12 @@ import com.google.firebase.storage.StorageReference;
 import java.util.Calendar;
 import java.util.UUID;
 
-public class HLMPageFragment extends ListFragment {
+public class HLMUsers extends ListFragment {
     String userKey;
 
-    static HLMPageFragment newInstance(String key) {
-        HLMPageFragment newFragment = new HLMPageFragment();
+    static HLMUsers newInstance(String key) {
+        HLMUsers newFragment = new HLMUsers();
 
-        // Supply num input as an argument.
         Bundle args = new Bundle();
         args.putString("key", key);
         newFragment.setArguments(args);
@@ -91,7 +90,7 @@ public class HLMPageFragment extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        userKey = getArguments() != null ? getArguments().getString("key"): "None key given";
+        userKey = getArguments() != null ? getArguments().getString("key"): "nullKey";
 
         didWeLike();
         System.out.println("Actual user: " + firebaseUser.getUid());
@@ -418,11 +417,6 @@ private void checkChat(){
     private String timeStamp(){
         Calendar calendar = Calendar.getInstance();
         calendar.getTime();
-        int date = calendar.get(Calendar.DATE);
-        int month = calendar.get(Calendar.MONTH);
-        int year = calendar.get(Calendar.YEAR);
-        int hours = calendar.get(Calendar.HOUR_OF_DAY);
-        int minutes = calendar.get(Calendar.MINUTE);
 
         //return (hours + ":" + minutes + " - " + date + "/" + month + "/" + year);
         return String.valueOf(calendar.getTimeInMillis());

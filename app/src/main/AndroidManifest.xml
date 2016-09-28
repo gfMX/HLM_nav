@@ -41,82 +41,63 @@
             android:exported="true" />
 
         <activity
-            android:name=".HLMSlidePagerActivity"
+            android:name=".HLMActivity"
             android:label="@string/title_activity_pager_hlm"
             android:launchMode="standard"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HLMSlidePagerActivity" />
+                android:value=".HLMActivity" />
         </activity>
         <activity
             android:name=".ChatActivity"
             android:label="@string/title_activity_chat"
             android:launchMode="singleTask"
-            android:parentActivityName=".HLMSlidePagerActivity"
+            android:parentActivityName=".HLMActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HLMSlidePagerActivity" />
-        </activity>
-        <activity android:name=".ChatUserList"
-            android:label="@string/title_activity_chat"
-            android:launchMode="singleTask"
-            android:parentActivityName=".HLMSlidePagerActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HLMSlidePagerActivity" />
+                android:value=".HLMActivity" />
         </activity>
         <activity
-            android:name=".SettingsActivity"
+            android:name=".HLMSettings"
             android:label="@string/title_activity_settings"
             android:launchMode="singleTask"
-            android:parentActivityName=".HLMSlidePagerActivity">
+            android:parentActivityName=".HLMActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HLMSlidePagerActivity" />
-        </activity>
-        <activity
-            android:name=".LoginActivity"
-            android:label="@string/title_activity_login"
-            android:launchMode="singleTask"
-            android:parentActivityName=".HLMSlidePagerActivity"
-            android:theme="@style/AppTheme.NoActionBar">
-            <meta-data
-                android:name="android.support.PARENT_ACTIVITY"
-                android:value=".HLMSlidePagerActivity" />
+                android:value=".HLMActivity" />
         </activity>
         <activity
             android:name=".ImageBrowser"
             android:label="@string/title_activity_image_browser"
             android:launchMode="singleTask"
-            android:parentActivityName=".LoginActivity"
+            android:parentActivityName=".HLMActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".LoginActivity" />
+                android:value=".HLMActivity" />
         </activity>
         <activity
             android:name=".FireBrowserActivity"
             android:label="@string/title_activity_fire_browser"
             android:launchMode="singleTask"
-            android:parentActivityName=".LoginActivity"
+            android:parentActivityName=".HLMActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
-                android:value=".LoginActivity" />
+                android:value=".HLMActivity" />
         </activity>
 
         <service
-            android:name=".MyFirebaseMessagingService"
+            android:name=".ChatMessagingService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.MESSAGING_EVENT" />
             </intent-filter>
         </service>
         <service
-            android:name=".MyFirebaseInstanceIdService"
+            android:name=".ChatInstanceIdService"
             android:exported="false">
             <intent-filter>
                 <action android:name="com.google.firebase.INSTANCE_ID_EVENT" />

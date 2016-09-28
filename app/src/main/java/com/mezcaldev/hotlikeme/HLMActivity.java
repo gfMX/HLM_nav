@@ -61,10 +61,15 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-public class HLMSlidePagerActivity extends AppCompatActivity implements
+public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Location";
+    int HLM_PAGES = 3;
+    final int PAGE_LOGIN = 0;
+    final int PAGE_HLM = 1;
+    final int PAGE_CHAT = 2;
+    final int PAGE_SETTINGS = 3;
 
     public static String userKey;
     private ViewPager mPager;
@@ -166,8 +171,8 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        mPager.setOffscreenPageLimit(3);
-        mPager.setPageTransformer(true, new RotatePageTransformer());
+        mPager.setOffscreenPageLimit(2);
+        //mPager.setPageTransformer(true, new RotatePageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
                                        public boolean onTouch(View view, MotionEvent event) {
@@ -197,7 +202,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
 
         System.out.println("Users: " + users);
 
-        if (users.size() <= 0) {
+        /*if (users.size() <= 0) {
             System.out.println("Getting Users");
             getUriProfilePics(gender);
 
@@ -212,7 +217,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             }, delayForUsers);
         } else {
             System.out.println("User list OK");
-        }
+        } */
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
@@ -221,7 +226,6 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
         super.onCreateOptionsMenu(menu);
-        //getMenuInflater().inflate(R.menu.menu_hlm, menu);
         getMenuInflater().inflate(R.menu.menu_hlm, menu);
         return true;
     }
@@ -229,22 +233,14 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
     public boolean onOptionsItemSelected(MenuItem item){
         int id = item.getItemId();
 
-        if (id == R.id.action_settings) {
-            clearInfo();
-            startActivity(new Intent(this, SettingsActivity.class));
-            finish();
-            return true;
-        }
         if (id == R.id.action_profile_settings) {
             clearInfo();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
+            mPager.setCurrentItem(PAGE_LOGIN);
             return true;
         }
         if (id == R.id.action_chat){
             clearInfo();
-            startActivity(new Intent(this, ChatUserList.class));
-            finish();
+            mPager.setCurrentItem(PAGE_CHAT);
             return true;
         }
 
@@ -269,7 +265,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                                 finishAndRemoveTask();
                             } else {
-                                ActivityCompat.finishAffinity(HLMSlidePagerActivity.this);
+                                ActivityCompat.finishAffinity(HLMActivity.this);
                             }
                         }
 
@@ -297,18 +293,15 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
             return true;
         } else if (id == R.id.nav_chat) {
             clearInfo();
-            startActivity(new Intent(this, ChatUserList.class));
-            finish();
+            mPager.setCurrentItem(PAGE_CHAT);
 
         } else if (id == R.id.nav_profile) {
             clearInfo();
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
+            mPager.setCurrentItem(PAGE_LOGIN);
 
         } else if (id == R.id.nav_settings) {
             clearInfo();
-            startActivity(new Intent(this, SettingsActivity.class));
-            finish();
+            startActivity(new Intent(this, HLMSettings.class));
 
         } else if (id == R.id.nav_share) {
 
@@ -330,21 +323,28 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                 .build();
         createLocationRequest();
     }
-    //A simple pager adapter
+
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        public ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
+        private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
         }
 
         @Override
         public Fragment getItem(int position) {
-            userKey = users.get(position);
-            return HLMPageFragment.newInstance(userKey);
-
+            switch (position) {
+                case PAGE_LOGIN: // Fragment # 0 - This will show FirstFragment
+                    return LoginFragment.newInstance();
+                case PAGE_HLM: // Fragment # 0 - This will show FirstFragment different title
+                    return HLMUsers.newInstance("nullKey");
+                case PAGE_CHAT: // Fragment # 1 - This will show SecondFragment
+                    return ChatUserList.newInstance();
+                default:
+                    return null;
+            }
         }
         @Override
         public int getCount() {
-            return users.size();
+            return HLM_PAGES;
         }
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
@@ -522,7 +522,7 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {
-                            status.startResolutionForResult(HLMSlidePagerActivity.this, REQUEST_CHECK_SETTINGS);
+                            status.startResolutionForResult(HLMActivity.this, REQUEST_CHECK_SETTINGS);
                             System.out.println("Access requested.");
                         } catch (IntentSender.SendIntentException e) {
                             // Ignore the error.
@@ -682,36 +682,45 @@ public class HLMSlidePagerActivity extends AppCompatActivity implements
         }
     }
 
-    public class RotatePageTransformer2 implements ViewPager.PageTransformer {
-        //Not working, pages overlapping.
-        private static final float MIN_SCALE = 0.5F;
+    public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
+        private static final float MIN_SCALE = 0.85f;
+        private static final float MIN_ALPHA = 0.5f;
 
-        public void transformPage(View page, float position) {
-            page.setRotation(position * + 15F);
-            float scaleFactor = MIN_SCALE
-                    + (1 - MIN_SCALE) * (1 - Math.abs(position));
+        public void transformPage(View view, float position) {
+            int pageWidth = view.getWidth();
+            int pageHeight = view.getHeight();
 
-            if(position <= -1.0F || position >= 1.0F) {
-                page.setTranslationX(page.getWidth() * -position);
-                page.setScaleX(scaleFactor-0.3F);
-                page.setScaleY(scaleFactor-0.3F);
-                page.setAlpha(0.0F);
-            } else if( position == 0.0F ) {
-                page.setTranslationX(0);
-                page.setTranslationY(0);
-                page.setScaleX(1);
-                page.setScaleY(1);
-                page.setAlpha(1.0F);
-                page.bringToFront();
-            } else {
-                // position is between -1.0F & 0.0F OR 0.0F & 1.0F
-                page.setScaleX(scaleFactor);
-                page.setScaleY(scaleFactor);
-                page.setTranslationX(page.getWidth()/(float) 1.1 * -position);
-                page.setAlpha(1.0F - Math.abs(position));
+            if (position < -1) { // [-Infinity,-1)
+                // This page is way off-screen to the left.
+                view.setAlpha(0);
+
+            } else if (position <= 1) { // [-1,1]
+                // Modify the default slide transition to shrink the page as well
+                float scaleFactor = Math.max(MIN_SCALE, 1 - Math.abs(position));
+                float vertMargin = pageHeight * (1 - scaleFactor) / 2;
+                float horzMargin = pageWidth * (1 - scaleFactor) / 2;
+                if (position < 0) {
+                    view.setTranslationX(horzMargin - vertMargin / 2);
+                } else {
+                    view.setTranslationX(-horzMargin + vertMargin / 2);
+                }
+
+                // Scale the page down (between MIN_SCALE and 1)
+                view.setScaleX(scaleFactor);
+                view.setScaleY(scaleFactor);
+
+                // Fade the page relative to its size.
+                view.setAlpha(MIN_ALPHA +
+                        (scaleFactor - MIN_SCALE) /
+                                (1 - MIN_SCALE) * (1 - MIN_ALPHA));
+
+            } else { // (1,+Infinity]
+                // This page is way off-screen to the right.
+                view.setAlpha(0);
             }
         }
     }
+
 
     @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {

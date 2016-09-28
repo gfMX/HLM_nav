@@ -145,7 +145,7 @@ public class ChatActivity extends AppCompatActivity implements
 
         if (mFirebaseUser == null) {
             // Not signed in, launch the Sign In activity
-            startActivity(new Intent(this, LoginActivity.class));
+            startActivity(new Intent(this, HLMActivity.class));
             finish();
             return;
         } else {

@@ -15,10 +15,10 @@ import android.preference.PreferenceFragment;
 import android.preference.PreferenceManager;
 import android.preference.RingtonePreference;
 import android.support.annotation.NonNull;
+import android.support.v4.app.NavUtils;
 import android.support.v7.app.ActionBar;
 import android.text.TextUtils;
 import android.util.Log;
-import android.view.Menu;
 import android.view.MenuItem;
 
 import com.google.android.gms.tasks.OnCompleteListener;
@@ -29,7 +29,7 @@ import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class SettingsActivity extends AppCompatPreferenceActivity {
+public class HLMSettings extends AppCompatPreferenceActivity {
 
     final static String TAG = "Settings: ";
 
@@ -102,7 +102,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     @Override
-    protected void onCreate(Bundle savedInstanceState) {
+    public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setupActionBar();
         
@@ -118,7 +118,7 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
                 .commit();
     }
 
-    private void setupActionBar() {
+   private void setupActionBar() {
         ActionBar actionBar = getSupportActionBar();
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true);
@@ -126,38 +126,13 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu){
-        super.onCreateOptionsMenu(menu);
-        getMenuInflater().inflate(R.menu.menu_settings, menu);
-
-        return true;
-    }
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item){
-        int id = item.getItemId();
-
-        if (id == R.id.action_profile_settings) {
-            startActivity(new Intent(this, LoginActivity.class));
-            finish();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
-    }
-
-    @Override
-    public void onBackPressed() {
-        startActivity(new Intent(this, HLMSlidePagerActivity.class));
-        finish();
-    }
-    @Override
     public boolean onMenuItemSelected(int featureId, MenuItem item) {
         int id = item.getItemId();
 
         if (id == android.R.id.home) {
-            startActivity(new Intent(this, HLMSlidePagerActivity.class));
-            finish();
-            //NavUtils.navigateUpFromSameTask(this);
+            /*startActivity(new Intent(this, HLMActivity.class));
+            finish();*/
+            NavUtils.navigateUpFromSameTask(this);
             return true;
         }
 
@@ -238,20 +213,20 @@ public class SettingsActivity extends AppCompatPreferenceActivity {
         public boolean onOptionsItemSelected(MenuItem item) {
             int id = item.getItemId();
             if (id == android.R.id.home) {
-                startActivity(new Intent(getActivity(), SettingsActivity.class));
+                startActivity(new Intent(getActivity(), HLMSettings.class));
                 return true;
             }
             return super.onOptionsItemSelected(item);
         }
     }
     @Override
-    protected void onResume() {
+    public void onResume() {
         super.onResume();
         updateFireSettings();
     }
 
     @Override
-    protected void onPause() {
+    public void onPause() {
         super.onPause();
         updateFireSettings();
     }

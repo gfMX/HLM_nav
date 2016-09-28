@@ -125,7 +125,7 @@ public class imageSelected extends DialogFragment {
                 @Override
                 public void run() {
                     getDialog().dismiss();
-                    startActivity(new Intent(getActivity(), LoginActivity.class));
+                    startActivity(new Intent(getActivity(), HLMActivity.class));
                 }
             }, 2500);
         }
