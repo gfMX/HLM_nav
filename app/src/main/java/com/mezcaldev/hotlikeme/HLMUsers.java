@@ -2,16 +2,12 @@ package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.graphics.PorterDuff;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ListFragment;
-import android.support.v4.content.ContextCompat;
 import android.util.DisplayMetrics;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.MotionEvent;
@@ -34,7 +30,39 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.Calendar;
-import java.util.UUID;
+
+import static android.graphics.BitmapFactory.decodeByteArray;
+import static android.graphics.PorterDuff.Mode.SRC_ATOP;
+import static android.support.v4.content.ContextCompat.getColor;
+import static android.view.Gravity.CENTER;
+import static android.view.MotionEvent.ACTION_DOWN;
+import static android.view.MotionEvent.ACTION_MASK;
+import static android.view.MotionEvent.ACTION_MOVE;
+import static android.view.MotionEvent.ACTION_POINTER_DOWN;
+import static android.view.MotionEvent.ACTION_POINTER_UP;
+import static android.view.MotionEvent.ACTION_UP;
+import static android.view.View.INVISIBLE;
+import static android.view.View.OnClickListener;
+import static android.view.View.OnTouchListener;
+import static android.view.View.VISIBLE;
+import static android.widget.RatingBar.OnRatingBarChangeListener;
+import static android.widget.Toast.LENGTH_LONG;
+import static android.widget.Toast.LENGTH_SHORT;
+import static android.widget.Toast.makeText;
+import static com.mezcaldev.hotlikeme.FireConnection.getInstance;
+import static com.mezcaldev.hotlikeme.R.color.colorAccent;
+import static com.mezcaldev.hotlikeme.R.id.fab_message;
+import static com.mezcaldev.hotlikeme.R.id.imageView;
+import static com.mezcaldev.hotlikeme.R.id.rating;
+import static com.mezcaldev.hotlikeme.R.id.textView;
+import static com.mezcaldev.hotlikeme.R.id.userDescription;
+import static com.mezcaldev.hotlikeme.R.layout.hlm_screen_slide_page;
+import static com.mezcaldev.hotlikeme.R.string.welcome_msg;
+import static java.lang.Float.valueOf;
+import static java.lang.Long.MAX_VALUE;
+import static java.lang.Math.random;
+import static java.lang.System.out;
+import static java.util.UUID.randomUUID;
 
 public class HLMUsers extends ListFragment {
     String userKey;
@@ -80,7 +108,7 @@ public class HLMUsers extends ListFragment {
     Toast toast2;
 
     //Firebase Initialization
-    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
+    FirebaseUser user = getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
@@ -90,28 +118,30 @@ public class HLMUsers extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        userKey = getArguments() != null ? getArguments().getString("key"): "nullKey";
+        userKey = getArguments() != null ? getArguments().getString("key") : "nullKey";
 
-        didWeLike();
-        System.out.println("Actual user: " + firebaseUser.getUid());
+        if (user != null) {
+            didWeLike();
+            out.println("Actual user: " + user.getUid());
+        }
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.hlm_screen_slide_page, container, false);
+        ViewGroup rootView = (ViewGroup) inflater.inflate(hlm_screen_slide_page, container, false);
 
         return rootView;
     }
 
     @Override
-    public void onViewCreated(final View view, Bundle savedInstanceState){
+    public void onViewCreated(final View view, Bundle savedInstanceState) {
 
         //Adds the users that Current User likes
 
         referenceLikeUser = database.getReference()
                 .child("users")
-                .child(firebaseUser.getUid())
+                .child(user.getUid())
                 .child("like_user")
                 .child(userKey);
 
@@ -120,14 +150,14 @@ public class HLMUsers extends ListFragment {
                 .child("users")
                 .child(userKey)
                 .child("user_rate")
-                .child(firebaseUser.getUid());
+                .child(user.getUid());
 
-        viewUserAlias = (TextView) view.findViewById(R.id.textView);
-        viewUserImage = (ImageView) view.findViewById(R.id.imageView);
-        viewUserDescription = (TextView) view.findViewById(R.id.userDescription);
+        viewUserAlias = (TextView) view.findViewById(textView);
+        viewUserImage = (ImageView) view.findViewById(imageView);
+        viewUserDescription = (TextView) view.findViewById(userDescription);
 
-        fabMessage = (FloatingActionButton) view.findViewById(R.id.fab_message);
-        fabMessage.setOnClickListener(new View.OnClickListener() {
+        fabMessage = (FloatingActionButton) view.findViewById(fab_message);
+        fabMessage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
                 checkChat();
@@ -137,11 +167,11 @@ public class HLMUsers extends ListFragment {
             }
         });
 
-        viewUserImage.setRotation(5 * ((float) Math.random() * 2 - 1));
+        viewUserImage.setRotation(5 * ((float) random() * 2 - 1));
 
-        ratingBar = (RatingBar) view.findViewById(R.id.rating);
+        ratingBar = (RatingBar) view.findViewById(rating);
         LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
-        stars.getDrawable(2).setColorFilter(ContextCompat.getColor(getContext(), R.color.colorAccent), PorterDuff.Mode.SRC_ATOP);
+        stars.getDrawable(2).setColorFilter(getColor(getContext(), colorAccent), SRC_ATOP);
 
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         displayHeight = metrics.heightPixels;
@@ -156,7 +186,7 @@ public class HLMUsers extends ListFragment {
             getUserDetails(userKey);
             userRating();
 
-            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+            ratingBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
                 public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
                     starsRating = rating;
                     if (starsRating == 0) {
@@ -167,7 +197,7 @@ public class HLMUsers extends ListFragment {
                 }
             });
 
-            viewUserImage.setOnTouchListener(new View.OnTouchListener() {
+            viewUserImage.setOnTouchListener(new OnTouchListener() {
                 @Override
                 public boolean onTouch(View v, MotionEvent event) {
                     int x = (int) event.getX();
@@ -175,32 +205,32 @@ public class HLMUsers extends ListFragment {
                     //int xRaw = (int) event.getRawX();
                     int yRaw = (int) event.getRawY();
 
-                    switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                        case MotionEvent.ACTION_DOWN:
-                            System.out.println("Down");
+                    switch (event.getAction() & ACTION_MASK) {
+                        case ACTION_DOWN:
+                            out.println("Down");
                             distanceX = x;
                             distanceY = y;
 
                             break;
-                        case MotionEvent.ACTION_UP:
-                            System.out.println("Up");
+                        case ACTION_UP:
+                            out.println("Up");
                             v.setTranslationY(0);
                             v.setTranslationX(0);
 
                             //Add users to the Like List
                             if (yRaw < screenUp) {
-                                System.out.println("User ID: " + userKey);
+                                out.println("User ID: " + userKey);
                                 referenceLikeUser.setValue(true);
-                                Toast.makeText(getContext(), "Added!", Toast.LENGTH_SHORT).show();
+                                makeText(getContext(), "Added!", LENGTH_SHORT).show();
 
                             }
 
                             //Remove users from the Like List
                             if (yRaw > screenDown) {
-                                System.out.println("User ID: " + userKey);
+                                out.println("User ID: " + userKey);
                                 referenceLikeUser.setValue(null);
-                                Toast.makeText(getContext(), "Removed!", Toast.LENGTH_SHORT).show();
-                                fabMessage.setVisibility(View.INVISIBLE);
+                                makeText(getContext(), "Removed!", LENGTH_SHORT).show();
+                                fabMessage.setVisibility(INVISIBLE);
                                 /*if (chatIcon != null) {
                                     chatIcon.setVisible(false);
                                 }*/
@@ -211,30 +241,30 @@ public class HLMUsers extends ListFragment {
                             resetFlags();
 
                             break;
-                        case MotionEvent.ACTION_POINTER_DOWN:
-                            System.out.println("Pointer Down");
+                        case ACTION_POINTER_DOWN:
+                            out.println("Pointer Down");
 
                             break;
-                        case MotionEvent.ACTION_POINTER_UP:
-                            System.out.println("Pointer Up");
+                        case ACTION_POINTER_UP:
+                            out.println("Pointer Up");
 
                             break;
-                        case MotionEvent.ACTION_MOVE:
+                        case ACTION_MOVE:
                             v.setX((v.getX() - v.getWidth() / 2) + x);
                             v.setY((v.getY() - v.getHeight() / 2) + y);
                             if (yRaw < screenUp && !flagOne) {
-                                System.out.println("Up");
-                                toast1 = Toast.makeText(getContext(), "I'll like to get in touch!", Toast.LENGTH_SHORT);
-                                toast1.setGravity(Gravity.CENTER, 0, 400);
+                                out.println("Up");
+                                toast1 = makeText(getContext(), "I'll like to get in touch!", LENGTH_SHORT);
+                                toast1.setGravity(CENTER, 0, 400);
                                 toast1.show();
 
                                 resetFlags();
                                 flagOne = true;
                             }
                             if (yRaw > screenDown && !flagTwo) {
-                                System.out.println("Down");
-                                toast2 = Toast.makeText(getContext(), "I don't wan't to get in touch.", Toast.LENGTH_SHORT);
-                                toast2.setGravity(Gravity.CENTER, 0, -350);
+                                out.println("Down");
+                                toast2 = makeText(getContext(), "I don't wan't to get in touch.", LENGTH_SHORT);
+                                toast2.setGravity(CENTER, 0, -350);
                                 toast2.show();
 
                                 resetFlags();
@@ -278,18 +308,18 @@ public class HLMUsers extends ListFragment {
                 }
             });
         } else {
-            Toast.makeText(this.getActivity(), "There's no one close to you right now", Toast.LENGTH_LONG).show();
+            makeText(this.getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
         }
     }
 
-    private void getUserDetails (String userKey){
+    private void getUserDetails(String userKey) {
 
         DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("preferences");
         databaseReference.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String userData = dataSnapshot.getValue().toString();
-                System.out.println("User data: " + userData);
+                out.println("User data: " + userData);
 
                 viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
                 viewUserDescription.setText(dataSnapshot.child("description").getValue().toString());
@@ -300,11 +330,11 @@ public class HLMUsers extends ListFragment {
 
             }
         });
-        storageRef.child(userKey).child("/profile_pic/").child("profile_im.jpg").getBytes(Long.MAX_VALUE)
+        storageRef.child(userKey).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                     @Override
                     public void onSuccess(byte[] bytes) {
-                        Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                        Bitmap image = decodeByteArray(bytes, 0, bytes.length);
                         viewUserImage.setImageBitmap(image);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -316,20 +346,21 @@ public class HLMUsers extends ListFragment {
         });
     }
 
-    private void userRating (){
+    private void userRating() {
         DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("user_rate");
         databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    if (data.getKey().equals(firebaseUser.getUid())) { //Shows only the rating given bye the actual User
-                        starsRating = Float.valueOf(data.getValue().toString());
+                    if (data.getKey().equals(user.getUid())) { //Shows only the rating given bye the actual User
+                        starsRating = valueOf(data.getValue().toString());
                         oldRating = starsRating;
                         ratingBar.setRating(starsRating);
-                        System.out.println("Long: " + starsRating);
+                        out.println("Long: " + starsRating);
                     }
                 }
-             }
+            }
+
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
@@ -339,7 +370,7 @@ public class HLMUsers extends ListFragment {
 
     private void didWeLike() {
         final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(userKey).child("like_user");
-        DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(firebaseUser.getUid()).child("like_user");
+        DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
         databaseReferenceCurrent.addValueEventListener(new ValueEventListener() {
             @Override
@@ -351,9 +382,9 @@ public class HLMUsers extends ListFragment {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                    if (data.getKey().equals(firebaseUser.getUid())) {
+                                    if (data.getKey().equals(user.getUid())) {
                                         //chatIcon.setVisible(true);
-                                        fabMessage.setVisibility(View.VISIBLE);
+                                        fabMessage.setVisibility(VISIBLE);
                                         weLike = true;
                                         checkChat();
                                     }
@@ -378,9 +409,9 @@ public class HLMUsers extends ListFragment {
         //checkChat();
     }
 
-private void checkChat(){
+    private void checkChat() {
 
-        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(firebaseUser.getUid()).child("my_chats");
+        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
         final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
         final DatabaseReference databaseReferenceChat = database.getReference().child("chats_resume");
 
@@ -388,23 +419,23 @@ private void checkChat(){
         databaseReferenceSetCurrentUserChat.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
-                System.out.println("Checking for chats");
-                if (weLike && !dataSnapshot.hasChild(userKey)){
-                    uniqueChatID = "chat_" + UUID.randomUUID();
+                out.println("Checking for chats");
+                if (weLike && !dataSnapshot.hasChild(userKey)) {
+                    uniqueChatID = "chat_" + randomUUID();
 
                     databaseReferenceSetCurrentUserChat.child(userKey).setValue(uniqueChatID);
-                    databaseReferenceSetRemoteUserChat.child(firebaseUser.getUid()).setValue(uniqueChatID);
+                    databaseReferenceSetRemoteUserChat.child(user.getUid()).setValue(uniqueChatID);
 
-                    databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(R.string.welcome_msg));
+                    databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(welcome_msg));
                     databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
                 } else {
                     for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        if (data.getKey().equals(userKey)){
+                        if (data.getKey().equals(userKey)) {
                             uniqueChatID = data.getValue().toString();
                         }
                     }
                 }
-                System.out.println("Unique Chat ID: " + uniqueChatID);
+                out.println("Unique Chat ID: " + uniqueChatID);
             }
 
             @Override
@@ -414,7 +445,7 @@ private void checkChat(){
         });
     }
 
-    private String timeStamp(){
+    private String timeStamp() {
         Calendar calendar = Calendar.getInstance();
         calendar.getTime();
 
@@ -422,7 +453,7 @@ private void checkChat(){
         return String.valueOf(calendar.getTimeInMillis());
     }
 
-    private void resetFlags (){
+    private void resetFlags() {
         flagOne = false;
         flagTwo = false;
     }

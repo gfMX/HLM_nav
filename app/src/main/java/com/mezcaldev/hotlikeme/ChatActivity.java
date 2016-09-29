@@ -213,15 +213,15 @@ public class ChatActivity extends AppCompatActivity implements
             public int getItemViewType(int position) {
                 ChatMessageModel model = getItem(position);
 
-                System.out.println("------------------------------------------------------------");
-                System.out.println(model.getUserId() + " = " + mFirebaseUser.getUid());
+                //System.out.println("------------------------------------------------------------");
+                //System.out.println(model.getUserId() + " = " + mFirebaseUser.getUid());
 
                 if (model.getName().equals(mFirebaseUser.getDisplayName())
                         || model.getUserId().equals(mFirebaseUser.getUid())){
-                    System.out.println("Message Right");
+                    //System.out.println("Message Right");
                     return RIGHT_MSG;
                 }else{
-                    System.out.println("Message Left");
+                    //System.out.println("Message Left");
                     return LEFT_MSG;
                 }
             }
@@ -346,6 +346,9 @@ public class ChatActivity extends AppCompatActivity implements
                 return true;
             case R.id.fresh_config_menu:
                 fetchConfig();
+                return true;
+            case android.R.id.home:
+                onBackPressed();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);

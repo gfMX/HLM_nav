@@ -63,7 +63,7 @@
         <activity
             android:name=".ChatActivity"
             android:label="@string/title_activity_chat"
-            android:launchMode="singleTask"
+            android:launchMode="standard"
             android:parentActivityName=".HLMActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data

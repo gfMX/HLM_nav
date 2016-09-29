@@ -10,6 +10,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
@@ -48,6 +49,7 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -65,11 +67,13 @@ public class HLMActivity extends AppCompatActivity implements
 
     private static final String TAG = "Location";
     int HLM_PAGES;
+    int HLM_CURRENT_PAGE;
     final int HLM_PAGES_MAX = 3;
     final int PAGE_LOGIN = 0;
     final int PAGE_HLM = 1;
     final int PAGE_CHAT = 2;
     final int PAGE_SETTINGS = 3;
+    final int OFFSCREEN_PAGES = 1;
 
     public static String userKey;
     private ViewPager mPager;
@@ -107,6 +111,7 @@ public class HLMActivity extends AppCompatActivity implements
     protected final static String LOCATION_KEY = "location-key";
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
     protected final static String NUMBER_OF_PAGES = "visible-pages";
+    protected final static String NUMBER_OF_CURRENT_PAGE = "last-viewed-page";
 
     // Others
     int x;
@@ -117,6 +122,8 @@ public class HLMActivity extends AppCompatActivity implements
 
     //Firebase Initialization
     FirebaseUser user;
+    FirebaseAuth mAuth;
+    FirebaseAuth.AuthStateListener mAuthListener;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
     //Drawer variables and Settings
@@ -153,7 +160,25 @@ public class HLMActivity extends AppCompatActivity implements
         }
         System.out.println("Bundle: " + bundle);
 
-        user = FireConnection.getInstance().getUser();
+        //Local FIrebase Initialization.
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "User credentials granted: " + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "User not logged.");
+                }
+                // ...
+                userConnected();
+            }
+        };
+
+        mAuth = FirebaseAuth.getInstance();
+        mAuth.addAuthStateListener(mAuthListener);
 
         drawerUserImage = (ImageView) headerView.findViewById(R.id.drawer_image);
         drawerUserAlias = (TextView) headerView.findViewById(R.id.drawer_user);
@@ -171,7 +196,7 @@ public class HLMActivity extends AppCompatActivity implements
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        mPager.setOffscreenPageLimit(HLM_PAGES-1);
+        mPager.setOffscreenPageLimit(OFFSCREEN_PAGES);
         //mPager.setPageTransformer(true, new RotatePageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
@@ -202,7 +227,7 @@ public class HLMActivity extends AppCompatActivity implements
 
         System.out.println("Users: " + users);
 
-        if (user != null) {
+        /*if (user != null) {
             //Set user Pic on the Drawers
             Glide
                     .with(this.getApplicationContext())
@@ -213,11 +238,11 @@ public class HLMActivity extends AppCompatActivity implements
 
             HLM_PAGES = HLM_PAGES_MAX;
             mPagerAdapter.notifyDataSetChanged();
-        }
+        }*/
 
-        if (HLM_PAGES > 1){
+        /* if (HLM_PAGES > 1) {
             mPager.setCurrentItem(PAGE_HLM);
-        }
+        } */
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
@@ -300,8 +325,10 @@ public class HLMActivity extends AppCompatActivity implements
             mPager.setCurrentItem(PAGE_LOGIN);
 
         } else if (id == R.id.nav_settings) {
-            clearInfo();
-            startActivity(new Intent(this, HLMSettings.class));
+            if (user != null) {
+                clearInfo();
+                startActivity(new Intent(this, HLMSettings.class));
+            }
 
         } else if (id == R.id.nav_share) {
 
@@ -333,12 +360,13 @@ public class HLMActivity extends AppCompatActivity implements
 
         @Override
         public Fragment getItem(int position) {
+
             switch (position) {
-                case PAGE_LOGIN: // Fragment # 0 - This will show FirstFragment
+                case PAGE_LOGIN:
                     return LoginFragment.newInstance();
-                case PAGE_HLM: // Fragment # 0 - This will show FirstFragment different title
+                case PAGE_HLM:
                     return HLMUsers.newInstance("nullKey");
-                case PAGE_CHAT: // Fragment # 1 - This will show SecondFragment
+                case PAGE_CHAT:
                     return ChatUserList.newInstance();
                 default:
                     return null;
@@ -351,6 +379,7 @@ public class HLMActivity extends AppCompatActivity implements
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
+
         }
     }
 
@@ -619,7 +648,7 @@ public class HLMActivity extends AppCompatActivity implements
 
     private void updateValuesFromBundle(Bundle savedInstanceState) {
         if (savedInstanceState != null) {
-            System.out.println("Updating from Bundle.");
+            System.out.println("Updating from Bundle." + savedInstanceState);
             // Update the value of mRequestingLocationUpdates from the Bundle, and
             if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
                 mRequestingLocationUpdates = savedInstanceState.getBoolean(
@@ -635,9 +664,18 @@ public class HLMActivity extends AppCompatActivity implements
                         LAST_UPDATED_TIME_STRING_KEY);
             }
             if (savedInstanceState.keySet().contains(NUMBER_OF_PAGES)){
-                HLM_PAGES = savedInstanceState.getInt(NUMBER_OF_PAGES);
+                HLM_PAGES = savedInstanceState.getInt(
+                        NUMBER_OF_PAGES);
             }
+            if (savedInstanceState.keySet().contains(NUMBER_OF_CURRENT_PAGE)){
+                HLM_CURRENT_PAGE = savedInstanceState.getInt(
+                        NUMBER_OF_CURRENT_PAGE);
+            }
+        } else if (HLM_PAGES > 1){
+            HLM_CURRENT_PAGE = PAGE_HLM;
         }
+        System.out.println("Recovered State: " + savedInstanceState);
+        mPager.setCurrentItem(HLM_CURRENT_PAGE);
     }
 
     public class RotatePageTransformer implements ViewPager.PageTransformer {
@@ -726,51 +764,51 @@ public class HLMActivity extends AppCompatActivity implements
         }
     }
 
-
-    /*@Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("onActivityResult()", Integer.toString(resultCode));
-        //final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
-        switch (requestCode)
-        {
-            case REQUEST_CHECK_SETTINGS:
-                switch (resultCode)
-                {
-                    case Activity.RESULT_OK:
-                    {
-                        // All required changes were successfully made
-                        Toast.makeText(this, "Location enabled by user!", Toast.LENGTH_LONG)
-                                .show();
-                        startLocationUpdates();
-                        break;
-                    }
-                    case Activity.RESULT_CANCELED:
-                    {
-                        // The user was asked to change settings, but chose not to
-                        Toast.makeText(this, "Location not enabled, user cancelled.", Toast.LENGTH_LONG)
-                                .show();
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
-                }
-                break;
-        }
-    }*/
-
     public void onSaveInstanceState(Bundle savedInstanceState) {
+        HLM_CURRENT_PAGE = mPager.getCurrentItem();
+
         savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
                 mRequestingLocationUpdates);
         savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
         savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
         savedInstanceState.putInt(NUMBER_OF_PAGES, HLM_PAGES);
+        savedInstanceState.putInt(NUMBER_OF_CURRENT_PAGE, HLM_CURRENT_PAGE);
         Log.v(TAG, "-------------------------------");
-        Log.v(TAG, "Data from Saved State Recovered");
+        Log.v(TAG, "Data Saved: State Recovery");
         Log.v(TAG, "-------------------------------");
+        Log.i(TAG,"State: " + savedInstanceState);
         super.onSaveInstanceState(savedInstanceState);
     }
+
+    private void userConnected(){
+        if (user != null){
+            Glide
+                    .with(this.getApplicationContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(drawerUserImage);
+            drawerUserAlias.setText(user.getDisplayName());
+
+            HLM_PAGES = HLM_PAGES_MAX;
+            mPagerAdapter.notifyDataSetChanged();
+
+        } else {
+            //for (int i = 1; i < mPager.getChildCount(); i++) {
+            if (mPager.getChildCount() > 1) {
+                //mPager.setOffscreenPageLimit(0);
+                //mPager.removeViewAt(PAGE_HLM);
+                //mPagerAdapter.notifyDataSetChanged();
+            }
+            //}
+            HLM_PAGES = 1;
+            mPagerAdapter.notifyDataSetChanged();
+            //mPager.setOffscreenPageLimit(0);
+
+            drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
+            drawerUserAlias.setText(R.string.app_name);
+        }
+    }
+
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         // TODO Auto-generated method stub
@@ -808,6 +846,7 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onResume(){
         super.onResume();
+
         if (user != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
         }
@@ -815,9 +854,11 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
+
         if (mGoogleApiClient.isConnected()) {
             stopLocationUpdates();
         }
+
     }
     @Override
     protected void onDestroy() {

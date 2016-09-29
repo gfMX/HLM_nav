@@ -83,14 +83,14 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
 
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
+            public void onClick(View view) {
                 String uniqueChatID = userChatID.get(holder.getAdapterPosition());
                 String userNameChat = userName.get(holder.getAdapterPosition());
 
-                Intent intent = new Intent(v.getContext(), ChatActivity.class);
+                Intent intent = new Intent(view.getContext(), ChatActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
                 intent.putExtra("userName", userNameChat);
-                v.getContext().startActivity(intent);
+                view.getContext().startActivity(intent);
             }
         });
 

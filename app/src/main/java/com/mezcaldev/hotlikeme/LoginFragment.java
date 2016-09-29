@@ -332,6 +332,7 @@ public class LoginFragment extends Fragment {
                         }
                     } else {
                         // User signed out
+                        deleteLocalProfilePic();
                         Log.d(TAG, "Firebase: Signed Out");
                         System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
                     }
@@ -384,7 +385,7 @@ public class LoginFragment extends Fragment {
         } else {
             profilePic.setProfileId(null);
             profilePic.setVisibility(View.INVISIBLE);
-            imageProfileHLM.setImageResource(R.drawable.ic_person_black);
+            imageProfileHLM.setImageResource(R.drawable.ic_account_circle_gray_64dp);
             imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(signInText);
             text_instruct.setText(null);
@@ -392,7 +393,7 @@ public class LoginFragment extends Fragment {
             btn_start.setVisibility(View.GONE);
             btn_settings.setVisibility(View.GONE);
 
-            boolean isDeleted = profileImageCheck.exists();
+            /*boolean isDeleted = profileImageCheck.exists();
             if (isDeleted) {
                 try {
                     isDeleted = profileImageCheck.delete();
@@ -400,7 +401,7 @@ public class LoginFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
-            Log.v(TAG, "File Deleted: " + isDeleted);
+            Log.v(TAG, "File Deleted: " + isDeleted);*/
         }
     }
     private void loadProfileDetails (Integer delayTime){
@@ -446,6 +447,19 @@ public class LoginFragment extends Fragment {
             });
         }
     }
+    private boolean deleteLocalProfilePic(){
+        boolean isDeleted = !profileImageCheck.exists();
+        if (!isDeleted) {
+            try {
+                isDeleted = profileImageCheck.delete();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        Log.v(TAG, "Profile Image Deleted: " + isDeleted);
+        return isDeleted;
+    }
+
     private void getFacebookDetails (){
 
         GraphRequest request = GraphRequest.newMeRequest(

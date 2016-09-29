@@ -64,8 +64,6 @@ public class ChatUserList extends ListFragment {
         cleanVars();
         user = FireConnection.getInstance().getUser();
 
-
-
         if (user!= null){
             getUsers();
         }
