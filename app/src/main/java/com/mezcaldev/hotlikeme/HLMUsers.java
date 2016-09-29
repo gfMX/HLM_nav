@@ -1,15 +1,18 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.drawable.LayerDrawable;
+import android.location.Location;
 import android.os.Bundle;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -29,7 +32,9 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 import static android.graphics.BitmapFactory.decodeByteArray;
 import static android.graphics.PorterDuff.Mode.SRC_ATOP;
@@ -49,6 +54,7 @@ import static android.widget.RatingBar.OnRatingBarChangeListener;
 import static android.widget.Toast.LENGTH_LONG;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
+import static com.facebook.FacebookSdk.getApplicationContext;
 import static com.mezcaldev.hotlikeme.FireConnection.getInstance;
 import static com.mezcaldev.hotlikeme.R.color.colorAccent;
 import static com.mezcaldev.hotlikeme.R.id.fab_message;
@@ -65,13 +71,18 @@ import static java.lang.System.out;
 import static java.util.UUID.randomUUID;
 
 public class HLMUsers extends ListFragment {
+
     String userKey;
+    private static final String TAG = "Location";
 
     static HLMUsers newInstance(String key) {
         HLMUsers newFragment = new HLMUsers();
 
         Bundle args = new Bundle();
         args.putString("key", key);
+        //args.putDouble("latitude", latitude);
+        //args.putDouble("longitude", longitude);
+
         newFragment.setArguments(args);
 
         return newFragment;
@@ -80,8 +91,17 @@ public class HLMUsers extends ListFragment {
     TextView viewUserAlias;
     ImageView viewUserImage;
     RatingBar ratingBar;
-    MenuItem chatIcon;
     FloatingActionButton fabMessage;
+
+    /* Position */
+    private static final int ONE_SECOND = 1000;
+    private static final int ONE_MINUTE = ONE_SECOND * 60;
+    private static final int MINUTES = ONE_MINUTE * 5;
+    int maxUserDistance = 250;
+
+    /* Location with Google API */
+    Location mCurrentLocation;
+    Boolean mRequestingLocationUpdates;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -107,6 +127,11 @@ public class HLMUsers extends ListFragment {
     Toast toast1;
     Toast toast2;
 
+    String gender;
+    SharedPreferences sharedPreferences;
+    SharedPreferences.Editor preferencesEditor;
+    static List<String> users = new ArrayList<>();
+
     //Firebase Initialization
     FirebaseUser user = getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -119,10 +144,25 @@ public class HLMUsers extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         userKey = getArguments() != null ? getArguments().getString("key") : "nullKey";
+        //Double latitude = getArguments() != null ? getArguments().getDouble("latitude") : null;
+        //Double longitude = getArguments() != null ? getArguments().getDouble("longitude") : null;
+        //mCurrtenLocation = new Location("");
+        //mCurrentLocation.setLatitude(latitude);
+        //mCurrentLocation.setLongitude(longitude);
+
+        //out.println("UserKey Received: " + userKey);
+
+        mCurrentLocation = HLMActivity.mCurrentLocation;
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
+        gender = sharedPreferences.getString("looking_for", "both");
+        maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
+        mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
         if (user != null) {
             didWeLike();
             out.println("Actual user: " + user.getUid());
+            getUriProfilePics(gender);
         }
     }
 
@@ -445,11 +485,109 @@ public class HLMUsers extends ListFragment {
         });
     }
 
+    public void getUriProfilePics (final String gender){
+
+        mCurrentLocation = HLMActivity.mCurrentLocation;
+        final ValueEventListener valueEventListener0;
+
+        final DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
+        final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
+
+        valueEventListener0 = new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                int numChildren = (int) dataSnapshot.getChildrenCount();
+                System.out.println("Number of users: " + numChildren);
+
+                for (DataSnapshot data: dataSnapshot.getChildren()){
+                    final String dataKey = data.getKey();
+                    databaseReferenceLocation.child(dataKey).addListenerForSingleValueEvent(
+                            new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    Location remoteUserLocation;
+
+                                    //Check permission and proceed according to them
+                                    if(!mRequestingLocationUpdates){
+                                        System.out.println("All users are visible");
+                                        users.add(dataKey);
+                                        //mPagerAdapter.notifyDataSetChanged();
+
+                                        Snackbar.make(getActivity().getWindow().getDecorView(),
+                                                getResources().getString(R.string.text_enable_gps_snack),
+                                                Snackbar.LENGTH_LONG)
+                                                .setAction("Enable GPS", new View.OnClickListener(){
+                                                    @Override
+                                                    public void onClick(View v) {
+                                                        preferencesEditor = sharedPreferences.edit();
+                                                        preferencesEditor.putBoolean("gps_enabled", true);
+                                                        preferencesEditor.apply();
+                                                        mRequestingLocationUpdates = true;
+
+                                                        users.clear();
+
+                                                        /*Handler handler = new Handler();
+                                                        handler.postDelayed(new Runnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                Intent intent = getIntent();
+                                                                startActivity(intent);
+                                                                finish();
+                                                            }
+                                                        },500);*/
+
+                                                    }
+                                                }).show();
+
+                                    } else if (mCurrentLocation != null) {
+                                        Double userLongitude = (Double) dataSnapshot.child("location_last").child("loc_longitude")
+                                                .getValue();
+                                        Double userLatitude = (Double) dataSnapshot.child("location_last").child("loc_latitude")
+                                                .getValue();
+                                        //Request location of the Remote User
+                                        if (userLongitude != null && userLatitude != null) {
+
+                                            remoteUserLocation = new Location("");
+                                            remoteUserLocation.setLongitude(userLongitude);
+                                            remoteUserLocation.setLatitude(userLatitude);
+
+                                            System.out.println("Remote User Location: " + remoteUserLocation);
+
+                                            if (mCurrentLocation.distanceTo(remoteUserLocation) <= maxUserDistance
+                                                    && !dataKey.equals(user.getUid())){
+
+                                                System.out.println("User " + dataKey + " reachable!");
+                                                users.add(dataKey);
+                                                //mPagerAdapter.notifyDataSetChanged();
+                                            }
+                                        }
+                                    } else {
+                                        System.out.println("Location Not Reachable! Please wait...");
+                                        Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
+                                    }
+
+                                }
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            }
+                    );
+                }
+            }
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        };
+        databaseReference.addListenerForSingleValueEvent(valueEventListener0);
+    }
+
+
     private String timeStamp() {
         Calendar calendar = Calendar.getInstance();
         calendar.getTime();
 
-        //return (hours + ":" + minutes + " - " + date + "/" + month + "/" + year);
         return String.valueOf(calendar.getTimeInMillis());
     }
 

@@ -8,11 +8,9 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -35,7 +33,6 @@ import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.google.android.gms.common.ConnectionResult;
@@ -51,11 +48,8 @@ import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 
 import java.text.DateFormat;
 import java.util.ArrayList;
@@ -95,7 +89,7 @@ public class HLMActivity extends AppCompatActivity implements
     int delayForUsers = 2500;
 
     /* Location with Google API */
-    Location mCurrentLocation;
+    static Location mCurrentLocation;
     LocationRequest mLocationRequest;
     GoogleApiClient mGoogleApiClient;
     Boolean mRequestingLocationUpdates;
@@ -227,22 +221,22 @@ public class HLMActivity extends AppCompatActivity implements
 
         System.out.println("Users: " + users);
 
-        /*if (user != null) {
-            //Set user Pic on the Drawers
-            Glide
-                    .with(this.getApplicationContext())
-                    .load(user.getPhotoUrl())
-                    .centerCrop()
-                    .into(drawerUserImage);
-            drawerUserAlias.setText(user.getDisplayName());
+        /*if (users.size() <= 0) {
+            System.out.println("Getting Users");
+            getUriProfilePics(gender);
 
-            HLM_PAGES = HLM_PAGES_MAX;
-            mPagerAdapter.notifyDataSetChanged();
+            Handler checkUsers = new Handler();
+            checkUsers.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (users.size()==0){
+                        usersNull();
+                    }
+                }
+            }, delayForUsers);
+        } else {
+            System.out.println("User list OK");
         }*/
-
-        /* if (HLM_PAGES > 1) {
-            mPager.setCurrentItem(PAGE_HLM);
-        } */
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
@@ -341,18 +335,6 @@ public class HLMActivity extends AppCompatActivity implements
         return true;
     }
 
-    protected synchronized void buildGoogleApiClient() {
-        Log.i(TAG, "Building GoogleApiClient");
-        mGoogleApiClient = new GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build();
-        if (user != null) {
-            createLocationRequest();
-        }
-    }
-
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
         private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
@@ -364,10 +346,13 @@ public class HLMActivity extends AppCompatActivity implements
             switch (position) {
                 case PAGE_LOGIN:
                     return LoginFragment.newInstance();
+
                 case PAGE_HLM:
                     return HLMUsers.newInstance("nullKey");
+
                 case PAGE_CHAT:
                     return ChatUserList.newInstance();
+
                 default:
                     return null;
             }
@@ -383,100 +368,45 @@ public class HLMActivity extends AppCompatActivity implements
         }
     }
 
-    public void getUriProfilePics (final String gender){
-        final ValueEventListener valueEventListener0;
+    private void userConnected(){
+        if (user != null){
+            Glide
+                    .with(this.getApplicationContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(drawerUserImage);
+            drawerUserAlias.setText(user.getDisplayName());
 
-        final DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
-        final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
+            HLM_PAGES = HLM_PAGES_MAX;
+            mPagerAdapter.notifyDataSetChanged();
 
-        valueEventListener0 = new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                int numChildren = (int) dataSnapshot.getChildrenCount();
-                System.out.println("Number of users: " + numChildren);
-
-                for (DataSnapshot data: dataSnapshot.getChildren()){
-                    final String dataKey = data.getKey();
-                    databaseReferenceLocation.child(dataKey).addListenerForSingleValueEvent(
-                            new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    Location remoteUserLocation;
-
-                                    //Check permission and proceed according to them
-                                    if(!mRequestingLocationUpdates){
-                                        System.out.println("All users are visible");
-                                        users.add(dataKey);
-                                        mPagerAdapter.notifyDataSetChanged();
-
-                                        Snackbar.make(getWindow().getDecorView(),
-                                                getResources().getString(R.string.text_enable_gps_snack),
-                                                Snackbar.LENGTH_LONG)
-                                                .setAction("Enable GPS", new View.OnClickListener(){
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        preferencesEditor = sharedPreferences.edit();
-                                                        preferencesEditor.putBoolean("gps_enabled", true);
-                                                        preferencesEditor.apply();
-                                                        mRequestingLocationUpdates = true;
-
-                                                        users.clear();
-                                                        mPagerAdapter.notifyDataSetChanged();
-                                                        Handler handler = new Handler();
-                                                        handler.postDelayed(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                Intent intent = getIntent();
-                                                                startActivity(intent);
-                                                                finish();
-                                                            }
-                                                        },500);
-
-                                                    }
-                                                }).show();
-
-                                    } else if (mCurrentLocation != null) {
-                                        Double userLongitude = (Double) dataSnapshot.child("location_last").child("loc_longitude")
-                                                .getValue();
-                                        Double userLatitude = (Double) dataSnapshot.child("location_last").child("loc_latitude")
-                                                .getValue();
-                                        //Request location of the Remote User
-                                        if (userLongitude != null && userLatitude != null) {
-
-                                            remoteUserLocation = new Location("");
-                                            remoteUserLocation.setLongitude(userLongitude);
-                                            remoteUserLocation.setLatitude(userLatitude);
-
-                                            System.out.println("Remote User Location: " + remoteUserLocation);
-
-                                            if (mCurrentLocation.distanceTo(remoteUserLocation) <= maxUserDistance
-                                                    && !dataKey.equals(user.getUid())){
-
-                                                System.out.println("User " + dataKey + " reachable!");
-                                                users.add(dataKey);
-                                                mPagerAdapter.notifyDataSetChanged();
-                                            }
-                                        }
-                                    } else {
-                                        System.out.println("Location Not Reachable! Please wait...");
-                                        Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
-                                    }
-
-                                }
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            }
-                    );
-                }
+        } else {
+            //for (int i = 1; i < mPager.getChildCount(); i++) {
+            if (mPager.getChildCount() > 1) {
+                //mPager.setOffscreenPageLimit(0);
+                //mPager.removeViewAt(PAGE_HLM);
+                //mPagerAdapter.notifyDataSetChanged();
             }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
+            //}
+            HLM_PAGES = 1;
+            mPagerAdapter.notifyDataSetChanged();
+            //mPager.setOffscreenPageLimit(0);
 
-            }
-        };
-        databaseReference.addListenerForSingleValueEvent(valueEventListener0);
+            drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
+            drawerUserAlias.setText(R.string.app_name);
+        }
+    }
+
+    protected synchronized void buildGoogleApiClient() {
+        Log.i(TAG, "Building GoogleApiClient");
+        mGoogleApiClient = new GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build();
+        if (user != null) {
+            createLocationRequest();
+        }
     }
 
     @Override
@@ -591,12 +521,6 @@ public class HLMActivity extends AppCompatActivity implements
         mPagerAdapter.notifyDataSetChanged();
     }
 
-    private void usersNull(){
-        //users.clear();
-        users.add("nullKey");
-        mPagerAdapter.notifyDataSetChanged();
-    }
-
     protected boolean isBetterLocation(Location location, Location currentBestLocation) {
         if (currentBestLocation == null) {
             // A new location is always better than no location
@@ -678,53 +602,6 @@ public class HLMActivity extends AppCompatActivity implements
         mPager.setCurrentItem(HLM_CURRENT_PAGE);
     }
 
-    public class RotatePageTransformer implements ViewPager.PageTransformer {
-        private static final float MIN_SCALE = 0.75f;
-
-        public void transformPage(View page, float position) {
-            float scaleFactor = MIN_SCALE
-                    + (1 - MIN_SCALE) * (1 - Math.abs(position));
-
-            page.setPivotX(page.getWidth() + x);
-            page.setPivotY(page.getHeight()/2 + y);
-            page.setRotation(position * +15f);
-
-            if (position < -1) { // [-Infinity,-1)
-                page.setAlpha(0);
-
-            } else if (position <= 0) { // [-1,0]
-                // Use the default slide transition when moving to the left page
-                page.setTranslationX(0);
-                page.setTranslationY(0);
-                page.setScaleX(1);
-                page.setScaleY(1);
-                page.setAlpha(1 + position);
-
-                page.setTranslationX(-position/2);
-                //page.setTranslationY(y/4 * position);
-
-            } else if (position <= 1) { // (0,1]
-
-                // Counteract the default slide transition
-                page.setPivotX(page.getWidth() + x);
-                page.setPivotY(page.getHeight()/2 + y);
-                page.setRotation(position * +15f);
-
-                page.setTranslationX(page.getWidth() * -position);
-                //page.setTranslationY(y/2 * position);
-
-                // Scale the page down (between MIN_SCALE and 1)
-                page.setScaleX(scaleFactor);
-                page.setScaleY(scaleFactor);
-                page.setAlpha(1 - position);
-
-            } else { // (1,+Infinity]
-                // This page is way off-screen to the right.
-                page.setAlpha(0);
-            }
-        }
-    }
-
     public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.85f;
         private static final float MIN_ALPHA = 0.5f;
@@ -780,35 +657,6 @@ public class HLMActivity extends AppCompatActivity implements
         super.onSaveInstanceState(savedInstanceState);
     }
 
-    private void userConnected(){
-        if (user != null){
-            Glide
-                    .with(this.getApplicationContext())
-                    .load(user.getPhotoUrl())
-                    .centerCrop()
-                    .into(drawerUserImage);
-            drawerUserAlias.setText(user.getDisplayName());
-
-            HLM_PAGES = HLM_PAGES_MAX;
-            mPagerAdapter.notifyDataSetChanged();
-
-        } else {
-            //for (int i = 1; i < mPager.getChildCount(); i++) {
-            if (mPager.getChildCount() > 1) {
-                //mPager.setOffscreenPageLimit(0);
-                //mPager.removeViewAt(PAGE_HLM);
-                //mPagerAdapter.notifyDataSetChanged();
-            }
-            //}
-            HLM_PAGES = 1;
-            mPagerAdapter.notifyDataSetChanged();
-            //mPager.setOffscreenPageLimit(0);
-
-            drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
-            drawerUserAlias.setText(R.string.app_name);
-        }
-    }
-
     @Override
     public void onConnectionFailed(ConnectionResult result) {
         // TODO Auto-generated method stub
@@ -858,7 +706,6 @@ public class HLMActivity extends AppCompatActivity implements
         if (mGoogleApiClient.isConnected()) {
             stopLocationUpdates();
         }
-
     }
     @Override
     protected void onDestroy() {
