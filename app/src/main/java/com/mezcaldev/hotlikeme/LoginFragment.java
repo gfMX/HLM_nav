@@ -8,7 +8,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -66,8 +65,8 @@ public class LoginFragment extends Fragment {
 
     private static final String TAG = "Login Details";
     //Delay Time to load Profile Picture if exists.
-    Integer minDelayTime =100;
-    Integer delayTime = 1500;
+    Integer minDelayTime = 100;
+    Integer delayTime = 500;
 
     //Facebook
     LoginButton loginButton;
@@ -120,6 +119,7 @@ public class LoginFragment extends Fragment {
         super.onCreate(savedInstanceState);
 
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
+        callbackManager = CallbackManager.Factory.create();
 
         snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(),
                 getResources().getString(R.string.text_network_access_required),
@@ -154,10 +154,7 @@ public class LoginFragment extends Fragment {
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
         //Gaining Tokens in Background:
-        getUserAccess userAccess = new getUserAccess();
-        userAccess.execute();
-
-        callbackManager = CallbackManager.Factory.create();
+        getUserAccess();
 
         profileImageCheck = new File(pathProfileImage + "/" + imageProfileFileName);
 
@@ -228,8 +225,7 @@ public class LoginFragment extends Fragment {
     //Buttons for different settings
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
       public void onClick (View v){
-          boolean networkAvailable = isNetworkAvailable();
-          if (networkAvailable){
+          if (isNetworkAvailable()){
               switch (v.getId()) {
                   case R.id.btn_choose_img:
                       Toast.makeText(getActivity(),
@@ -272,13 +268,7 @@ public class LoginFragment extends Fragment {
       }
     };
 
-    private class getUserAccess extends AsyncTask <Void, Void, Void>{
-        @Override
-        protected void onPreExecute(){
-
-        }
-        @Override
-        protected Void doInBackground(Void...params){
+    private void getUserAccess() {
             //Facebook Access Token & Profile:
             accessTokenTracker = new AccessTokenTracker() {
                 @Override
@@ -292,7 +282,6 @@ public class LoginFragment extends Fragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_see_you_soon),
                                 Toast.LENGTH_SHORT).show();
-                       // itemSettings.setVisible(false);
 
                         FirebaseAuth.getInstance().signOut();
                         Log.i(TAG, "Firebase: " + FirebaseAuth.getInstance().toString());
@@ -301,7 +290,6 @@ public class LoginFragment extends Fragment {
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_welcome_again),
                                 Toast.LENGTH_SHORT).show();
-                        //itemSettings.setVisible(true);
                     }
                     updateUI();
                 }
@@ -351,13 +339,6 @@ public class LoginFragment extends Fragment {
                     updateUI();
                 }
             };
-
-            return null;
-        }
-        @Override
-        protected void onPostExecute(Void result){
-
-        }
     }
 
     private void handleFacebookAccessToken(final AccessToken token) {
@@ -516,6 +497,7 @@ public class LoginFragment extends Fragment {
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
+        System.out.println("On Start: OK");
     }
 
     @Override

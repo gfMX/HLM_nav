@@ -1,6 +1,5 @@
 package com.mezcaldev.hotlikeme;
 
-import android.app.Activity;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
@@ -65,8 +64,8 @@ public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Location";
-    int HLM_PAGES = 1;
-    int HLM_PAGES_MAX = 3;
+    int HLM_PAGES;
+    final int HLM_PAGES_MAX = 3;
     final int PAGE_LOGIN = 0;
     final int PAGE_HLM = 1;
     final int PAGE_CHAT = 2;
@@ -107,6 +106,7 @@ public class HLMActivity extends AppCompatActivity implements
     protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
     protected final static String LOCATION_KEY = "location-key";
     protected final static String LAST_UPDATED_TIME_STRING_KEY = "last-updated-time-string-key";
+    protected final static String NUMBER_OF_PAGES = "visible-pages";
 
     // Others
     int x;
@@ -159,20 +159,6 @@ public class HLMActivity extends AppCompatActivity implements
         drawerUserAlias = (TextView) headerView.findViewById(R.id.drawer_user);
         drawerUserDescription = (TextView) headerView.findViewById(R.id.drawer_description);
 
-        if (user != null) {
-            Glide
-                    .with(this.getApplicationContext())
-                    .load(user.getPhotoUrl())
-                    .centerCrop()
-                    .into(drawerUserImage);
-            drawerUserAlias.setText(user.getDisplayName());
-
-            if (HLM_PAGES == 1) {
-                HLM_PAGES = HLM_PAGES_MAX;
-                mPagerAdapter.notifyDataSetChanged();
-            }
-        }
-
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         gender = sharedPreferences.getString("looking_for", "Not specified");
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
@@ -215,6 +201,19 @@ public class HLMActivity extends AppCompatActivity implements
         );
 
         System.out.println("Users: " + users);
+
+        if (user != null) {
+            //Set user Pic on the Drawers
+            Glide
+                    .with(this.getApplicationContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(drawerUserImage);
+            drawerUserAlias.setText(user.getDisplayName());
+
+            HLM_PAGES = HLM_PAGES_MAX;
+            mPagerAdapter.notifyDataSetChanged();
+        }
 
         if (HLM_PAGES > 1){
             mPager.setCurrentItem(PAGE_HLM);
@@ -322,7 +321,9 @@ public class HLMActivity extends AppCompatActivity implements
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-        createLocationRequest();
+        if (user != null) {
+            createLocationRequest();
+        }
     }
 
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
@@ -633,6 +634,9 @@ public class HLMActivity extends AppCompatActivity implements
                 mLastUpdateTime = savedInstanceState.getString(
                         LAST_UPDATED_TIME_STRING_KEY);
             }
+            if (savedInstanceState.keySet().contains(NUMBER_OF_PAGES)){
+                HLM_PAGES = savedInstanceState.getInt(NUMBER_OF_PAGES);
+            }
         }
     }
 
@@ -723,7 +727,7 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
 
-    @Override
+    /*@Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         Log.d("onActivityResult()", Integer.toString(resultCode));
         //final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
@@ -754,13 +758,14 @@ public class HLMActivity extends AppCompatActivity implements
                 }
                 break;
         }
-    }
+    }*/
 
     public void onSaveInstanceState(Bundle savedInstanceState) {
         savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
                 mRequestingLocationUpdates);
         savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
         savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
+        savedInstanceState.putInt(NUMBER_OF_PAGES, HLM_PAGES);
         Log.v(TAG, "-------------------------------");
         Log.v(TAG, "Data from Saved State Recovered");
         Log.v(TAG, "-------------------------------");
@@ -803,7 +808,7 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onResume(){
         super.onResume();
-        if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
+        if (user != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
         }
     }

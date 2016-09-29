@@ -12,7 +12,6 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
-import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseUser;
 
 public class MainActivity extends AppCompatActivity {
@@ -35,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        FacebookSdk.sdkInitialize(this.getApplicationContext());
+        //FacebookSdk.sdkInitialize(this.getApplicationContext());
 
         fireConnection = FireConnection.getInstance();
         checkAccess();
