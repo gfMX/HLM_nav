@@ -511,7 +511,6 @@ public class LoginFragment extends Fragment {
     public void onStart() {
         super.onStart();
         mAuth.addAuthStateListener(mAuthListener);
-        System.out.println("On Start: OK");
     }
 
     @Override

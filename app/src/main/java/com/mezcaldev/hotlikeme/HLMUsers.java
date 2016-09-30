@@ -6,6 +6,7 @@ import android.graphics.Bitmap;
 import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
@@ -35,6 +36,7 @@ import com.google.firebase.storage.StorageReference;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
+import java.util.Random;
 
 import static android.graphics.BitmapFactory.decodeByteArray;
 import static android.graphics.PorterDuff.Mode.SRC_ATOP;
@@ -48,9 +50,7 @@ import static android.view.MotionEvent.ACTION_POINTER_UP;
 import static android.view.MotionEvent.ACTION_UP;
 import static android.view.View.INVISIBLE;
 import static android.view.View.OnClickListener;
-import static android.view.View.OnTouchListener;
 import static android.view.View.VISIBLE;
-import static android.widget.RatingBar.OnRatingBarChangeListener;
 import static android.widget.Toast.LENGTH_LONG;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
@@ -72,7 +72,7 @@ import static java.util.UUID.randomUUID;
 
 public class HLMUsers extends ListFragment {
 
-    String userKey;
+    String userKey = "nullKey";
     private static final String TAG = "Location";
 
     static HLMUsers newInstance(String key) {
@@ -98,10 +98,12 @@ public class HLMUsers extends ListFragment {
     private static final int ONE_MINUTE = ONE_SECOND * 60;
     private static final int MINUTES = ONE_MINUTE * 5;
     int maxUserDistance = 250;
+    int delayTime = 250;
 
     /* Location with Google API */
     Location mCurrentLocation;
     Boolean mRequestingLocationUpdates;
+    final int REQUEST_CHECK_SETTINGS = 2543;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -143,7 +145,7 @@ public class HLMUsers extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        userKey = getArguments() != null ? getArguments().getString("key") : "nullKey";
+        //userKey = getArguments() != null ? getArguments().getString("key") : "nullKey";
         //Double latitude = getArguments() != null ? getArguments().getDouble("latitude") : null;
         //Double longitude = getArguments() != null ? getArguments().getDouble("longitude") : null;
         //mCurrtenLocation = new Location("");
@@ -152,6 +154,7 @@ public class HLMUsers extends ListFragment {
 
         //out.println("UserKey Received: " + userKey);
 
+        user = getInstance().getUser();
         mCurrentLocation = HLMActivity.mCurrentLocation;
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
@@ -159,11 +162,10 @@ public class HLMUsers extends ListFragment {
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
-        if (user != null) {
-            didWeLike();
+        //if (user != null) {
             out.println("Actual user: " + user.getUid());
             getUriProfilePics(gender);
-        }
+        //}
     }
 
     @Override
@@ -176,21 +178,6 @@ public class HLMUsers extends ListFragment {
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState) {
-
-        //Adds the users that Current User likes
-
-        referenceLikeUser = database.getReference()
-                .child("users")
-                .child(user.getUid())
-                .child("like_user")
-                .child(userKey);
-
-        //Adds the rate of the Current User to the rating of the external user
-        referenceUserRated = database.getReference()
-                .child("users")
-                .child(userKey)
-                .child("user_rate")
-                .child(user.getUid());
 
         viewUserAlias = (TextView) view.findViewById(textView);
         viewUserImage = (ImageView) view.findViewById(imageView);
@@ -221,135 +208,19 @@ public class HLMUsers extends ListFragment {
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
-        //Only if a Key si given proceed, else Show a blank (Default) page.
-        if (!userKey.equals("nullKey")) {
-            getUserDetails(userKey);
-            userRating();
-
-            ratingBar.setOnRatingBarChangeListener(new OnRatingBarChangeListener() {
-                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                    starsRating = rating;
-                    if (starsRating == 0) {
-                        referenceUserRated.setValue(null);
-                    } else {
-                        referenceUserRated.setValue(starsRating);
-                    }
-                }
-            });
-
-            viewUserImage.setOnTouchListener(new OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    int x = (int) event.getX();
-                    int y = (int) event.getY();
-                    //int xRaw = (int) event.getRawX();
-                    int yRaw = (int) event.getRawY();
-
-                    switch (event.getAction() & ACTION_MASK) {
-                        case ACTION_DOWN:
-                            out.println("Down");
-                            distanceX = x;
-                            distanceY = y;
-
-                            break;
-                        case ACTION_UP:
-                            out.println("Up");
-                            v.setTranslationY(0);
-                            v.setTranslationX(0);
-
-                            //Add users to the Like List
-                            if (yRaw < screenUp) {
-                                out.println("User ID: " + userKey);
-                                referenceLikeUser.setValue(true);
-                                makeText(getContext(), "Added!", LENGTH_SHORT).show();
-
-                            }
-
-                            //Remove users from the Like List
-                            if (yRaw > screenDown) {
-                                out.println("User ID: " + userKey);
-                                referenceLikeUser.setValue(null);
-                                makeText(getContext(), "Removed!", LENGTH_SHORT).show();
-                                fabMessage.setVisibility(INVISIBLE);
-                                /*if (chatIcon != null) {
-                                    chatIcon.setVisible(false);
-                                }*/
-                            }
-
-                            referenceUserRated.setValue(starsRating);
-
-                            resetFlags();
-
-                            break;
-                        case ACTION_POINTER_DOWN:
-                            out.println("Pointer Down");
-
-                            break;
-                        case ACTION_POINTER_UP:
-                            out.println("Pointer Up");
-
-                            break;
-                        case ACTION_MOVE:
-                            v.setX((v.getX() - v.getWidth() / 2) + x);
-                            v.setY((v.getY() - v.getHeight() / 2) + y);
-                            if (yRaw < screenUp && !flagOne) {
-                                out.println("Up");
-                                toast1 = makeText(getContext(), "I'll like to get in touch!", LENGTH_SHORT);
-                                toast1.setGravity(CENTER, 0, 400);
-                                toast1.show();
-
-                                resetFlags();
-                                flagOne = true;
-                            }
-                            if (yRaw > screenDown && !flagTwo) {
-                                out.println("Down");
-                                toast2 = makeText(getContext(), "I don't wan't to get in touch.", LENGTH_SHORT);
-                                toast2.setGravity(CENTER, 0, -350);
-                                toast2.show();
-
-                                resetFlags();
-                                flagTwo = true;
-                            }
-
-                            if (yRaw < screenPart) {
-                                //Upper limit of the screen
-                                //System.out.println("None");
-                            } else if (yRaw < screenPart * 2) {
-                                starsRating = 1;
-                            } else if (yRaw < screenPart * 3) {
-                                starsRating = 2;
-                            } else if (yRaw < screenPart * 4) {
-                                starsRating = 3;
-                            } else if (yRaw < screenPart * 5) {
-                                starsRating = 4;
-                            } else if (yRaw < screenPart * 6) {
-                                starsRating = 5;
-                            } else if (yRaw < screenPart * 7) {
-                                //Null zone doesn't add or change Rating
-                                starsRating = oldRating;
-                            } else if (yRaw < screenPart * 8) {
-                                starsRating = 5;
-                            } else if (yRaw < screenPart * 9) {
-                                starsRating = 4;
-                            } else if (yRaw < screenPart * 10) {
-                                starsRating = 3;
-                            } else if (yRaw < screenPart * 11) {
-                                starsRating = 2;
-                            } else if (yRaw < screenPart * 12) {
-                                starsRating = 1;
-                            } else if (yRaw < screenPart * 13) {
-                                //Way too low of the screen
-                                //System.out.println("None");
-                            }
-                            ratingBar.setRating(starsRating);
-                            break;
-                    }
-                    return true;
-                }
-            });
-        } else {
-            makeText(this.getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
+        if (users.size() > 0){
+            userKey = users.get(randomUser(users.size()));
         }
+
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+
+                showUser();
+
+            }
+        },delayTime);
     }
 
     private void getUserDetails(String userKey) {
@@ -445,8 +316,6 @@ public class HLMUsers extends ListFragment {
 
             }
         });
-
-        //checkChat();
     }
 
     private void checkChat() {
@@ -487,7 +356,6 @@ public class HLMUsers extends ListFragment {
 
     public void getUriProfilePics (final String gender){
 
-        mCurrentLocation = HLMActivity.mCurrentLocation;
         final ValueEventListener valueEventListener0;
 
         final DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
@@ -511,7 +379,6 @@ public class HLMUsers extends ListFragment {
                                     if(!mRequestingLocationUpdates){
                                         System.out.println("All users are visible");
                                         users.add(dataKey);
-                                        //mPagerAdapter.notifyDataSetChanged();
 
                                         Snackbar.make(getActivity().getWindow().getDecorView(),
                                                 getResources().getString(R.string.text_enable_gps_snack),
@@ -526,15 +393,13 @@ public class HLMUsers extends ListFragment {
 
                                                         users.clear();
 
-                                                        /*Handler handler = new Handler();
+                                                        Handler handler = new Handler();
                                                         handler.postDelayed(new Runnable() {
                                                             @Override
                                                             public void run() {
-                                                                Intent intent = getIntent();
-                                                                startActivity(intent);
-                                                                finish();
+                                                                startActivity(new Intent(getActivity(), HLMActivity.class));
                                                             }
-                                                        },500);*/
+                                                        },500);
 
                                                     }
                                                 }).show();
@@ -558,14 +423,14 @@ public class HLMUsers extends ListFragment {
 
                                                 System.out.println("User " + dataKey + " reachable!");
                                                 users.add(dataKey);
-                                                //mPagerAdapter.notifyDataSetChanged();
+
                                             }
                                         }
                                     } else {
                                         System.out.println("Location Not Reachable! Please wait...");
                                         Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
                                     }
-
+                                    showUser();
                                 }
                                 @Override
                                 public void onCancelled(DatabaseError databaseError) {
@@ -583,6 +448,161 @@ public class HLMUsers extends ListFragment {
         databaseReference.addListenerForSingleValueEvent(valueEventListener0);
     }
 
+    private void showUser(){
+        didWeLike();
+        //Only if a Key si given proceed, else Show a blank (Default) page.
+        if (!userKey.equals("nullKey")) {
+
+            //Adds the users that Current User likes
+            referenceLikeUser = database.getReference()
+                    .child("users")
+                    .child(user.getUid())
+                    .child("like_user")
+                    .child(userKey);
+
+            //Adds the rate of the Current User to the rating of the external user
+            referenceUserRated = database.getReference()
+                    .child("users")
+                    .child(userKey)
+                    .child("user_rate")
+                    .child(user.getUid());
+
+            getUserDetails(userKey);
+            userRating();
+
+            ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+                public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
+                    starsRating = rating;
+                    if (starsRating == 0) {
+                        referenceUserRated.setValue(null);
+                    } else {
+                        referenceUserRated.setValue(starsRating);
+                    }
+                }
+            });
+
+            viewUserImage.setOnTouchListener(new View.OnTouchListener() {
+                @Override
+                public boolean onTouch(View v, MotionEvent event) {
+                    int x = (int) event.getX();
+                    int y = (int) event.getY();
+                    //int xRaw = (int) event.getRawX();
+                    int yRaw = (int) event.getRawY();
+
+                    switch (event.getAction() & ACTION_MASK) {
+                        case ACTION_DOWN:
+                            out.println("Down");
+                            distanceX = x;
+                            distanceY = y;
+
+                            break;
+                        case ACTION_UP:
+                            out.println("Up");
+                            v.setTranslationY(0);
+                            v.setTranslationX(0);
+
+                            //Add users to the Like List
+                            if (yRaw < screenUp) {
+                                out.println("User ID: " + userKey);
+                                referenceLikeUser.setValue(true);
+                                makeText(getContext(), "Added!", LENGTH_SHORT).show();
+
+                            }
+
+                            //Remove users from the Like List
+                            if (yRaw > screenDown) {
+                                out.println("User ID: " + userKey);
+                                referenceLikeUser.setValue(null);
+                                makeText(getContext(), "Removed!", LENGTH_SHORT).show();
+                                fabMessage.setVisibility(INVISIBLE);
+                            }
+
+                            referenceUserRated.setValue(starsRating);
+
+                            resetFlags();
+                            userKey = users.get(randomUser(users.size()));
+                            showUser();
+
+                            break;
+                        case ACTION_POINTER_DOWN:
+                            out.println("Pointer Down");
+
+                            break;
+                        case ACTION_POINTER_UP:
+                            out.println("Pointer Up");
+
+                            break;
+                        case ACTION_MOVE:
+                            v.setX((v.getX() - v.getWidth() / 2) + x);
+                            v.setY((v.getY() - v.getHeight() / 2) + y);
+                            if (yRaw < screenUp && !flagOne) {
+                                out.println("Up");
+                                toast1 = makeText(getContext(), "I'll like to get in touch!", LENGTH_SHORT);
+                                toast1.setGravity(CENTER, 0, 400);
+                                toast1.show();
+
+                                resetFlags();
+                                flagOne = true;
+                            }
+                            if (yRaw > screenDown && !flagTwo) {
+                                out.println("Down");
+                                toast2 = makeText(getContext(), "I don't wan't to get in touch.", LENGTH_SHORT);
+                                toast2.setGravity(CENTER, 0, -350);
+                                toast2.show();
+
+                                resetFlags();
+                                flagTwo = true;
+                            }
+
+                            if (yRaw < screenPart) {
+                                //Upper limit of the screen
+                                //System.out.println("None");
+                            } else if (yRaw < screenPart * 2) {
+                                starsRating = 5;
+                            } else if (yRaw < screenPart * 3) {
+                                starsRating = 4;
+                            } else if (yRaw < screenPart * 4) {
+                                starsRating = 3;
+                            } else if (yRaw < screenPart * 5) {
+                                starsRating = 2;
+                            } else if (yRaw < screenPart * 6) {
+                                starsRating = 1;
+                            } else if (yRaw < screenPart * 7) {
+                                //Null zone doesn't add or change Rating
+                                starsRating = oldRating;
+                            } else if (yRaw < screenPart * 8) {
+                                starsRating = 1;
+                            } else if (yRaw < screenPart * 9) {
+                                starsRating = 2;
+                            } else if (yRaw < screenPart * 10) {
+                                starsRating = 3;
+                            } else if (yRaw < screenPart * 11) {
+                                starsRating = 4;
+                            } else if (yRaw < screenPart * 12) {
+                                starsRating = 5;
+                            } else if (yRaw < screenPart * 13) {
+                                //Way too low of the screen
+                                //System.out.println("None");
+                            }
+                            ratingBar.setRating(starsRating);
+                            break;
+                    }
+                    return true;
+                }
+            });
+
+        } else {
+            Toast.makeText(getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
+        }
+    }
+
+    private int randomUser(int noMax){
+        int nMin = 0;
+        int nMax = noMax-1;
+        Random random = new Random();
+
+        return random.nextInt((nMax - nMin) + 1) + nMin;
+    }
 
     private String timeStamp() {
         Calendar calendar = Calendar.getInstance();
@@ -594,6 +614,9 @@ public class HLMUsers extends ListFragment {
     private void resetFlags() {
         flagOne = false;
         flagTwo = false;
+
+        weLike = false;
+        fabMessage.setVisibility(INVISIBLE);
     }
 
     @Override

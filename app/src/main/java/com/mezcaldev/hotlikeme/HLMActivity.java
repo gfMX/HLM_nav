@@ -66,14 +66,12 @@ public class HLMActivity extends AppCompatActivity implements
     final int PAGE_LOGIN = 0;
     final int PAGE_HLM = 1;
     final int PAGE_CHAT = 2;
-    final int PAGE_SETTINGS = 3;
+    //final int PAGE_SETTINGS = 3;
     final int OFFSCREEN_PAGES = 1;
 
-    public static String userKey;
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     SharedPreferences sharedPreferences;
-    SharedPreferences.Editor preferencesEditor;
 
     //Location variables Initialization
     /* GPS Constant Permission */
@@ -86,7 +84,6 @@ public class HLMActivity extends AppCompatActivity implements
     int maxUserDistance = 250;
     int fastInterval = ONE_SECOND * 30;
     int minInterval = ONE_MINUTE;
-    int delayForUsers = 2500;
 
     /* Location with Google API */
     static Location mCurrentLocation;
@@ -125,6 +122,9 @@ public class HLMActivity extends AppCompatActivity implements
     TextView drawerUserAlias;
     TextView drawerUserDescription;
 
+    View headerView;
+    NavigationView navigationView;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -141,12 +141,16 @@ public class HLMActivity extends AppCompatActivity implements
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
-        drawer.addDrawerListener(toggle);
-        toggle.syncState();
+        if (drawer != null) {
+            drawer.addDrawerListener(toggle);
+            toggle.syncState();
+        }
 
-        NavigationView navigationView = (NavigationView) findViewById(R.id.nav_view);
-        navigationView.setNavigationItemSelectedListener(this);
-        View headerView = navigationView.getHeaderView(0);
+        navigationView = (NavigationView) findViewById(R.id.nav_view);
+        if (navigationView != null) {
+            navigationView.setNavigationItemSelectedListener(this);
+            headerView = navigationView.getHeaderView(0);
+        }
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
@@ -182,9 +186,9 @@ public class HLMActivity extends AppCompatActivity implements
         gender = sharedPreferences.getString("looking_for", "Not specified");
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
         minInterval = (Integer.valueOf(sharedPreferences.getString("sync_frequency","1")) * ONE_MINUTE);
-        System.out.println("Max user distance allowed: " + maxUserDistance + " Sync time: " + minInterval);
-        System.out.println("Looking for: " + gender);
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
+        //mRequestingLocationUpdates = false;
+        //System.out.println("Requesting Location: " + mRequestingLocationUpdates);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
@@ -253,12 +257,10 @@ public class HLMActivity extends AppCompatActivity implements
         int id = item.getItemId();
 
         if (id == R.id.action_profile_settings) {
-            clearInfo();
             mPager.setCurrentItem(PAGE_LOGIN);
             return true;
         }
         if (id == R.id.action_chat){
-            clearInfo();
             mPager.setCurrentItem(PAGE_CHAT);
             return true;
         }
@@ -306,21 +308,16 @@ public class HLMActivity extends AppCompatActivity implements
         int id = item.getItemId();
 
         if (id == R.id.nav_hlm) {
-            if (drawer != null) {
-                drawer.closeDrawer(GravityCompat.START);
-            }
+            mPager.setCurrentItem(PAGE_HLM);
             return true;
         } else if (id == R.id.nav_chat) {
-            clearInfo();
             mPager.setCurrentItem(PAGE_CHAT);
 
         } else if (id == R.id.nav_profile) {
-            clearInfo();
             mPager.setCurrentItem(PAGE_LOGIN);
 
         } else if (id == R.id.nav_settings) {
             if (user != null) {
-                clearInfo();
                 startActivity(new Intent(this, HLMSettings.class));
             }
 
@@ -382,11 +379,11 @@ public class HLMActivity extends AppCompatActivity implements
 
         } else {
             //for (int i = 1; i < mPager.getChildCount(); i++) {
-            if (mPager.getChildCount() > 1) {
+            /*if (mPager.getChildCount() > 1) {
                 //mPager.setOffscreenPageLimit(0);
                 //mPager.removeViewAt(PAGE_HLM);
                 //mPagerAdapter.notifyDataSetChanged();
-            }
+            } */
             //}
             HLM_PAGES = 1;
             mPagerAdapter.notifyDataSetChanged();
@@ -404,9 +401,9 @@ public class HLMActivity extends AppCompatActivity implements
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-        if (user != null) {
-            createLocationRequest();
-        }
+        //if (user != null) {
+                createLocationRequest();
+        //}
     }
 
     @Override
@@ -458,6 +455,38 @@ public class HLMActivity extends AppCompatActivity implements
 
         }
     }
+    /*@Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        Log.d("onActivityResult()", Integer.toString(resultCode));
+        //final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
+        switch (requestCode)
+        {
+            case REQUEST_CHECK_SETTINGS:
+                switch (resultCode)
+                {
+                    case Activity.RESULT_OK:
+                    {
+                        // All required changes were successfully made
+                        Toast.makeText(this, "Location enabled by user!", Toast.LENGTH_LONG)
+                                .show();
+                        startLocationUpdates();
+                        break;
+                    }
+                    case Activity.RESULT_CANCELED:
+                    {
+                        // The user was asked to change settings, but chose not to
+                        Toast.makeText(this, "Location not enabled, user cancelled.", Toast.LENGTH_LONG)
+                                .show();
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
+                }
+                break;
+        }
+    } */
 
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();
@@ -480,6 +509,7 @@ public class HLMActivity extends AppCompatActivity implements
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
                         System.out.println("Access GRANTED by the User!");
+                        startLocationUpdates();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {
@@ -514,11 +544,6 @@ public class HLMActivity extends AppCompatActivity implements
     protected void stopLocationUpdates() {
         LocationServices.FusedLocationApi.removeLocationUpdates(
                 mGoogleApiClient, this);
-    }
-
-    private void clearInfo(){
-        users.clear();
-        mPagerAdapter.notifyDataSetChanged();
     }
 
     protected boolean isBetterLocation(Location location, Location currentBestLocation) {
@@ -602,6 +627,41 @@ public class HLMActivity extends AppCompatActivity implements
         mPager.setCurrentItem(HLM_CURRENT_PAGE);
     }
 
+    public void onSaveInstanceState(Bundle savedInstanceState) {
+        HLM_CURRENT_PAGE = mPager.getCurrentItem();
+
+        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
+                mRequestingLocationUpdates);
+        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
+        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
+        savedInstanceState.putInt(NUMBER_OF_PAGES, HLM_PAGES);
+        savedInstanceState.putInt(NUMBER_OF_CURRENT_PAGE, HLM_CURRENT_PAGE);
+        Log.v(TAG, "-------------------------------");
+        Log.v(TAG, "Data Saved: State Recovery");
+        Log.v(TAG, "-------------------------------");
+        Log.i(TAG,"State: " + savedInstanceState);
+        super.onSaveInstanceState(savedInstanceState);
+    }
+
+    @Override
+    public void onConnectionFailed(ConnectionResult result) {
+        // TODO Auto-generated method stub
+    }
+
+    @Override
+    public void onConnected(Bundle connectionHint) {
+        if (mCurrentLocation == null &&
+                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
+                        == PackageManager.PERMISSION_GRANTED) {
+            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
+        }
+        if (mRequestingLocationUpdates) {
+            System.out.println("Requesting Location");
+            startLocationUpdates();
+        }
+    }
+
     public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.85f;
         private static final float MIN_ALPHA = 0.5f;
@@ -638,41 +698,6 @@ public class HLMActivity extends AppCompatActivity implements
                 // This page is way off-screen to the right.
                 view.setAlpha(0);
             }
-        }
-    }
-
-    public void onSaveInstanceState(Bundle savedInstanceState) {
-        HLM_CURRENT_PAGE = mPager.getCurrentItem();
-
-        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
-                mRequestingLocationUpdates);
-        savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
-        savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
-        savedInstanceState.putInt(NUMBER_OF_PAGES, HLM_PAGES);
-        savedInstanceState.putInt(NUMBER_OF_CURRENT_PAGE, HLM_CURRENT_PAGE);
-        Log.v(TAG, "-------------------------------");
-        Log.v(TAG, "Data Saved: State Recovery");
-        Log.v(TAG, "-------------------------------");
-        Log.i(TAG,"State: " + savedInstanceState);
-        super.onSaveInstanceState(savedInstanceState);
-    }
-
-    @Override
-    public void onConnectionFailed(ConnectionResult result) {
-        // TODO Auto-generated method stub
-    }
-
-    @Override
-    public void onConnected(Bundle connectionHint) {
-        if (mCurrentLocation == null &&
-                ContextCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED) {
-            mCurrentLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-            mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
-        }
-        if (mRequestingLocationUpdates) {
-            System.out.println("Requesting Location");
-            startLocationUpdates();
         }
     }
 

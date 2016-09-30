@@ -16,7 +16,7 @@
         <activity
             android:name=".MainActivity"
             android:label="@string/app_name"
-            android:launchMode="singleTask"
+            android:launchMode="standard"
             android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -73,7 +73,7 @@
         <activity
             android:name=".HLMSettings"
             android:label="@string/title_activity_settings"
-            android:launchMode="singleTask"
+            android:launchMode="standard"
             android:parentActivityName=".HLMActivity">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
@@ -82,7 +82,7 @@
         <activity
             android:name=".ImageBrowser"
             android:label="@string/title_activity_image_browser"
-            android:launchMode="singleTask"
+            android:launchMode="standard"
             android:parentActivityName=".HLMActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
@@ -92,7 +92,7 @@
         <activity
             android:name=".FireBrowserActivity"
             android:label="@string/title_activity_fire_browser"
-            android:launchMode="singleTask"
+            android:launchMode="standard"
             android:parentActivityName=".HLMActivity"
             android:theme="@style/AppTheme.NoActionBar">
             <meta-data
