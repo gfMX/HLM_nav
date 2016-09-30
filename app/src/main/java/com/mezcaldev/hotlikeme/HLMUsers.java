@@ -189,7 +189,7 @@ public class HLMUsers extends ListFragment {
         fabMessage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                checkChat();
+                //checkChat(userKey);
                 Intent intent = new Intent(getActivity(), ChatActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
                 startActivity(intent);
@@ -282,7 +282,7 @@ public class HLMUsers extends ListFragment {
         });
     }
 
-    private void didWeLike() {
+    private void didWeLike(final String userKey) {
         final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(userKey).child("like_user");
         DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
@@ -300,7 +300,7 @@ public class HLMUsers extends ListFragment {
                                         //chatIcon.setVisible(true);
                                         fabMessage.setVisibility(VISIBLE);
                                         weLike = true;
-                                        checkChat();
+                                            checkChat(userKey);
                                     }
                                 }
                             }
@@ -321,7 +321,7 @@ public class HLMUsers extends ListFragment {
         });
     }
 
-    private void checkChat() {
+    private void checkChat(final String userKey) {
 
         final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
         final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
@@ -433,7 +433,7 @@ public class HLMUsers extends ListFragment {
                                         System.out.println("Location Not Reachable! Please wait...");
                                         Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
                                     }
-                                    showUser();
+                                    //showUser();
                                 }
                                 @Override
                                 public void onCancelled(DatabaseError databaseError) {
@@ -452,11 +452,9 @@ public class HLMUsers extends ListFragment {
     }
 
     private void showUser(){
-
-        didWeLike();
         //Only if a Key si given proceed, else Show a blank (Default) page.
         if (keyChecker()) {
-
+            didWeLike(userKey);
             //Adds the users that Current User likes
             referenceLikeUser = database.getReference()
                     .child("users")

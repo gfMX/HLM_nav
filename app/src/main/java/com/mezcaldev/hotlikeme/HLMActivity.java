@@ -323,10 +323,10 @@ public class HLMActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_chat) {
             mPager.setCurrentItem(PAGE_CHAT);
 
-        } else if (id == R.id.nav_profile) {
+        } /*else if (id == R.id.nav_profile) {
             mPager.setCurrentItem(PAGE_LOGIN);
 
-        } else if (id == R.id.nav_settings) {
+        }*/ else if (id == R.id.nav_settings) {
             if (user != null) {
                 startActivity(new Intent(this, HLMSettings.class));
             }

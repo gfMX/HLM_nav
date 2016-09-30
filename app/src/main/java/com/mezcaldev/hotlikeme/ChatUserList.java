@@ -189,8 +189,20 @@ public class ChatUserList extends ListFragment {
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            userLastMessage.set(position, dataSnapshot.child("text").getValue().toString());
-                            userTimeStamp.set(position, dateFormatter(dataSnapshot.child("timeStamp").getValue().toString()));
+                            String lasteMessageText;
+                            String lastDateFromMessage;
+                            if (dataSnapshot.child("text").getValue() != null){
+                                lasteMessageText = dataSnapshot.child("text").getValue().toString();
+                            } else {
+                                lasteMessageText = "Sorry! The last Message wasn't found!";
+                            }
+                            if (dataSnapshot.child("timeStamp").getValue() != null){
+                                lastDateFromMessage = dateFormatter(dataSnapshot.child("timeStamp").getValue().toString());
+                            } else {
+                                lastDateFromMessage = "Date Not Found!";
+                            }
+                            userLastMessage.set(position, lasteMessageText);
+                            userTimeStamp.set(position, lastDateFromMessage);
                             mAdapter.notifyDataSetChanged();
                         }
 

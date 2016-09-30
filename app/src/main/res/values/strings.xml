@@ -24,11 +24,11 @@
     <string name="fb_login_protocol_scheme">fb755197327949172</string>
     <string name="text_profile_pic">Profile Pic</string>
 
-    <string name="btn_choose_img">Choose your Images</string>
+    <string name="btn_choose_img">Upload Your Images</string>
     <string name="btn_settings">Nickname, Looking for&#8230;</string>
     <string name="btn_start">Let\'s Start!</string>
     <string name="btn_ok">Yes!</string>
-    <string name="btn_cancel">Nop</string>
+    <string name="btn_cancel">No!</string>
 
     <!-- Strings related to Settings -->
     <string name="action_delete">Delete Image</string>
@@ -182,5 +182,11 @@
     <!-- HLM Drawer -->
     <string name="navigation_drawer_open">Open navigation drawer</string>
     <string name="navigation_drawer_close">Close navigation drawer</string>
+    <string name="drawer_text_chat">Chat</string>
+    <string name="drawer_text_navigate">Navigate</string>
+    <string name="drawer_text_other_settings">Other Settings</string>
+    <string name="drawer_text_communicate">Communicate</string>
+    <string name="drawer_text_share">Share</string>
+    <string name="drawer_text_invite">Invite</string>
 
 </resources>
