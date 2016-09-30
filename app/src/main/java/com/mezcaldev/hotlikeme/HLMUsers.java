@@ -98,7 +98,7 @@ public class HLMUsers extends ListFragment {
     private static final int ONE_MINUTE = ONE_SECOND * 60;
     private static final int MINUTES = ONE_MINUTE * 5;
     int maxUserDistance = 250;
-    int delayTime = 250;
+    int delayTime = 500;
 
     /* Location with Google API */
     Location mCurrentLocation;

@@ -67,7 +67,7 @@ public class HLMActivity extends AppCompatActivity implements
     final int PAGE_HLM = 1;
     final int PAGE_CHAT = 2;
     //final int PAGE_SETTINGS = 3;
-    final int OFFSCREEN_PAGES = 1;
+    final int OFFSCREEN_PAGES = 2;
 
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
@@ -309,7 +309,7 @@ public class HLMActivity extends AppCompatActivity implements
 
         if (id == R.id.nav_hlm) {
             mPager.setCurrentItem(PAGE_HLM);
-            return true;
+
         } else if (id == R.id.nav_chat) {
             mPager.setCurrentItem(PAGE_CHAT);
 
@@ -378,16 +378,8 @@ public class HLMActivity extends AppCompatActivity implements
             mPagerAdapter.notifyDataSetChanged();
 
         } else {
-            //for (int i = 1; i < mPager.getChildCount(); i++) {
-            /*if (mPager.getChildCount() > 1) {
-                //mPager.setOffscreenPageLimit(0);
-                //mPager.removeViewAt(PAGE_HLM);
-                //mPagerAdapter.notifyDataSetChanged();
-            } */
-            //}
             HLM_PAGES = 1;
             mPagerAdapter.notifyDataSetChanged();
-            //mPager.setOffscreenPageLimit(0);
 
             drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
             drawerUserAlias.setText(R.string.app_name);
@@ -415,28 +407,30 @@ public class HLMActivity extends AppCompatActivity implements
             mCurrentLocation = location;
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
             mLastUpdateDay = DateFormat.getDateInstance().format(new Date());
-            //New Location:
-            DatabaseReference databaseReferenceNewLocation = database.getReference()
-                    .child("users")
-                    .child(user.getUid())
-                    .child("location_last");
-            databaseReferenceNewLocation.child("loc_longitude").setValue(mCurrentLocation.getLongitude());
-            databaseReferenceNewLocation.child("loc_latitude").setValue(mCurrentLocation.getLatitude());
-            databaseReferenceNewLocation.child("loc_accuracy").setValue(mCurrentLocation.getAccuracy());
-            databaseReferenceNewLocation.child("time").setValue(mLastUpdateTime);
-            databaseReferenceNewLocation.child("day").setValue(mLastUpdateDay);
-            Log.i(TAG, "Current BEST " + mCurrentLocation + " Time: " + mLastUpdateTime + " Day: " + mLastUpdateDay);
-            //Old Location:
-            if (mOldLocation != null) {
-                DatabaseReference databaseReferenceOldLocation = database.getReference()
+            if (user != null) {
+                //New Location:
+                DatabaseReference databaseReferenceNewLocation = database.getReference()
                         .child("users")
                         .child(user.getUid())
-                        .child("location_old");
-                databaseReferenceOldLocation.child("loc_longitude").setValue(mOldLocation.getLongitude());
-                databaseReferenceOldLocation.child("loc_latitude").setValue(mOldLocation.getLatitude());
-                databaseReferenceOldLocation.child("loc_accuracy").setValue(mOldLocation.getAccuracy());
-                databaseReferenceOldLocation.child("time").setValue(mOldTime);
-                databaseReferenceOldLocation.child("day").setValue(mOldDay);
+                        .child("location_last");
+                databaseReferenceNewLocation.child("loc_longitude").setValue(mCurrentLocation.getLongitude());
+                databaseReferenceNewLocation.child("loc_latitude").setValue(mCurrentLocation.getLatitude());
+                databaseReferenceNewLocation.child("loc_accuracy").setValue(mCurrentLocation.getAccuracy());
+                databaseReferenceNewLocation.child("time").setValue(mLastUpdateTime);
+                databaseReferenceNewLocation.child("day").setValue(mLastUpdateDay);
+                Log.i(TAG, "Current BEST " + mCurrentLocation + " Time: " + mLastUpdateTime + " Day: " + mLastUpdateDay);
+                //Old Location:
+                if (mOldLocation != null) {
+                    DatabaseReference databaseReferenceOldLocation = database.getReference()
+                            .child("users")
+                            .child(user.getUid())
+                            .child("location_old");
+                    databaseReferenceOldLocation.child("loc_longitude").setValue(mOldLocation.getLongitude());
+                    databaseReferenceOldLocation.child("loc_latitude").setValue(mOldLocation.getLatitude());
+                    databaseReferenceOldLocation.child("loc_accuracy").setValue(mOldLocation.getAccuracy());
+                    databaseReferenceOldLocation.child("time").setValue(mOldTime);
+                    databaseReferenceOldLocation.child("day").setValue(mOldDay);
+                }
             }
         }
     }
@@ -662,6 +656,11 @@ public class HLMActivity extends AppCompatActivity implements
         }
     }
 
+    @Override
+    public void onConnectionSuspended(int cause) {
+        mGoogleApiClient.connect();
+    }
+
     public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.85f;
         private static final float MIN_ALPHA = 0.5f;
@@ -702,14 +701,12 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onConnectionSuspended(int cause) {
-        mGoogleApiClient.connect();
-    }
-
-    @Override
     protected void onStart() {
         super.onStart();
         mGoogleApiClient.connect();
+        if (user ==null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
+            mGoogleApiClient.disconnect();
+        }
     }
     @Override
     protected void onStop() {
@@ -722,6 +719,8 @@ public class HLMActivity extends AppCompatActivity implements
 
         if (user != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
+        } else if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
+            stopLocationUpdates();
         }
     }
     @Override
