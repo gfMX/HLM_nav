@@ -234,12 +234,11 @@ public class LoginFragment extends Fragment {
                               .show();
 
                       startActivity(new Intent(getActivity(), ImageBrowser.class));
-                      //getActivity().finish();
                       break;
                   case R.id.btn_start:
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
                               Toast.LENGTH_LONG).show();
-                      
+
                       break;
                   case R.id.btn_settings:
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
@@ -253,7 +252,6 @@ public class LoginFragment extends Fragment {
                                   Toast.LENGTH_LONG).show();
 
                           startActivity(new Intent(getActivity(), FireBrowserActivity.class));
-                          //getActivity().finish();
                       } else {
                           Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
                                   Toast.LENGTH_LONG).show();

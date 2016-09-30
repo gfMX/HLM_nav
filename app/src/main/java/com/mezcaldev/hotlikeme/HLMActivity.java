@@ -138,7 +138,7 @@ public class HLMActivity extends AppCompatActivity implements
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
 
-        DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
+        final DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         ActionBarDrawerToggle toggle = new ActionBarDrawerToggle(
                 this, drawer, toolbar, R.string.navigation_drawer_open, R.string.navigation_drawer_close);
         if (drawer != null) {
@@ -222,6 +222,16 @@ public class HLMActivity extends AppCompatActivity implements
                                        }
                                    }
         );
+
+        drawerUserImage.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                mPager.setCurrentItem(PAGE_LOGIN);
+                if (drawer != null && drawer.isDrawerOpen(GravityCompat.START)) {
+                    drawer.closeDrawer(GravityCompat.START);
+                }
+            }
+        });
 
         System.out.println("Users: " + users);
 
@@ -441,6 +451,7 @@ public class HLMActivity extends AppCompatActivity implements
             case MY_PERMISSION_ACCESS_FINE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     System.out.println("Permission Granted!");
+                    startLocationUpdates();
                 } else {
                     System.out.println("Permission NOT Granted!");
                 }

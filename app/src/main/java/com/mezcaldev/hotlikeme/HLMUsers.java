@@ -72,7 +72,8 @@ import static java.util.UUID.randomUUID;
 
 public class HLMUsers extends ListFragment {
 
-    String userKey = "nullKey";
+    String nullKey = "nullKey";
+    String userKey = nullKey;
     private static final String TAG = "Location";
 
     static HLMUsers newInstance(String key) {
@@ -99,6 +100,7 @@ public class HLMUsers extends ListFragment {
     private static final int MINUTES = ONE_MINUTE * 5;
     int maxUserDistance = 250;
     int delayTime = 500;
+    int reloadTimer = 2500;
 
     /* Location with Google API */
     Location mCurrentLocation;
@@ -163,8 +165,8 @@ public class HLMUsers extends ListFragment {
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
         //if (user != null) {
-            out.println("Actual user: " + user.getUid());
-            getUriProfilePics(gender);
+        out.println("Actual user: " + user.getUid());
+        getUriProfilePics(gender);
         //}
     }
 
@@ -208,19 +210,20 @@ public class HLMUsers extends ListFragment {
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
-        if (users.size() > 0){
-            userKey = users.get(randomUser(users.size()));
+        if (!keyChecker()){
+            Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    if (!keyChecker()) {
+                        showUser();
+                    }
+                }
+            }, reloadTimer);
+        } else {
+            showUser();
         }
 
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-
-                showUser();
-
-            }
-        },delayTime);
     }
 
     private void getUserDetails(String userKey) {
@@ -449,9 +452,10 @@ public class HLMUsers extends ListFragment {
     }
 
     private void showUser(){
+
         didWeLike();
         //Only if a Key si given proceed, else Show a blank (Default) page.
-        if (!userKey.equals("nullKey")) {
+        if (keyChecker()) {
 
             //Adds the users that Current User likes
             referenceLikeUser = database.getReference()
@@ -593,6 +597,16 @@ public class HLMUsers extends ListFragment {
 
         } else {
             Toast.makeText(getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
+        }
+    }
+
+    private boolean keyChecker (){
+        if (users.size() > 0){
+            userKey = users.get(randomUser(users.size()));
+            return true;
+        } else {
+            userKey = nullKey;
+            return false;
         }
     }
 
