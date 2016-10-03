@@ -52,9 +52,7 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
 import java.text.DateFormat;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
@@ -66,8 +64,6 @@ public class HLMActivity extends AppCompatActivity implements
     final int PAGE_LOGIN = 0;
     final int PAGE_HLM = 1;
     final int PAGE_CHAT = 2;
-    //final int PAGE_SETTINGS = 3;
-    final int OFFSCREEN_PAGES = 2;
 
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
@@ -109,7 +105,6 @@ public class HLMActivity extends AppCompatActivity implements
     int y;
 
     String gender;
-    static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
     FirebaseUser user;
@@ -194,30 +189,13 @@ public class HLMActivity extends AppCompatActivity implements
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        mPager.setOffscreenPageLimit(OFFSCREEN_PAGES);
+        //mPager.setOffscreenPageLimit(OFFSCREEN_PAGES);
         //mPager.setPageTransformer(true, new RotatePageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
                                        public boolean onTouch(View view, MotionEvent event) {
                                            x = (int) event.getX();
                                            y = (int) event.getY();
-
-                                           switch (event.getAction() & MotionEvent.ACTION_MASK) {
-                                               case MotionEvent.ACTION_DOWN:
-
-                                                   break;
-                                               case MotionEvent.ACTION_UP:
-                                                   //view.setTranslationX(0);
-                                                   //view.setTranslationY(0);
-
-                                                   break;
-                                               case MotionEvent.ACTION_MOVE:
-                                                   //view.setX(view.getX() - view.getWidth()/2 + x);
-                                                   //view.setY(view.getY() - view.getHeight()/2 + y);
-
-                                               break;
-                                           }
-
                                            return false;
                                        }
                                    }
@@ -232,25 +210,6 @@ public class HLMActivity extends AppCompatActivity implements
                 }
             }
         });
-
-        System.out.println("Users: " + users);
-
-        /*if (users.size() <= 0) {
-            System.out.println("Getting Users");
-            getUriProfilePics(gender);
-
-            Handler checkUsers = new Handler();
-            checkUsers.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (users.size()==0){
-                        usersNull();
-                    }
-                }
-            }, delayForUsers);
-        } else {
-            System.out.println("User list OK");
-        }*/
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
@@ -355,7 +314,7 @@ public class HLMActivity extends AppCompatActivity implements
                     return LoginFragment.newInstance();
 
                 case PAGE_HLM:
-                    return HLMUsers.newInstance("nullKey");
+                    return HLMUsers.newInstance();
 
                 case PAGE_CHAT:
                     return ChatUserList.newInstance();
@@ -371,7 +330,6 @@ public class HLMActivity extends AppCompatActivity implements
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
-
         }
     }
 
@@ -727,6 +685,7 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onResume(){
         super.onResume();
+        mPagerAdapter.notifyDataSetChanged();
 
         if (user != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
@@ -745,5 +704,6 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
+
     }
 }

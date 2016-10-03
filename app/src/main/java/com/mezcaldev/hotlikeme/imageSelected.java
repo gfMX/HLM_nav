@@ -2,7 +2,6 @@ package com.mezcaldev.hotlikeme;
 
 
 import android.app.DialogFragment;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -125,7 +124,7 @@ public class imageSelected extends DialogFragment {
                 @Override
                 public void run() {
                     getDialog().dismiss();
-                    startActivity(new Intent(getActivity(), HLMActivity.class));
+                    //startActivity(new Intent(getActivity(), HLMActivity.class));
                 }
             }, 2500);
         }

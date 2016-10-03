@@ -427,8 +427,9 @@ public class LoginFragment extends Fragment {
                         @Override
                         public void onSuccess(byte[] bytes) {
                             // Use the bytes to display the image
-                            Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
                             ImageSaver saveBitmap = new ImageSaver();
+                            Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
+                            //Bitmap image = saveBitmap.decodeSampledBitmap(bytes, reqWidth, reqHeight);
                             saveBitmap.iSaveToInternalStorage(image, imageProfileFileName, getContext());
 
                             flagImagesOnFirebase = true;

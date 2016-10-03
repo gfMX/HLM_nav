@@ -3,6 +3,7 @@ package com.mezcaldev.hotlikeme;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
 import android.os.Bundle;
@@ -38,15 +39,12 @@ import java.util.Calendar;
 import java.util.List;
 import java.util.Random;
 
-import static android.graphics.BitmapFactory.decodeByteArray;
 import static android.graphics.PorterDuff.Mode.SRC_ATOP;
 import static android.support.v4.content.ContextCompat.getColor;
 import static android.view.Gravity.CENTER;
 import static android.view.MotionEvent.ACTION_DOWN;
 import static android.view.MotionEvent.ACTION_MASK;
 import static android.view.MotionEvent.ACTION_MOVE;
-import static android.view.MotionEvent.ACTION_POINTER_DOWN;
-import static android.view.MotionEvent.ACTION_POINTER_UP;
 import static android.view.MotionEvent.ACTION_UP;
 import static android.view.View.INVISIBLE;
 import static android.view.View.OnClickListener;
@@ -76,17 +74,9 @@ public class HLMUsers extends ListFragment {
     String userKey = nullKey;
     private static final String TAG = "Location";
 
-    static HLMUsers newInstance(String key) {
-        HLMUsers newFragment = new HLMUsers();
+    static HLMUsers newInstance() {
 
-        Bundle args = new Bundle();
-        args.putString("key", key);
-        //args.putDouble("latitude", latitude);
-        //args.putDouble("longitude", longitude);
-
-        newFragment.setArguments(args);
-
-        return newFragment;
+        return new HLMUsers();
     }
 
     TextView viewUserAlias;
@@ -94,18 +84,22 @@ public class HLMUsers extends ListFragment {
     RatingBar ratingBar;
     FloatingActionButton fabMessage;
 
+    //Sampled Image:
+    int reqWidth = 600;
+    int reqHeight = 600;
+
     /* Position */
     private static final int ONE_SECOND = 1000;
-    private static final int ONE_MINUTE = ONE_SECOND * 60;
-    private static final int MINUTES = ONE_MINUTE * 5;
+    /*private static final int ONE_MINUTE = ONE_SECOND * 60;
+    private static final int MINUTES = ONE_MINUTE * 5; */
     int maxUserDistance = 250;
-    int delayTime = 500;
-    int reloadTimer = 2500;
+    //int delayTime = 500;
+    int reloadTimer = ONE_SECOND * 3;
 
     /* Location with Google API */
     Location mCurrentLocation;
     Boolean mRequestingLocationUpdates;
-    final int REQUEST_CHECK_SETTINGS = 2543;
+    //final int REQUEST_CHECK_SETTINGS = 2543;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -147,17 +141,10 @@ public class HLMUsers extends ListFragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        //userKey = getArguments() != null ? getArguments().getString("key") : "nullKey";
-        //Double latitude = getArguments() != null ? getArguments().getDouble("latitude") : null;
-        //Double longitude = getArguments() != null ? getArguments().getDouble("longitude") : null;
-        //mCurrtenLocation = new Location("");
-        //mCurrentLocation.setLatitude(latitude);
-        //mCurrentLocation.setLongitude(longitude);
-
-        //out.println("UserKey Received: " + userKey);
 
         user = getInstance().getUser();
         mCurrentLocation = HLMActivity.mCurrentLocation;
+        out.println("Location from HLMActivity: " + mCurrentLocation);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         gender = sharedPreferences.getString("looking_for", "both");
@@ -173,9 +160,9 @@ public class HLMUsers extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(hlm_screen_slide_page, container, false);
+        //ViewGroup rootView = (ViewGroup) inflater.inflate(hlm_screen_slide_page, container, false);
 
-        return rootView;
+        return inflater.inflate(hlm_screen_slide_page, container, false);
     }
 
     @Override
@@ -210,7 +197,7 @@ public class HLMUsers extends ListFragment {
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
-        if (!keyChecker()){
+        /*if (!keyChecker()){
             Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override
@@ -222,14 +209,15 @@ public class HLMUsers extends ListFragment {
             }, reloadTimer);
         } else {
             showUser();
-        }
+        } */
+        showUser();
 
     }
 
     private void getUserDetails(String userKey) {
+        DatabaseReference databaseReferenceUserDetails = database.getReference().child("users").child(userKey).child("preferences");
 
-        DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("preferences");
-        databaseReference.addValueEventListener(new ValueEventListener() {
+        databaseReferenceUserDetails.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String userData = dataSnapshot.getValue().toString();
@@ -244,11 +232,12 @@ public class HLMUsers extends ListFragment {
 
             }
         });
+
         storageRef.child(userKey).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                     @Override
                     public void onSuccess(byte[] bytes) {
-                        Bitmap image = decodeByteArray(bytes, 0, bytes.length);
+                        Bitmap image = decodeSampledBitmap(bytes, reqWidth, reqHeight);
                         viewUserImage.setImageBitmap(image);
                     }
                 }).addOnFailureListener(new OnFailureListener() {
@@ -260,9 +249,10 @@ public class HLMUsers extends ListFragment {
         });
     }
 
-    private void userRating() {
-        DatabaseReference databaseReference = database.getReference().child("users").child(userKey).child("user_rate");
-        databaseReference.addListenerForSingleValueEvent(new ValueEventListener() {
+    private void userRating(String userKey) {
+        DatabaseReference databaseReferenceRating = database.getReference().child("users").child(userKey).child("user_rate");
+
+        databaseReferenceRating.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
@@ -270,7 +260,7 @@ public class HLMUsers extends ListFragment {
                         starsRating = valueOf(data.getValue().toString());
                         oldRating = starsRating;
                         ratingBar.setRating(starsRating);
-                        out.println("Long: " + starsRating);
+                        //out.println("Long: " + starsRating);
                     }
                 }
             }
@@ -297,10 +287,9 @@ public class HLMUsers extends ListFragment {
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                                     if (data.getKey().equals(user.getUid())) {
-                                        //chatIcon.setVisible(true);
                                         fabMessage.setVisibility(VISIBLE);
                                         weLike = true;
-                                            checkChat(userKey);
+                                        checkChat(userKey);
                                     }
                                 }
                             }
@@ -358,13 +347,10 @@ public class HLMUsers extends ListFragment {
     }
 
     public void getUriProfilePics (final String gender){
-
-        final ValueEventListener valueEventListener0;
-
-        final DatabaseReference databaseReference = database.getReference().child("groups").child(gender);
+        final DatabaseReference databaseReferenceUriProfile = database.getReference().child("groups").child(gender);
         final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
 
-        valueEventListener0 = new ValueEventListener() {
+        databaseReferenceUriProfile.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 int numChildren = (int) dataSnapshot.getChildrenCount();
@@ -433,7 +419,6 @@ public class HLMUsers extends ListFragment {
                                         System.out.println("Location Not Reachable! Please wait...");
                                         Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
                                     }
-                                    //showUser();
                                 }
                                 @Override
                                 public void onCancelled(DatabaseError databaseError) {
@@ -447,13 +432,15 @@ public class HLMUsers extends ListFragment {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        };
-        databaseReference.addListenerForSingleValueEvent(valueEventListener0);
+        });
     }
 
     private void showUser(){
+        userKey = nullKey;
         //Only if a Key si given proceed, else Show a blank (Default) page.
         if (keyChecker()) {
+            userKey = users.get(randomUser(users.size()));
+
             didWeLike(userKey);
             //Adds the users that Current User likes
             referenceLikeUser = database.getReference()
@@ -470,7 +457,7 @@ public class HLMUsers extends ListFragment {
                     .child(user.getUid());
 
             getUserDetails(userKey);
-            userRating();
+            userRating(userKey);
 
             ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
                 public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
@@ -480,6 +467,7 @@ public class HLMUsers extends ListFragment {
                     } else {
                         referenceUserRated.setValue(starsRating);
                     }
+                    //showUser();
                 }
             });
 
@@ -510,7 +498,6 @@ public class HLMUsers extends ListFragment {
                                 makeText(getContext(), "Added!", LENGTH_SHORT).show();
 
                             }
-
                             //Remove users from the Like List
                             if (yRaw > screenDown) {
                                 out.println("User ID: " + userKey);
@@ -519,19 +506,14 @@ public class HLMUsers extends ListFragment {
                                 fabMessage.setVisibility(INVISIBLE);
                             }
 
-                            referenceUserRated.setValue(starsRating);
+                            //referenceUserRated.setValue(starsRating);
 
+                            userKey = nullKey;
                             resetFlags();
                             userKey = users.get(randomUser(users.size()));
-                            showUser();
-
-                            break;
-                        case ACTION_POINTER_DOWN:
-                            out.println("Pointer Down");
-
-                            break;
-                        case ACTION_POINTER_UP:
-                            out.println("Pointer Up");
+                            //showUser();
+                            getUserDetails(userKey);
+                            userRating(userKey);
 
                             break;
                         case ACTION_MOVE:
@@ -558,7 +540,7 @@ public class HLMUsers extends ListFragment {
 
                             if (yRaw < screenPart) {
                                 //Upper limit of the screen
-                                //System.out.println("None");
+                                System.out.println("None");
                             } else if (yRaw < screenPart * 2) {
                                 starsRating = 5;
                             } else if (yRaw < screenPart * 3) {
@@ -584,7 +566,7 @@ public class HLMUsers extends ListFragment {
                                 starsRating = 5;
                             } else if (yRaw < screenPart * 13) {
                                 //Way too low of the screen
-                                //System.out.println("None");
+                                System.out.println("None");
                             }
                             ratingBar.setRating(starsRating);
                             break;
@@ -598,12 +580,48 @@ public class HLMUsers extends ListFragment {
         }
     }
 
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeSampledBitmap(byte[] bytes, int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+    }
+
     private boolean keyChecker (){
         if (users.size() > 0){
-            userKey = users.get(randomUser(users.size()));
             return true;
         } else {
-            userKey = nullKey;
             return false;
         }
     }
@@ -635,6 +653,7 @@ public class HLMUsers extends ListFragment {
     public void onDestroy() {
         super.onDestroy();
         viewUserImage.setImageBitmap(null);
+        //System.gc();
     }
 }
 

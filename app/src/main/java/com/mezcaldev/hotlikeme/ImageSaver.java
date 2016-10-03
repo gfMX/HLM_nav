@@ -39,16 +39,22 @@ import java.net.URL;
 import java.util.List;
 import java.util.UUID;
 
+import static android.graphics.BitmapFactory.decodeStream;
+
 /**
  * Methods and functions for general use
  */
 public class ImageSaver {
 
     private final String TAG = "Image record: ";
-    final Integer compressRatio = 80;
+    final Integer compressRatio = 70;
 
     String pathImages = "/images/";
     String pathThumbs = "/images/thumbs/";
+
+    //Profile Image
+    int reqWidth = 200;
+    int reqHeight = 200;
 
     final FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -79,15 +85,10 @@ public class ImageSaver {
 
     //Load Image
     public Bitmap iLoadImageFromStorage(String path, String imageName) {
-        try {
+
             File file = new File(path, imageName);
-            return BitmapFactory.decodeStream(new FileInputStream(file));
-        }
-        catch (FileNotFoundException e)
-        {
-            e.printStackTrace();
-            return null;
-        }
+            return decodeSampledBitmapFromStream(file, reqWidth, reqHeight);
+
     }
 
     //Upload Image to Firebase
@@ -186,7 +187,7 @@ public class ImageSaver {
                     try {
 
                         InputStream inputStream = (InputStream) image.getContent();
-                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        Bitmap bitmap = decodeStream(inputStream);
 
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                         bitmap.compress(Bitmap.CompressFormat.JPEG, compressRatio, byteArrayOutputStream);
@@ -270,7 +271,7 @@ public class ImageSaver {
                     try {
 
                         InputStream inputStream = (InputStream) image.getContent();
-                        Bitmap bitmap = BitmapFactory.decodeStream(inputStream);
+                        Bitmap bitmap = decodeStream(inputStream);
 
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
                         bitmap.compress(Bitmap.CompressFormat.JPEG, compressRatio, byteArrayOutputStream);
@@ -329,6 +330,76 @@ public class ImageSaver {
                     }
                 }
         );
+    }
+    private static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public Bitmap decodeSampledBitmap(byte[] bytes, int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
+    }
+
+    public Bitmap decodeSampledBitmapFromStream(File file, int reqWidth, int reqHeight) {
+        Bitmap bitmap = null;
+        try {
+            FileInputStream fis = new FileInputStream(file);
+
+            // First decode with inJustDecodeBounds=true to check dimensions
+            final BitmapFactory.Options options = new BitmapFactory.Options();
+            options.inJustDecodeBounds = true;
+            decodeStream(fis, null, options);
+            try {
+                fis.close();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+
+            // Calculate inSampleSize
+            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+            fis = new FileInputStream(file);
+            // Decode bitmap with inSampleSize set
+            options.inJustDecodeBounds = false;
+            bitmap = BitmapFactory.decodeStream(fis, null, options);
+            try {
+                fis.close();
+            } catch (IOException e){
+                e.printStackTrace();
+            }
+        } catch (FileNotFoundException e){
+            e.printStackTrace();
+        }
+        return bitmap;
     }
 
 }
