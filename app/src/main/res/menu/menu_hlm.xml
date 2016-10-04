@@ -7,7 +7,7 @@
         android:id="@+id/action_profile_settings"
         android:title="@string/action_profile_settings"
         android:icon="@drawable/ic_account_circle_24dp"
-        android:visible="true"
+        android:visible="false"
         app:showAsAction="ifRoom" />
     <item
         android:id="@+id/action_chat"

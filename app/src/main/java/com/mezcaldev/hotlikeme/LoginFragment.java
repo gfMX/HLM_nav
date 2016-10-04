@@ -67,6 +67,7 @@ public class LoginFragment extends Fragment {
     //Delay Time to load Profile Picture if exists.
     Integer minDelayTime = 100;
     Integer delayTime = 250;
+    Boolean oneTime = false;
 
     //Facebook
     LoginButton loginButton;
@@ -140,6 +141,12 @@ public class LoginFragment extends Fragment {
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
         fireRef = database.getReference();
         mAuth = FirebaseAuth.getInstance();
+
+
+        user = mAuth.getCurrentUser();
+        if ( user != null){
+            oneTime = true;
+        }
 
     }
 
@@ -325,6 +332,9 @@ public class LoginFragment extends Fragment {
 
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
+                            if (!oneTime) {
+                                //FireConnection.getInstance().getFirebaseUsers(getActivity().getApplicationContext(), HLMActivity.mCurrentLocation);
+                            }
                         }
                     } else {
                         // User signed out

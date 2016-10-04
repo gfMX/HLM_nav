@@ -1,9 +1,15 @@
 package com.mezcaldev.hotlikeme;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
+import android.content.Intent;
+import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.annotation.NonNull;
 import android.support.v4.app.ListFragment;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -26,6 +32,7 @@ import com.google.firebase.storage.StorageReference;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +47,8 @@ public class ChatUserList extends ListFragment {
 
         return newFragment;
     }
+
+    int maxTimeForNotifications = 48;       /* Time in Hours */
 
     FirebaseUser user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -189,21 +198,31 @@ public class ChatUserList extends ListFragment {
                     .addValueEventListener(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
-                            String lasteMessageText;
+                            String lastMessageText;
                             String lastDateFromMessage;
+                            Long lastMessageTime = 0L;
                             if (dataSnapshot.child("text").getValue() != null){
-                                lasteMessageText = dataSnapshot.child("text").getValue().toString();
+                                lastMessageText = dataSnapshot.child("text").getValue().toString();
                             } else {
-                                lasteMessageText = "Sorry! The last Message wasn't found!";
+                                lastMessageText = "Sorry! The last Message wasn't found!";
                             }
                             if (dataSnapshot.child("timeStamp").getValue() != null){
                                 lastDateFromMessage = dateFormatter(dataSnapshot.child("timeStamp").getValue().toString());
+                                lastMessageTime = Long.valueOf(dataSnapshot.child("timeStamp").getValue().toString());
                             } else {
                                 lastDateFromMessage = "Date Not Found!";
                             }
-                            userLastMessage.set(position, lasteMessageText);
+                            userLastMessage.set(position, lastMessageText);
                             userTimeStamp.set(position, lastDateFromMessage);
                             mAdapter.notifyDataSetChanged();
+
+                            Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ 1000 / 60 / 60;
+                            Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
+
+                            if (timeInHours < maxTimeForNotifications && !isInLayout()) {
+                                String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
+                                sendNotification(notificationText);
+                            }
                         }
 
                         @Override
@@ -213,6 +232,28 @@ public class ChatUserList extends ListFragment {
                     });
         }
     }
+
+    private void sendNotification(String messageBody) {
+        Intent intent = new Intent(getActivity(), MainActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getActivity())
+                .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+                .setContentTitle(getResources().getString(R.string.app_name))
+                .setContentText(messageBody)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setContentIntent(pendingIntent);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        notificationManager.notify(0, notificationBuilder.build());
+    }
+
 
     private String dateFormatter (String millis) {
 
