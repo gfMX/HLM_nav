@@ -84,8 +84,8 @@ public class HLMUsers extends ListFragment {
     FloatingActionButton fabMessage;
 
     //Sampled Image:
-    int reqWidth = 600;
-    int reqHeight = 600;
+    int reqWidth = 650;
+    int reqHeight = 650;
 
     /* Position */
     int maxUserDistance = 250;
