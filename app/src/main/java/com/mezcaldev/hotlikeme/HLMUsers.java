@@ -71,7 +71,7 @@ public class HLMUsers extends ListFragment {
     String nullKey = "nullKey";
     String userKey = nullKey;
     String oldKey = nullKey;
-    private static final String TAG = "UserView";
+    //private static final String TAG = "UserView";
 
     static HLMUsers newInstance() {
 
@@ -108,9 +108,6 @@ public class HLMUsers extends ListFragment {
     boolean flagOne = false;
     boolean flagTwo = false;
     boolean weLike = false;
-
-    float distanceY = 0;
-    float distanceX = 0;
 
     String uniqueChatID;
 
@@ -220,10 +217,8 @@ public class HLMUsers extends ListFragment {
                     switch (event.getAction() & ACTION_MASK) {
                         case ACTION_DOWN:
                             out.println("Down");
-                            distanceX = x;
-                            distanceY = y;
-
                             break;
+
                         case ACTION_UP:
                             out.println("Up");
                             v.setTranslationY(0);
@@ -249,8 +244,8 @@ public class HLMUsers extends ListFragment {
                             userKey = genNoRepeatedKey(userKey);
                             out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
                             changeUserKey(userKey);
-
                             break;
+
                         case ACTION_MOVE:
                             v.setX((v.getX() - v.getWidth() / 2) + x);
                             v.setY((v.getY() - v.getHeight() / 2) + y);
@@ -305,6 +300,7 @@ public class HLMUsers extends ListFragment {
                             }
                             ratingBar.setRating(starsRating);
                             break;
+
                     }
                     return true;
                 }
@@ -448,26 +444,6 @@ public class HLMUsers extends ListFragment {
         });
     }
 
-    private void changeUserKey(String newKey){
-        //Adds the users that Current User likes
-                referenceLikeUser = database.getReference()
-                .child("users")
-                .child(user.getUid())
-                .child("like_user")
-                .child(newKey);
-
-        //Adds the rate of the Current User to the rating of the external user
-        referenceUserRated = database.getReference()
-                .child("users")
-                .child(newKey)
-                .child("user_rate")
-                .child(user.getUid());
-
-        didWeLike(newKey);
-        getUserDetails(newKey);
-        userRating(newKey);
-    }
-
     public static int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
@@ -506,6 +482,26 @@ public class HLMUsers extends ListFragment {
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
     }
 
+    private void changeUserKey(String newKey){
+        //Adds the users that Current User likes
+        referenceLikeUser = database.getReference()
+                .child("users")
+                .child(user.getUid())
+                .child("like_user")
+                .child(newKey);
+
+        //Adds the rate of the Current User to the rating of the external user
+        referenceUserRated = database.getReference()
+                .child("users")
+                .child(newKey)
+                .child("user_rate")
+                .child(user.getUid());
+
+        didWeLike(newKey);
+        getUserDetails(newKey);
+        userRating(newKey);
+    }
+
     private boolean keyChecker (){
         return (users.size() > 0);
     }
@@ -513,7 +509,6 @@ public class HLMUsers extends ListFragment {
     private String genNoRepeatedKey (String oldKey){
         String newKey = users.get(randomUser(users.size()));
         if (newKey.equals(oldKey)){
-            newKey = users.get(randomUser(users.size()));
             genNoRepeatedKey(newKey);
         }
         out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
