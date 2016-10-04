@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ListFragment;
 import android.util.DisplayMetrics;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -71,7 +72,7 @@ public class HLMUsers extends ListFragment {
     String nullKey = "nullKey";
     String userKey = nullKey;
     String oldKey = nullKey;
-    //private static final String TAG = "UserView";
+    private static final String TAG = "UserView";
 
     static HLMUsers newInstance() {
 
@@ -108,6 +109,7 @@ public class HLMUsers extends ListFragment {
     boolean flagOne = false;
     boolean flagTwo = false;
     boolean weLike = false;
+    boolean noUserFlag = true;
 
     String uniqueChatID;
 
@@ -133,7 +135,7 @@ public class HLMUsers extends ListFragment {
 
         user = getInstance().getUser();
         mCurrentLocation = HLMActivity.mCurrentLocation;
-        out.println("Location from HLMActivity: " + mCurrentLocation);
+        Log.v(TAG, "Location from HLMActivity: " + mCurrentLocation);
 
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         gender = sharedPreferences.getString("looking_for", "both");
@@ -141,12 +143,12 @@ public class HLMUsers extends ListFragment {
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
         users = usersList;
-        out.println("Number of Users from Singleton: " + users.size());
+        Log.i(TAG, "Number of Users from Singleton: " + users.size());
         //if (user != null) {
         out.println("Actual user: " + user.getUid());
         if (users == null) {
             FireConnection.getInstance().getFirebaseUsers(getContext(), mCurrentLocation);
-            System.out.println("Users from Singleton Empty");
+            Log.v(TAG, "Users from Singleton Empty");
         }
     }
 
@@ -192,6 +194,7 @@ public class HLMUsers extends ListFragment {
 
         //Only if a Key si given proceed, else Show a blank (Default) page.
         if (keyChecker()) {
+            noUserFlag = false;
             userKey = users.get(randomUser(users.size()));
             changeUserKey(userKey);
 
@@ -242,7 +245,7 @@ public class HLMUsers extends ListFragment {
                             //Generate new Key and Load new User
                             oldKey = userKey;
                             userKey = genNoRepeatedKey(userKey);
-                            out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
+                            Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
                             changeUserKey(userKey);
                             break;
 
@@ -319,7 +322,7 @@ public class HLMUsers extends ListFragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String userData = dataSnapshot.getValue().toString();
-                out.println("User data: " + userData);
+                Log.v(TAG, "User data: " + userData);
 
                 viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
                 viewUserDescription.setText(dataSnapshot.child("description").getValue().toString());
@@ -434,7 +437,7 @@ public class HLMUsers extends ListFragment {
                         }
                     }
                 }
-                out.println("Unique Chat ID: " + uniqueChatID);
+                Log.i(TAG, "Unique Chat ID: " + uniqueChatID);
             }
 
             @Override
@@ -511,7 +514,7 @@ public class HLMUsers extends ListFragment {
         if (newKey.equals(oldKey)){
             genNoRepeatedKey(newKey);
         }
-        out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
+        Log.i(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
         return newKey;
     }
 
@@ -538,6 +541,20 @@ public class HLMUsers extends ListFragment {
         fabMessage.setVisibility(INVISIBLE);
     }
 
+    @Override
+    public void onStart(){
+        super.onStart();
+        /* if (noUserFlag && users.size()>0){
+            Log.i(TAG, "Loading Users after Login");
+            //userKey = genNoRepeatedKey(null);
+            changeUserKey(genNoRepeatedKey(null));
+        } */
+    }
+    @Override
+    public void onResume (){
+        super.onResume();
+
+    }
     @Override
     public void onDestroy() {
         super.onDestroy();

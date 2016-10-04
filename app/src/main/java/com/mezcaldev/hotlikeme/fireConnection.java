@@ -25,7 +25,7 @@ import java.util.List;
  * Manage user credentials on Firebase
  */
 public class FireConnection {
-    String TAG = "Singleton: ";
+    String TAG = "Singleton";
     FirebaseUser user;
     FirebaseAuth mAuth;
     FirebaseAuth.AuthStateListener mAuthListener;
@@ -90,7 +90,7 @@ public class FireConnection {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     int numChildren = (int) dataSnapshot.getChildrenCount();
-                    System.out.println("Number of users: " + numChildren);
+                    Log.i(TAG, "Number of users: " + numChildren);
 
                     for (DataSnapshot data: dataSnapshot.getChildren()){
                         final String dataKey = data.getKey();
@@ -102,7 +102,7 @@ public class FireConnection {
 
                                         //Check permission and proceed according to them
                                         if(!mRequestingLocationUpdates || mCurrentLocation == null){
-                                            System.out.println("All users are visible");
+                                            Log.i(TAG, "All users are visible");
                                             usersList.add(dataKey);
 
                                        } else if (mCurrentLocation != null) {
@@ -117,7 +117,7 @@ public class FireConnection {
                                                 remoteUserLocation.setLongitude(userLongitude);
                                                 remoteUserLocation.setLatitude(userLatitude);
 
-                                                System.out.println("Remote User Location: " + remoteUserLocation);
+                                               Log.i(TAG, "Remote User Location: " + remoteUserLocation);
 
                                                 if (mCurrentLocation.distanceTo(remoteUserLocation) <= maxUserDistance
                                                         && !dataKey.equals(user.getUid())){
