@@ -71,7 +71,7 @@ public class HLMUsers extends ListFragment {
     String nullKey = "nullKey";
     String userKey = nullKey;
     String oldKey = nullKey;
-    private static final String TAG = "Location";
+    private static final String TAG = "UserView";
 
     static HLMUsers newInstance() {
 
@@ -88,17 +88,11 @@ public class HLMUsers extends ListFragment {
     int reqHeight = 600;
 
     /* Position */
-    private static final int ONE_SECOND = 1000;
-    /*private static final int ONE_MINUTE = ONE_SECOND * 60;
-    private static final int MINUTES = ONE_MINUTE * 5; */
     int maxUserDistance = 250;
-    //int delayTime = 500;
-    int reloadTimer = ONE_SECOND * 3;
 
     /* Location with Google API */
     Location mCurrentLocation;
     Boolean mRequestingLocationUpdates;
-    //final int REQUEST_CHECK_SETTINGS = 2543;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -126,7 +120,6 @@ public class HLMUsers extends ListFragment {
 
     String gender;
     SharedPreferences sharedPreferences;
-    SharedPreferences.Editor preferencesEditor;
     static List<String> users = new ArrayList<>();
 
     //Firebase Initialization
@@ -179,7 +172,6 @@ public class HLMUsers extends ListFragment {
         fabMessage.setOnClickListener(new OnClickListener() {
             @Override
             public void onClick(View v) {
-                //checkChat(userKey);
                 Intent intent = new Intent(getActivity(), ChatActivity.class);
                 intent.putExtra("userChat", uniqueChatID);
                 startActivity(intent);
@@ -214,7 +206,6 @@ public class HLMUsers extends ListFragment {
                     } else {
                         referenceUserRated.setValue(starsRating);
                     }
-                    //showUser();
                 }
             });
 
@@ -253,8 +244,7 @@ public class HLMUsers extends ListFragment {
                                 fabMessage.setVisibility(INVISIBLE);
                             }
 
-                            //referenceUserRated.setValue(starsRating);
-
+                            //Generate new Key and Load new User
                             oldKey = userKey;
                             userKey = genNoRepeatedKey(userKey);
                             out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
@@ -517,11 +507,7 @@ public class HLMUsers extends ListFragment {
     }
 
     private boolean keyChecker (){
-        if (users.size() > 0){
-            return true;
-        } else {
-            return false;
-        }
+        return (users.size() > 0);
     }
 
     private String genNoRepeatedKey (String oldKey){
