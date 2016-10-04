@@ -418,38 +418,6 @@ public class HLMActivity extends AppCompatActivity implements
 
         }
     }
-    /*@Override
-    public void onActivityResult(int requestCode, int resultCode, Intent data) {
-        Log.d("onActivityResult()", Integer.toString(resultCode));
-        //final LocationSettingsStates states = LocationSettingsStates.fromIntent(data);
-        switch (requestCode)
-        {
-            case REQUEST_CHECK_SETTINGS:
-                switch (resultCode)
-                {
-                    case Activity.RESULT_OK:
-                    {
-                        // All required changes were successfully made
-                        Toast.makeText(this, "Location enabled by user!", Toast.LENGTH_LONG)
-                                .show();
-                        startLocationUpdates();
-                        break;
-                    }
-                    case Activity.RESULT_CANCELED:
-                    {
-                        // The user was asked to change settings, but chose not to
-                        Toast.makeText(this, "Location not enabled, user cancelled.", Toast.LENGTH_LONG)
-                                .show();
-                        break;
-                    }
-                    default:
-                    {
-                        break;
-                    }
-                }
-                break;
-        }
-    } */
 
     protected void createLocationRequest() {
         mLocationRequest = new LocationRequest();

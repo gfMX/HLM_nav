@@ -7,11 +7,9 @@ import android.graphics.BitmapFactory;
 import android.graphics.drawable.LayerDrawable;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.util.DisplayMetrics;
 import android.view.LayoutInflater;
@@ -52,8 +50,8 @@ import static android.view.View.VISIBLE;
 import static android.widget.Toast.LENGTH_LONG;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-import static com.facebook.FacebookSdk.getApplicationContext;
 import static com.mezcaldev.hotlikeme.FireConnection.getInstance;
+import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 import static com.mezcaldev.hotlikeme.R.color.colorAccent;
 import static com.mezcaldev.hotlikeme.R.id.fab_message;
 import static com.mezcaldev.hotlikeme.R.id.imageView;
@@ -72,6 +70,7 @@ public class HLMUsers extends ListFragment {
 
     String nullKey = "nullKey";
     String userKey = nullKey;
+    String oldKey = nullKey;
     private static final String TAG = "Location";
 
     static HLMUsers newInstance() {
@@ -151,10 +150,14 @@ public class HLMUsers extends ListFragment {
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
+        users = usersList;
+        out.println("Number of Users from Singleton: " + users.size());
         //if (user != null) {
         out.println("Actual user: " + user.getUid());
-        getUriProfilePics(gender);
-        //}
+        if (users == null) {
+            FireConnection.getInstance().getFirebaseUsers(getContext(), mCurrentLocation);
+            System.out.println("Users from Singleton Empty");
+        }
     }
 
     @Override
@@ -189,6 +192,7 @@ public class HLMUsers extends ListFragment {
         LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
         stars.getDrawable(2).setColorFilter(getColor(getContext(), colorAccent), SRC_ATOP);
 
+        //Calculations for the subdivisions and Rating based on screen Height
         getActivity().getWindowManager().getDefaultDisplay().getMetrics(metrics);
         displayHeight = metrics.heightPixels;
         displayWidth = metrics.widthPixels;
@@ -197,267 +201,10 @@ public class HLMUsers extends ListFragment {
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
-        /*if (!keyChecker()){
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run() {
-                    if (!keyChecker()) {
-                        showUser();
-                    }
-                }
-            }, reloadTimer);
-        } else {
-            showUser();
-        } */
-        showUser();
-
-    }
-
-    private void getUserDetails(String userKey) {
-        DatabaseReference databaseReferenceUserDetails = database.getReference().child("users").child(userKey).child("preferences");
-
-        databaseReferenceUserDetails.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                String userData = dataSnapshot.getValue().toString();
-                out.println("User data: " + userData);
-
-                viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
-                viewUserDescription.setText(dataSnapshot.child("description").getValue().toString());
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        storageRef.child(userKey).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
-                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                    @Override
-                    public void onSuccess(byte[] bytes) {
-                        Bitmap image = decodeSampledBitmap(bytes, reqWidth, reqHeight);
-                        viewUserImage.setImageBitmap(image);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-                exception.printStackTrace();
-            }
-        });
-    }
-
-    private void userRating(String userKey) {
-        DatabaseReference databaseReferenceRating = database.getReference().child("users").child(userKey).child("user_rate");
-
-        databaseReferenceRating.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    if (data.getKey().equals(user.getUid())) { //Shows only the rating given bye the actual User
-                        starsRating = valueOf(data.getValue().toString());
-                        oldRating = starsRating;
-                        ratingBar.setRating(starsRating);
-                        //out.println("Long: " + starsRating);
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void didWeLike(final String userKey) {
-        final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(userKey).child("like_user");
-        DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
-
-        databaseReferenceCurrent.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                for (DataSnapshot data : dataSnapshot.getChildren()) {
-                    if (data.getKey().equals(userKey)) {
-                        //currentUserLike = true;
-                        databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                for (DataSnapshot data : dataSnapshot.getChildren()) {
-                                    if (data.getKey().equals(user.getUid())) {
-                                        fabMessage.setVisibility(VISIBLE);
-                                        weLike = true;
-                                        checkChat(userKey);
-                                    }
-                                }
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-
-                            }
-                        });
-                    }
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void checkChat(final String userKey) {
-
-        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
-        final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(userKey).child("my_chats");
-        final DatabaseReference databaseReferenceChat = database.getReference().child("chats_resume");
-
-        //Check if a chat exists already, if not a new Chat is assigned to the users.
-        databaseReferenceSetCurrentUserChat.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                out.println("Checking for chats");
-                if (weLike && !dataSnapshot.hasChild(userKey)) {
-                    uniqueChatID = "chat_" + randomUUID();
-
-                    databaseReferenceSetCurrentUserChat.child(userKey).setValue(uniqueChatID);
-                    databaseReferenceSetRemoteUserChat.child(user.getUid()).setValue(uniqueChatID);
-
-                    databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(welcome_msg));
-                    databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
-                } else {
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        if (data.getKey().equals(userKey)) {
-                            uniqueChatID = data.getValue().toString();
-                        }
-                    }
-                }
-                out.println("Unique Chat ID: " + uniqueChatID);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    public void getUriProfilePics (final String gender){
-        final DatabaseReference databaseReferenceUriProfile = database.getReference().child("groups").child(gender);
-        final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
-
-        databaseReferenceUriProfile.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                int numChildren = (int) dataSnapshot.getChildrenCount();
-                System.out.println("Number of users: " + numChildren);
-
-                for (DataSnapshot data: dataSnapshot.getChildren()){
-                    final String dataKey = data.getKey();
-                    databaseReferenceLocation.child(dataKey).addListenerForSingleValueEvent(
-                            new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    Location remoteUserLocation;
-
-                                    //Check permission and proceed according to them
-                                    if(!mRequestingLocationUpdates){
-                                        System.out.println("All users are visible");
-                                        users.add(dataKey);
-
-                                        Snackbar.make(getActivity().getWindow().getDecorView(),
-                                                getResources().getString(R.string.text_enable_gps_snack),
-                                                Snackbar.LENGTH_LONG)
-                                                .setAction("Enable GPS", new View.OnClickListener(){
-                                                    @Override
-                                                    public void onClick(View v) {
-                                                        preferencesEditor = sharedPreferences.edit();
-                                                        preferencesEditor.putBoolean("gps_enabled", true);
-                                                        preferencesEditor.apply();
-                                                        mRequestingLocationUpdates = true;
-
-                                                        users.clear();
-
-                                                        Handler handler = new Handler();
-                                                        handler.postDelayed(new Runnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                startActivity(new Intent(getActivity(), HLMActivity.class));
-                                                            }
-                                                        },500);
-
-                                                    }
-                                                }).show();
-
-                                    } else if (mCurrentLocation != null) {
-                                        Double userLongitude = (Double) dataSnapshot.child("location_last").child("loc_longitude")
-                                                .getValue();
-                                        Double userLatitude = (Double) dataSnapshot.child("location_last").child("loc_latitude")
-                                                .getValue();
-                                        //Request location of the Remote User
-                                        if (userLongitude != null && userLatitude != null) {
-
-                                            remoteUserLocation = new Location("");
-                                            remoteUserLocation.setLongitude(userLongitude);
-                                            remoteUserLocation.setLatitude(userLatitude);
-
-                                            System.out.println("Remote User Location: " + remoteUserLocation);
-
-                                            if (mCurrentLocation.distanceTo(remoteUserLocation) <= maxUserDistance
-                                                    && !dataKey.equals(user.getUid())){
-
-                                                System.out.println("User " + dataKey + " reachable!");
-                                                users.add(dataKey);
-
-                                            }
-                                        }
-                                    } else {
-                                        System.out.println("Location Not Reachable! Please wait...");
-                                        Toast.makeText(getApplicationContext(), "Please wait", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            }
-                    );
-                }
-            }
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-    }
-
-    private void showUser(){
-        userKey = nullKey;
         //Only if a Key si given proceed, else Show a blank (Default) page.
         if (keyChecker()) {
             userKey = users.get(randomUser(users.size()));
-
-            didWeLike(userKey);
-            //Adds the users that Current User likes
-            referenceLikeUser = database.getReference()
-                    .child("users")
-                    .child(user.getUid())
-                    .child("like_user")
-                    .child(userKey);
-
-            //Adds the rate of the Current User to the rating of the external user
-            referenceUserRated = database.getReference()
-                    .child("users")
-                    .child(userKey)
-                    .child("user_rate")
-                    .child(user.getUid());
-
-            getUserDetails(userKey);
-            userRating(userKey);
+            changeUserKey(userKey);
 
             ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
                 public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
@@ -508,12 +255,10 @@ public class HLMUsers extends ListFragment {
 
                             //referenceUserRated.setValue(starsRating);
 
-                            userKey = nullKey;
-                            resetFlags();
-                            userKey = users.get(randomUser(users.size()));
-                            //showUser();
-                            getUserDetails(userKey);
-                            userRating(userKey);
+                            oldKey = userKey;
+                            userKey = genNoRepeatedKey(userKey);
+                            out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
+                            changeUserKey(userKey);
 
                             break;
                         case ACTION_MOVE:
@@ -578,6 +323,159 @@ public class HLMUsers extends ListFragment {
         } else {
             Toast.makeText(getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
         }
+
+    }
+
+    private void getUserDetails(String key) {
+        DatabaseReference databaseReferenceUserDetails = database.getReference().child("users").child(key).child("preferences");
+
+        databaseReferenceUserDetails.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                String userData = dataSnapshot.getValue().toString();
+                out.println("User data: " + userData);
+
+                viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
+                viewUserDescription.setText(dataSnapshot.child("description").getValue().toString());
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+
+        storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
+                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
+                    @Override
+                    public void onSuccess(byte[] bytes) {
+                        Bitmap image = decodeSampledBitmap(bytes, reqWidth, reqHeight);
+                        viewUserImage.setImageBitmap(image);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception exception) {
+                // Handle any errors
+                exception.printStackTrace();
+            }
+        });
+    }
+
+    private void userRating(String key) {
+        DatabaseReference databaseReferenceRating = database.getReference().child("users").child(key).child("user_rate");
+
+        databaseReferenceRating.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    if (data.getKey().equals(user.getUid())) { //Shows only the rating given bye the actual User
+                        starsRating = valueOf(data.getValue().toString());
+                        oldRating = starsRating;
+                        ratingBar.setRating(starsRating);
+                        //out.println("Long: " + starsRating);
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void didWeLike(final String key) {
+        final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(key).child("like_user");
+        DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
+
+        databaseReferenceCurrent.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                    if (data.getKey().equals(key)) {
+                        //currentUserLike = true;
+                        databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
+                            @Override
+                            public void onDataChange(DataSnapshot dataSnapshot) {
+                                for (DataSnapshot data : dataSnapshot.getChildren()) {
+                                    if (data.getKey().equals(user.getUid())) {
+                                        fabMessage.setVisibility(VISIBLE);
+                                        weLike = true;
+                                        checkChat(key);
+                                    }
+                                }
+                            }
+
+                            @Override
+                            public void onCancelled(DatabaseError databaseError) {
+
+                            }
+                        });
+                    }
+                }
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void checkChat(final String key) {
+
+        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
+        final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(key).child("my_chats");
+        final DatabaseReference databaseReferenceChat = database.getReference().child("chats_resume");
+
+        //Check if a chat exists already, if not a new Chat is assigned to the users.
+        databaseReferenceSetCurrentUserChat.addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                out.println("Checking for chats");
+                if (weLike && !dataSnapshot.hasChild(key)) {
+                    uniqueChatID = "chat_" + randomUUID();
+
+                    databaseReferenceSetCurrentUserChat.child(key).setValue(uniqueChatID);
+                    databaseReferenceSetRemoteUserChat.child(user.getUid()).setValue(uniqueChatID);
+
+                    databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(welcome_msg));
+                    databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
+                } else {
+                    for (DataSnapshot data : dataSnapshot.getChildren()) {
+                        if (data.getKey().equals(key)) {
+                            uniqueChatID = data.getValue().toString();
+                        }
+                    }
+                }
+                out.println("Unique Chat ID: " + uniqueChatID);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
+    }
+
+    private void changeUserKey(String newKey){
+        //Adds the users that Current User likes
+                referenceLikeUser = database.getReference()
+                .child("users")
+                .child(user.getUid())
+                .child("like_user")
+                .child(newKey);
+
+        //Adds the rate of the Current User to the rating of the external user
+        referenceUserRated = database.getReference()
+                .child("users")
+                .child(newKey)
+                .child("user_rate")
+                .child(user.getUid());
+
+        didWeLike(newKey);
+        getUserDetails(newKey);
+        userRating(newKey);
     }
 
     public static int calculateInSampleSize(
@@ -624,6 +522,16 @@ public class HLMUsers extends ListFragment {
         } else {
             return false;
         }
+    }
+
+    private String genNoRepeatedKey (String oldKey){
+        String newKey = users.get(randomUser(users.size()));
+        if (newKey.equals(oldKey)){
+            newKey = users.get(randomUser(users.size()));
+            genNoRepeatedKey(newKey);
+        }
+        out.println("New randomKey: " + userKey + " oldKey: " + oldKey);
+        return newKey;
     }
 
     private int randomUser(int noMax){
