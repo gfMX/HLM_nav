@@ -219,10 +219,10 @@ public class ChatUserList extends ListFragment {
                             Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ 1000 / 60 / 60;
                             Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
 
-                            if (timeInHours < maxTimeForNotifications && !isInLayout()) {
+                            /*if (timeInHours < maxTimeForNotifications && !isInLayout()) {
                                 String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
                                 sendNotification(notificationText);
-                            }
+                            }*/
                         }
 
                         @Override
