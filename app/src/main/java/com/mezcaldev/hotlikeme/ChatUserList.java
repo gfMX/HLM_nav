@@ -7,7 +7,9 @@ import android.content.Intent;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.NonNull;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
@@ -18,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
@@ -62,6 +65,8 @@ public class ChatUserList extends ListFragment {
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
 
+    Boolean undoFlag = false;
+
     RecyclerView mRecyclerView;
     RecyclerView.Adapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
@@ -87,6 +92,9 @@ public class ChatUserList extends ListFragment {
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
+        final DatabaseReference databaseMessageReference = database.getReference();
+        final DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
+
         mRecyclerView = (RecyclerView) view.findViewById(R.id.user_list);
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -104,10 +112,50 @@ public class ChatUserList extends ListFragment {
                         final int fromPos = viewHolder.getAdapterPosition();
                         final int toPos = target.getAdapterPosition();
                         // move item in `fromPos` to `toPos` in adapter.
+                        Toast.makeText(getApplicationContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
                         return true;// true if moved, false otherwise
                     }
+
                     public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
                         // remove from adapter
+                        if (direction == ItemTouchHelper.LEFT){
+                            final int position = viewHolder.getAdapterPosition();
+                            System.out.println("Delete here: " + position);
+                            System.out.println("User: " + userName.get(position) + " Key: " + userKey.get(position));
+                            Snackbar snackbar = Snackbar.make(getActivity().getWindow().getDecorView(), "Disconnected from User", Snackbar.LENGTH_LONG)
+                                    .setAction("UNDO", new View.OnClickListener() {
+                                @Override
+                                public void onClick(View v) {
+                                    undoFlag =true;
+                                }
+                            });
+                            snackbar.show();
+                            Handler handler = new Handler();
+                            handler.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    if (!undoFlag) {
+                                        databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
+                                        databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
+                                        databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
+                                        databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
+
+                                        userKey.remove(position);
+                                        userChatID.remove(position);
+                                        userName.remove(position);
+                                        userProfilePic.remove(position);
+                                        userLastMessage.remove(position);
+                                        userTimeStamp.remove(position);
+
+                                        Log.i(TAG, "User removed!");
+                                    } else {
+                                        Log.i(TAG, "User NOT removed!");
+                                    }
+                                    mAdapter.notifyDataSetChanged();
+                                    undoFlag = false;
+                                }
+                            }, (2500));
+                        }
                     }
                 });
         mIth.attachToRecyclerView(mRecyclerView);
@@ -125,6 +173,8 @@ public class ChatUserList extends ListFragment {
         databaseReferenceMyUsers.addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
+                cleanVars();
+
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
 
                     userKey.add(data.getKey());
@@ -268,6 +318,7 @@ public class ChatUserList extends ListFragment {
     private void cleanVars(){
         userKey.clear();
         userName.clear();
+        userChatID.clear();
         userProfilePic.clear();
         userLastMessage.clear();
         userTimeStamp.clear();

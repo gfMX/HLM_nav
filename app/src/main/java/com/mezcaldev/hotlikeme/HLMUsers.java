@@ -85,6 +85,7 @@ public class HLMUsers extends ListFragment {
     FloatingActionButton fabMessage;
 
     Bitmap image;
+    Handler handlerBeforeNewUser = new Handler();
 
     //Sampled Image:
     int reqWidth = 700;
@@ -92,6 +93,7 @@ public class HLMUsers extends ListFragment {
 
     /* Position */
     int maxUserDistance = 250;
+    int delayBeforeNewUser = 500;
     int delayTime = 2500;
 
     /* Location with Google API */
@@ -124,13 +126,34 @@ public class HLMUsers extends ListFragment {
     SharedPreferences sharedPreferences;
     static List<String> users = new ArrayList<>();
 
-    //Firebase Initialization
+    //Firebase Initialization:
     FirebaseUser user = getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
     DatabaseReference referenceLikeUser;
     DatabaseReference referenceUserRated;
+
+    /*************************
+     * Database References:
+     * **********************/
+    //User Details
+    DatabaseReference databaseReferenceUserDetails;
+    //User Rating:
+    DatabaseReference databaseReferenceRating;
+    //Did we like
+    DatabaseReference databaseReferenceUserKey;
+    DatabaseReference databaseReferenceCurrent;
+    //Chat
+    DatabaseReference databaseReferenceSetCurrentUserChat;
+    DatabaseReference databaseReferenceSetRemoteUserChat;
+    DatabaseReference databaseReferenceChat;
+
+    //Value Event Listeners:
+    ValueEventListener valueEventListenerDidWeLike;
+    ValueEventListener valueEventListenerGetUserDetails;
+    ValueEventListener valueEventListenerCheckChat;
+    ValueEventListener valueEventListenerUserRating;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -252,12 +275,20 @@ public class HLMUsers extends ListFragment {
                                 //makeText(getContext(), "Removed!", LENGTH_SHORT).show();
                                 fabMessage.setVisibility(INVISIBLE);
                             }
+                            //Check if Users Like each other:
+                            didWeLike(userKey);
 
-                            //Generate new Key and Load new User
-                            oldKey = userKey;
-                            userKey = genNoRepeatedKey(userKey);
-                            Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
-                            changeUserKey(userKey);
+                            //Generate new Key and Load new User before the given time
+                            handlerBeforeNewUser.postDelayed(new Runnable() {
+                                @Override
+                                public void run() {
+                                    oldKey = userKey;
+                                    userKey = genNoRepeatedKey(userKey);
+                                    Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
+                                    changeUserKey(userKey);
+                                }
+                            }, delayBeforeNewUser);
+
                             break;
 
                         case ACTION_MOVE:
@@ -327,9 +358,9 @@ public class HLMUsers extends ListFragment {
     }
 
     private void getUserDetails(String key) {
-        DatabaseReference databaseReferenceUserDetails = database.getReference().child("users").child(key).child("preferences");
+        databaseReferenceUserDetails = database.getReference().child("users").child(key).child("preferences");
 
-        databaseReferenceUserDetails.addListenerForSingleValueEvent(new ValueEventListener() {
+        valueEventListenerGetUserDetails = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 String userData = dataSnapshot.getValue().toString();
@@ -343,7 +374,9 @@ public class HLMUsers extends ListFragment {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+
+        databaseReferenceUserDetails.addValueEventListener(valueEventListenerGetUserDetails);
 
         storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
@@ -365,9 +398,9 @@ public class HLMUsers extends ListFragment {
     }
 
     private void userRating(String key) {
-        DatabaseReference databaseReferenceRating = database.getReference().child("users").child(key).child("user_rate");
+        databaseReferenceRating = database.getReference().child("users").child(key).child("user_rate");
 
-        databaseReferenceRating.addListenerForSingleValueEvent(new ValueEventListener() {
+        valueEventListenerUserRating = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
@@ -384,19 +417,20 @@ public class HLMUsers extends ListFragment {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+
+        databaseReferenceRating.addValueEventListener(valueEventListenerUserRating);
     }
 
     private void didWeLike(final String key) {
-        final DatabaseReference databaseReferenceUserKey = database.getReference().child("users").child(key).child("like_user");
-        DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
+        databaseReferenceUserKey = database.getReference().child("users").child(key).child("like_user");
+        databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
-        databaseReferenceCurrent.addListenerForSingleValueEvent(new ValueEventListener() {
+        valueEventListenerDidWeLike = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                     if (data.getKey().equals(key)) {
-                        //currentUserLike = true;
                         databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
@@ -422,17 +456,19 @@ public class HLMUsers extends ListFragment {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+
+        databaseReferenceCurrent.addValueEventListener(valueEventListenerDidWeLike);
     }
 
     private void checkChat(final String key) {
 
-        final DatabaseReference databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
-        final DatabaseReference databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(key).child("my_chats");
-        final DatabaseReference databaseReferenceChat = database.getReference().child("chats_resume");
+        databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
+        databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(key).child("my_chats");
+        databaseReferenceChat = database.getReference().child("chats_resume");
 
         //Check if a chat exists already, if not a new Chat is assigned to the users.
-        databaseReferenceSetCurrentUserChat.addListenerForSingleValueEvent(new ValueEventListener() {
+        valueEventListenerCheckChat = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 out.println("Checking for chats");
@@ -458,7 +494,9 @@ public class HLMUsers extends ListFragment {
             public void onCancelled(DatabaseError databaseError) {
 
             }
-        });
+        };
+
+        databaseReferenceSetCurrentUserChat.addValueEventListener(valueEventListenerCheckChat);
     }
 
     public static int calculateInSampleSize(
@@ -500,6 +538,20 @@ public class HLMUsers extends ListFragment {
     }
 
     private void changeUserKey(String newKey){
+        fabMessage.setVisibility(INVISIBLE);
+        weLike = false;
+        //First Remove old Listeners:
+        try {
+            //Avoid LOS for too many references:
+            databaseReferenceUserDetails.removeEventListener(valueEventListenerGetUserDetails);
+            databaseReferenceRating.removeEventListener(valueEventListenerUserRating);
+            databaseReferenceCurrent.removeEventListener(valueEventListenerDidWeLike);
+            databaseReferenceSetCurrentUserChat.removeEventListener(valueEventListenerCheckChat);
+        } catch (NullPointerException e){
+            Log.i(TAG, "First RUN Event Listeners are NULL!");
+            //e.printStackTrace();
+        }
+
         //Adds the users that Current User likes
         referenceLikeUser = database.getReference()
                 .child("users")
@@ -514,8 +566,8 @@ public class HLMUsers extends ListFragment {
                 .child("user_rate")
                 .child(user.getUid());
 
-        didWeLike(newKey);
         getUserDetails(newKey);
+        didWeLike(newKey);
         userRating(newKey);
     }
 
@@ -551,9 +603,6 @@ public class HLMUsers extends ListFragment {
     private void resetFlags() {
         flagOne = false;
         flagTwo = false;
-
-        weLike = false;
-        fabMessage.setVisibility(INVISIBLE);
     }
 
     @Override

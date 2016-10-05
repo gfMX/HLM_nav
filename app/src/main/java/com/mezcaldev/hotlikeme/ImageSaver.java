@@ -53,8 +53,8 @@ public class ImageSaver {
     String pathThumbs = "/images/thumbs/";
 
     //Profile Image
-    int reqWidth = 100;
-    int reqHeight = 100;
+    int reqWidth = 200;
+    int reqHeight = 200;
 
     final FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
