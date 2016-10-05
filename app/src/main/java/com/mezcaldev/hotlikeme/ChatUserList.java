@@ -41,6 +41,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.facebook.FacebookSdk.getApplicationContext;
+import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
     final static String TAG = "Chat: ";
@@ -135,10 +136,16 @@ public class ChatUserList extends ListFragment {
                                 @Override
                                 public void run() {
                                     if (!undoFlag) {
-                                        databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
-                                        databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
-                                        databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
-                                        databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
+                                        weLike = false;
+
+                                        try {
+                                            databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
+                                            databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
+                                            databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
+                                            databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
+                                        } catch (NullPointerException e){
+                                            Log.e(TAG, "Missing values to delete!");
+                                        }
 
                                         userKey.remove(position);
                                         userChatID.remove(position);
@@ -146,6 +153,7 @@ public class ChatUserList extends ListFragment {
                                         userProfilePic.remove(position);
                                         userLastMessage.remove(position);
                                         userTimeStamp.remove(position);
+
 
                                         Log.i(TAG, "User removed!");
                                     } else {
@@ -245,7 +253,7 @@ public class ChatUserList extends ListFragment {
             });
             databaseReferenceLastMessage
                     .child(userChatID.get(position))
-                    .addValueEventListener(new ValueEventListener() {
+                    .addListenerForSingleValueEvent(new ValueEventListener() {
                         @Override
                         public void onDataChange(DataSnapshot dataSnapshot) {
                             String lastMessageText;

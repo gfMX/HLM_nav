@@ -31,6 +31,7 @@ public class FireConnection {
     FirebaseAuth.AuthStateListener mAuthListener;
     FirebaseDatabase database;
     Location mCurrentLocation;
+    static Boolean weLike = false;
 
     Boolean flagOneTime = false;
     static List<String> usersList = new ArrayList<>();

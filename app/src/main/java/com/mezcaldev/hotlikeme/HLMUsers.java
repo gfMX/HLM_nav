@@ -53,6 +53,7 @@ import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
 import static com.mezcaldev.hotlikeme.FireConnection.getInstance;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
+import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 import static com.mezcaldev.hotlikeme.R.color.colorAccent;
 import static com.mezcaldev.hotlikeme.R.id.fab_message;
 import static com.mezcaldev.hotlikeme.R.id.imageView;
@@ -113,7 +114,7 @@ public class HLMUsers extends ListFragment {
 
     boolean flagOne = false;
     boolean flagTwo = false;
-    boolean weLike = false;
+    //boolean weLike = false;
     boolean noUserFlag = true;
 
     String uniqueChatID;
