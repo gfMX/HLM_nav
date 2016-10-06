@@ -175,6 +175,12 @@ public class HLMSettings extends AppCompatPreferenceActivity {
             databaseReference.child("/preferences/gps_enabled/")
                     .setValue(sharedPreferences.getBoolean("gps_enabled", false));
         }
+
+        if (sharedPreferences.getBoolean("gps_enabled", false) && HLMActivity.mCurrentLocation != null){
+            FireConnection.getInstance().getFirebaseUsers(getApplicationContext(), HLMActivity.mCurrentLocation);
+        } else{
+            FireConnection.getInstance().getFirebaseUsers(getApplicationContext(), null);
+        }
         if (sharedPreferences.getBoolean("visible_switch", false)){
             System.out.println("User Visible");
             databaseReferenceZero.child("groups").child(gender).child(firebaseUser.getUid()).setValue(true);

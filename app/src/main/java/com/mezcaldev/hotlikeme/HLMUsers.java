@@ -34,9 +34,7 @@ import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
-import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.List;
 import java.util.Random;
 
 import static android.graphics.PorterDuff.Mode.SRC_ATOP;
@@ -89,8 +87,8 @@ public class HLMUsers extends ListFragment {
     Handler handlerBeforeNewUser = new Handler();
 
     //Sampled Image:
-    int reqWidth = 700;
-    int reqHeight = 700;
+    int reqWidth = 650;
+    int reqHeight = 650;
 
     /* Position */
     int maxUserDistance = 250;
@@ -115,7 +113,7 @@ public class HLMUsers extends ListFragment {
     boolean flagOne = false;
     boolean flagTwo = false;
     //boolean weLike = false;
-    boolean noUserFlag = true;
+    //boolean noUserFlag = true;
 
     String uniqueChatID;
 
@@ -125,7 +123,7 @@ public class HLMUsers extends ListFragment {
 
     String gender;
     SharedPreferences sharedPreferences;
-    static List<String> users = new ArrayList<>();
+    //static List<String> users = new ArrayList<>();
 
     //Firebase Initialization:
     FirebaseUser user = getInstance().getUser();
@@ -169,11 +167,11 @@ public class HLMUsers extends ListFragment {
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
-        users = usersList;
-        Log.i(TAG, "Number of Users from Singleton: " + users.size());
+        //users = usersList;
+        Log.i(TAG, "Number of Users from Singleton: " + usersList.size());
         //if (user != null) {
         out.println("Actual user: " + user.getUid());
-        if (users == null) {
+        if (usersList == null) {
             FireConnection.getInstance().getFirebaseUsers(getContext(), mCurrentLocation);
             Log.v(TAG, "Users from Singleton Empty");
         }
@@ -221,7 +219,7 @@ public class HLMUsers extends ListFragment {
 
         //Only if a Key si given proceed, else Show a blank (Default) page.
         if (keyChecker()) {
-            noUserFlag = false;
+            //noUserFlag = false;
             //userKey = users.get(randomUser(users.size()));
             userKey = genNoRepeatedKey(userKey);
             changeUserKey(userKey);
@@ -230,8 +228,12 @@ public class HLMUsers extends ListFragment {
             handler.postDelayed(new Runnable() {
                 @Override
                 public void run() {
-                    userKey = genNoRepeatedKey(userKey);
-                    changeUserKey(userKey);
+                    if (usersList.size() > 0) {
+                        userKey = genNoRepeatedKey(userKey);
+                        changeUserKey(userKey);
+                    } else {
+                        Log.e(TAG, "There are no users around");
+                    }
                 }
             }, delayTime);
         }
@@ -266,7 +268,7 @@ public class HLMUsers extends ListFragment {
                             if (yRaw < screenUp) {
                                 out.println("User ID: " + userKey);
                                 referenceLikeUser.setValue(true);
-                                makeText(getContext(), "Added!", LENGTH_SHORT).show();
+                                //makeText(getContext(), "Added!", LENGTH_SHORT).show();
 
                             }
                             //Remove users from the Like List
@@ -278,17 +280,23 @@ public class HLMUsers extends ListFragment {
                             }
                             //Check if Users Like each other:
                             didWeLike(userKey);
+                            removeReferences();
 
                             //Generate new Key and Load new User before the given time
-                            handlerBeforeNewUser.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    oldKey = userKey;
-                                    userKey = genNoRepeatedKey(userKey);
-                                    Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
-                                    changeUserKey(userKey);
-                                }
-                            }, delayBeforeNewUser);
+                            if (usersList.size() > 1) {
+                                handlerBeforeNewUser.postDelayed(new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        oldKey = userKey;
+                                        userKey = genNoRepeatedKey(userKey);
+                                        Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
+                                        changeUserKey(userKey);
+                                    }
+                                }, delayBeforeNewUser);
+                            } else {
+                                Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
+                                Log.i(TAG, "No more users around!");
+                            }
 
                             break;
 
@@ -476,11 +484,15 @@ public class HLMUsers extends ListFragment {
                 if (weLike && !dataSnapshot.hasChild(key)) {
                     uniqueChatID = "chat_" + randomUUID();
 
-                    databaseReferenceSetCurrentUserChat.child(key).setValue(uniqueChatID);
-                    databaseReferenceSetRemoteUserChat.child(user.getUid()).setValue(uniqueChatID);
+                    //try {
+                        databaseReferenceSetCurrentUserChat.child(key).setValue(uniqueChatID);
+                        databaseReferenceSetRemoteUserChat.child(user.getUid()).setValue(uniqueChatID);
 
-                    databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(welcome_msg));
-                    databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
+                        databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(welcome_msg));
+                        databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
+                    /*} catch (IllegalStateException ie){
+                        Log.e(TAG, "Ups! Listeners detached earlier");
+                    }*/
                 } else {
                     for (DataSnapshot data : dataSnapshot.getChildren()) {
                         if (data.getKey().equals(key)) {
@@ -542,16 +554,7 @@ public class HLMUsers extends ListFragment {
         fabMessage.setVisibility(INVISIBLE);
         weLike = false;
         //First Remove old Listeners:
-        try {
-            //Avoid LOS for too many references:
-            databaseReferenceUserDetails.removeEventListener(valueEventListenerGetUserDetails);
-            databaseReferenceRating.removeEventListener(valueEventListenerUserRating);
-            databaseReferenceCurrent.removeEventListener(valueEventListenerDidWeLike);
-            databaseReferenceSetCurrentUserChat.removeEventListener(valueEventListenerCheckChat);
-        } catch (NullPointerException e){
-            Log.i(TAG, "First RUN Event Listeners are NULL!");
-            //e.printStackTrace();
-        }
+        removeReferences();
 
         //Adds the users that Current User likes
         referenceLikeUser = database.getReference()
@@ -572,17 +575,31 @@ public class HLMUsers extends ListFragment {
         userRating(newKey);
     }
 
+    private void removeReferences (){
+        try {
+            //Avoid LOS for too many references:
+            databaseReferenceUserDetails.removeEventListener(valueEventListenerGetUserDetails);
+            databaseReferenceRating.removeEventListener(valueEventListenerUserRating);
+            databaseReferenceCurrent.removeEventListener(valueEventListenerDidWeLike);
+            databaseReferenceSetCurrentUserChat.removeEventListener(valueEventListenerCheckChat);
+        } catch (NullPointerException e){
+            Log.i(TAG, "Failed to remove Listeners");
+            //e.printStackTrace();
+        }
+    }
+
     private boolean keyChecker (){
-        return (users.size() > 0);
+        return (usersList.size() > 0);
     }
 
     private String genNoRepeatedKey (String oldKey){
-        String newKey = users.get(randomUser(users.size()));
-        if (newKey.equals(oldKey)){
-            //newKey = users.get(randomUser(users.size()));
+        String newKey = usersList.get(randomUser(usersList.size()));
+
+        /* if (newKey.equals(oldKey) && usersList.size()>1) {
             genNoRepeatedKey(newKey);
-        }
-        Log.i(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
+        } */
+        Log.i(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey + " UserList Size: " + usersList.size());
+
         return newKey;
     }
 
@@ -591,7 +608,11 @@ public class HLMUsers extends ListFragment {
         int nMax = noMax-1;
         Random random = new Random();
 
-        return random.nextInt((nMax - nMin) + 1) + nMin;
+        if (noMax > 1) {
+            return random.nextInt((nMax - nMin) + 1) + nMin;
+        } else {
+            return nMin;
+        }
     }
 
     private String timeStamp() {
@@ -622,6 +643,7 @@ public class HLMUsers extends ListFragment {
         if (image != null) {
             image.recycle();
         }
+        removeReferences();
         viewUserImage.setImageBitmap(null);
         //System.gc();
     }
