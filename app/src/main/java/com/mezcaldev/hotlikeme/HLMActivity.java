@@ -54,6 +54,9 @@ import com.google.firebase.database.FirebaseDatabase;
 import java.text.DateFormat;
 import java.util.Date;
 
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_MINUTE;
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
+
 public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
@@ -74,8 +77,6 @@ public class HLMActivity extends AppCompatActivity implements
     private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
 
     /* Position */
-    private static final int ONE_SECOND = 1000;
-    private static final int ONE_MINUTE = ONE_SECOND * 60;
     private static final int MINUTES = ONE_MINUTE * 5;
     int maxUserDistance = 250;
     int fastInterval = ONE_SECOND * 30;
@@ -376,6 +377,8 @@ public class HLMActivity extends AppCompatActivity implements
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
             mLastUpdateDay = DateFormat.getDateInstance().format(new Date());
             if (user != null) {
+                //Update Users List:
+                FireConnection.getInstance().getFirebaseUsers(getApplicationContext(), mCurrentLocation);
                 //New Location:
                 DatabaseReference databaseReferenceNewLocation = database.getReference()
                         .child("users")

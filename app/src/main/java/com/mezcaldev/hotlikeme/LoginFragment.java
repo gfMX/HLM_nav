@@ -23,6 +23,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.facebook.AccessToken;
 import com.facebook.AccessTokenTracker;
 import com.facebook.CallbackManager;
@@ -191,10 +192,10 @@ public class LoginFragment extends Fragment {
                 accessToken = loginResult.getAccessToken();
                 // App code
                 Log.d(TAG, "FB: onSuccess:" + loginResult);
-                Toast.makeText(getActivity(),
+                /*Toast.makeText(getActivity(),
                         getResources().getString(R.string.text_welcome),
                         Toast.LENGTH_SHORT)
-                        .show();
+                        .show();*/
                 handleFacebookAccessToken(accessToken);
             }
             @Override
@@ -385,6 +386,12 @@ public class LoginFragment extends Fragment {
                 profilePic.setProfileId(accessToken.getUserId());
             }
             imageProfileHLM.setClickable(true);
+            //Glide do better RAM Optimization:
+            Glide
+                    .with(getContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(imageProfileHLM);
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.VISIBLE);
@@ -420,9 +427,10 @@ public class LoginFragment extends Fragment {
                 }
                 if (profileImageCheck.exists()) {
                     flagImagesOnFirebase = true;
-                    imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
+                    //imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
                 } else {
-                    fireProfilePic();
+                    Log.i(TAG, "No need to store Image Profile locally...");
+                    //fireProfilePic();
                 }
             }
         }, delayTime);

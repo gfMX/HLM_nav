@@ -60,8 +60,8 @@ import static com.mezcaldev.hotlikeme.R.id.textView;
 import static com.mezcaldev.hotlikeme.R.id.userDescription;
 import static com.mezcaldev.hotlikeme.R.layout.hlm_screen_slide_page;
 import static com.mezcaldev.hotlikeme.R.string.welcome_msg;
-import static java.lang.Float.valueOf;
 import static java.lang.Long.MAX_VALUE;
+import static java.lang.Float.valueOf;
 import static java.lang.Math.random;
 import static java.lang.System.out;
 import static java.util.UUID.randomUUID;
@@ -87,8 +87,8 @@ public class HLMUsers extends ListFragment {
     Handler handlerBeforeNewUser = new Handler();
 
     //Sampled Image:
-    int reqWidth = 650;
-    int reqHeight = 650;
+    int reqWidth = 700;
+    int reqHeight = 700;
 
     /* Position */
     int maxUserDistance = 250;
@@ -158,7 +158,8 @@ public class HLMUsers extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        user = getInstance().getUser();
+        user = FireConnection.getInstance().getUser();
+        weLike = false;
         mCurrentLocation = HLMActivity.mCurrentLocation;
         Log.v(TAG, "Location from HLMActivity: " + mCurrentLocation);
 
@@ -237,14 +238,15 @@ public class HLMUsers extends ListFragment {
                 }
             }, delayTime);
         }
-        ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
+
+        /*ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
             public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
                 starsRating = rating;
                 if (starsRating != 0) {
                     referenceUserRated.setValue(starsRating);
                 }
             }
-        });
+        }); */
 
             viewUserImage.setOnTouchListener(new View.OnTouchListener() {
                 @Override
@@ -352,6 +354,7 @@ public class HLMUsers extends ListFragment {
                                 //Way too low of the screen
                                 System.out.println("None");
                             }
+                            referenceUserRated.setValue(starsRating);
                             ratingBar.setRating(starsRating);
                             break;
 
@@ -385,7 +388,7 @@ public class HLMUsers extends ListFragment {
             }
         };
 
-        databaseReferenceUserDetails.addValueEventListener(valueEventListenerGetUserDetails);
+        databaseReferenceUserDetails.addListenerForSingleValueEvent(valueEventListenerGetUserDetails);
 
         storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
@@ -404,9 +407,25 @@ public class HLMUsers extends ListFragment {
                 exception.printStackTrace();
             }
         });
+        /*storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getDownloadUrl()
+                .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                    @Override
+                    public void onSuccess(Uri uri) {
+                        Glide
+                                .with(getContext())
+                                .load(uri)
+                                .fitCenter()
+                                .into(viewUserImage);
+                    }
+                }).addOnFailureListener(new OnFailureListener() {
+            @Override
+            public void onFailure(@NonNull Exception e) {
+                e.printStackTrace();
+            }
+        });*/
     }
 
-    private void userRating(String key) {
+    private void userRating(final String key) {
         databaseReferenceRating = database.getReference().child("users").child(key).child("user_rate");
 
         valueEventListenerUserRating = new ValueEventListener() {
@@ -417,7 +436,7 @@ public class HLMUsers extends ListFragment {
                         starsRating = valueOf(data.getValue().toString());
                         oldRating = starsRating;
                         ratingBar.setRating(starsRating);
-                        //out.println("Long: " + starsRating);
+                        out.println("Key: " + key + " Rating: " + starsRating);
                     }
                 }
             }
@@ -428,7 +447,7 @@ public class HLMUsers extends ListFragment {
             }
         };
 
-        databaseReferenceRating.addValueEventListener(valueEventListenerUserRating);
+        databaseReferenceRating.addListenerForSingleValueEvent(valueEventListenerUserRating);
     }
 
     private void didWeLike(final String key) {
@@ -440,7 +459,7 @@ public class HLMUsers extends ListFragment {
             public void onDataChange(DataSnapshot dataSnapshot) {
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
                     if (data.getKey().equals(key)) {
-                        databaseReferenceUserKey.addValueEventListener(new ValueEventListener() {
+                        databaseReferenceUserKey.addListenerForSingleValueEvent(new ValueEventListener() {
                             @Override
                             public void onDataChange(DataSnapshot dataSnapshot) {
                                 for (DataSnapshot data : dataSnapshot.getChildren()) {
@@ -467,7 +486,7 @@ public class HLMUsers extends ListFragment {
             }
         };
 
-        databaseReferenceCurrent.addValueEventListener(valueEventListenerDidWeLike);
+        databaseReferenceCurrent.addListenerForSingleValueEvent(valueEventListenerDidWeLike);
     }
 
     private void checkChat(final String key) {
@@ -509,7 +528,7 @@ public class HLMUsers extends ListFragment {
             }
         };
 
-        databaseReferenceSetCurrentUserChat.addValueEventListener(valueEventListenerCheckChat);
+        databaseReferenceSetCurrentUserChat.addListenerForSingleValueEvent(valueEventListenerCheckChat);
     }
 
     public static int calculateInSampleSize(
@@ -551,8 +570,15 @@ public class HLMUsers extends ListFragment {
     }
 
     private void changeUserKey(String newKey){
-        fabMessage.setVisibility(INVISIBLE);
         weLike = false;
+        starsRating = 0;
+        if (image != null) {
+            viewUserImage.setImageBitmap(null);
+            viewUserImage.setImageResource(R.drawable.ic_person_gray);
+            image.recycle();
+        }
+        ratingBar.setRating(starsRating);
+        fabMessage.setVisibility(INVISIBLE);
         //First Remove old Listeners:
         removeReferences();
 
@@ -571,8 +597,8 @@ public class HLMUsers extends ListFragment {
                 .child(user.getUid());
 
         getUserDetails(newKey);
-        didWeLike(newKey);
         userRating(newKey);
+        didWeLike(newKey);
     }
 
     private void removeReferences (){
@@ -640,11 +666,10 @@ public class HLMUsers extends ListFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        viewUserImage.setImageBitmap(null);
         if (image != null) {
             image.recycle();
         }
         removeReferences();
-        viewUserImage.setImageBitmap(null);
-        //System.gc();
     }
 }

@@ -33,8 +33,12 @@ public class FireConnection {
     Location mCurrentLocation;
     static Boolean weLike = false;
 
-    Boolean flagOneTime = false;
+    private Boolean flagOneTime = false;
     static List<String> usersList = new ArrayList<>();
+
+    static final int ONE_SECOND = 1000;
+    static final int ONE_MINUTE = ONE_SECOND * 60;
+    static final int ONE_HOUR = ONE_MINUTE * 60;
 
     private static FireConnection ourInstance = new FireConnection();
 
@@ -106,7 +110,7 @@ public class FireConnection {
                                             Log.i(TAG, "All users are visible");
                                             usersList.add(dataKey);
 
-                                       } else if (mCurrentLocation != null) {
+                                       } else {
                                             Double userLongitude = (Double) dataSnapshot.child("location_last").child("loc_longitude")
                                                     .getValue();
                                             Double userLatitude = (Double) dataSnapshot.child("location_last").child("loc_latitude")
@@ -128,8 +132,6 @@ public class FireConnection {
 
                                                 }
                                             }
-                                        } else {
-                                            Log.i(TAG, "Location and users  Not Reachable!");
                                         }
                                     }
                                     @Override

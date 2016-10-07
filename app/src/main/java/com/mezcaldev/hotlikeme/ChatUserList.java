@@ -40,7 +40,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 
-import static com.facebook.FacebookSdk.getApplicationContext;
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
@@ -51,6 +51,7 @@ public class ChatUserList extends ListFragment {
 
         return newFragment;
     }
+
 
     int maxTimeForNotifications = 48;       /* Time in Hours */
 
@@ -102,7 +103,7 @@ public class ChatUserList extends ListFragment {
         mRecyclerView.setHasFixedSize(false);
 
         // specify an adapter (see also next example)
-        mAdapter = new ChatRecyclerAdapter(getApplicationContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
+        mAdapter = new ChatRecyclerAdapter(getContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
         mRecyclerView.setAdapter(mAdapter);
 
         ItemTouchHelper mIth = new ItemTouchHelper(
@@ -113,7 +114,7 @@ public class ChatUserList extends ListFragment {
                         final int fromPos = viewHolder.getAdapterPosition();
                         final int toPos = target.getAdapterPosition();
                         // move item in `fromPos` to `toPos` in adapter.
-                        Toast.makeText(getApplicationContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
+                        Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
                         return true;// true if moved, false otherwise
                     }
 
@@ -274,7 +275,7 @@ public class ChatUserList extends ListFragment {
                             userTimeStamp.set(position, lastDateFromMessage);
                             mAdapter.notifyDataSetChanged();
 
-                            Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ 1000 / 60 / 60;
+                            Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ ONE_HOUR;
                             Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
 
                             /*if (timeInHours < maxTimeForNotifications && !isInLayout()) {
