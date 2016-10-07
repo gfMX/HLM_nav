@@ -60,8 +60,8 @@ import static com.mezcaldev.hotlikeme.R.id.textView;
 import static com.mezcaldev.hotlikeme.R.id.userDescription;
 import static com.mezcaldev.hotlikeme.R.layout.hlm_screen_slide_page;
 import static com.mezcaldev.hotlikeme.R.string.welcome_msg;
-import static java.lang.Long.MAX_VALUE;
 import static java.lang.Float.valueOf;
+import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.random;
 import static java.lang.System.out;
 import static java.util.UUID.randomUUID;
@@ -422,7 +422,7 @@ public class HLMUsers extends ListFragment {
             public void onFailure(@NonNull Exception e) {
                 e.printStackTrace();
             }
-        });*/
+        }); */
     }
 
     private void userRating(final String key) {
@@ -648,6 +648,14 @@ public class HLMUsers extends ListFragment {
         return String.valueOf(calendar.getTimeInMillis());
     }
 
+    private void littleCleaning(){
+        viewUserImage.setImageBitmap(null);
+        viewUserImage.destroyDrawingCache();
+        if (image != null) {
+            image.recycle();
+        }
+        removeReferences();
+    }
     private void resetFlags() {
         flagOne = false;
         flagTwo = false;
@@ -656,20 +664,18 @@ public class HLMUsers extends ListFragment {
     @Override
     public void onStart(){
         super.onStart();
-
+    }
+    @Override
+    public void onStop(){
+        super.onStop();
     }
     @Override
     public void onResume (){
         super.onResume();
-
     }
     @Override
     public void onDestroy() {
         super.onDestroy();
-        viewUserImage.setImageBitmap(null);
-        if (image != null) {
-            image.recycle();
-        }
-        removeReferences();
+        littleCleaning();
     }
 }

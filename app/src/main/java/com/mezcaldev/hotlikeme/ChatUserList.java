@@ -73,6 +73,20 @@ public class ChatUserList extends ListFragment {
     RecyclerView.Adapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
 
+    //Database References:
+    DatabaseReference databaseMessageReference;
+    DatabaseReference databaseReferenceCurrent;
+    DatabaseReference databaseReferenceMyUsers;
+    DatabaseReference databaseReferenceUsers;
+    DatabaseReference databaseReferenceLastMessage;
+
+    //Value Event Listeners:
+    ValueEventListener valueEventListenerMessageReference;
+    ValueEventListener valueEventListenerReferenceCurrent;
+    ValueEventListener valueEventListenerMyUsers;
+    ValueEventListener valueEventListenerUsers;
+    ValueEventListener valueEventListenerLastMessage;
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -94,8 +108,8 @@ public class ChatUserList extends ListFragment {
 
     @Override
     public void onViewCreated(final View view, Bundle savedInstanceState){
-        final DatabaseReference databaseMessageReference = database.getReference();
-        final DatabaseReference databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
+        databaseMessageReference = database.getReference();
+        databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
         mRecyclerView = (RecyclerView) view.findViewById(R.id.user_list);
         mLayoutManager = new LinearLayoutManager(getActivity());
@@ -178,8 +192,8 @@ public class ChatUserList extends ListFragment {
     }
 
     private void getUsers() {
-        DatabaseReference databaseReferenceMyUsers = database.getReference().child("users").child(user.getUid()).child("my_chats");
-        databaseReferenceMyUsers.addValueEventListener(new ValueEventListener() {
+        databaseReferenceMyUsers = database.getReference().child("users").child(user.getUid()).child("my_chats");
+        valueEventListenerMyUsers = new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 cleanVars();
@@ -202,22 +216,22 @@ public class ChatUserList extends ListFragment {
             @Override
             public void onCancelled(DatabaseError databaseError) {
 
-                }
-            });
+            }
+        };
+
+        databaseReferenceMyUsers.addValueEventListener(valueEventListenerMyUsers);
 
 
     }
     private void getData(long size){
         Log.d(TAG, "Looking data for: " + userKey);
         //int size = userKey.size();
-        final DatabaseReference databaseReferenceUsers = database.getReference().child("users");
-        final DatabaseReference databaseReferenceLastMessage = database.getReference().child("chats_resume");
+        databaseReferenceUsers = database.getReference().child("users");
+        databaseReferenceLastMessage = database.getReference().child("chats_resume");
         for(int i = 0; i < size; i++){
             final int position = i;
-            Log.d(TAG, "Looking data for: " + userKey.get(position));
-            databaseReferenceUsers.child(userKey.get(position))
-                    .child("preferences").child("alias")
-                    .addValueEventListener(new ValueEventListener() {
+
+            valueEventListenerUsers = new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     //Log.i(TAG, "Alias found: " + dataSnapshot.getValue());
@@ -230,7 +244,49 @@ public class ChatUserList extends ListFragment {
                 public void onCancelled(DatabaseError databaseError) {
 
                 }
-            });
+            };
+
+            valueEventListenerLastMessage = new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    String lastMessageText;
+                    String lastDateFromMessage;
+                    Long lastMessageTime = 0L;
+                    if (dataSnapshot.child("text").getValue() != null){
+                        lastMessageText = dataSnapshot.child("text").getValue().toString();
+                    } else {
+                        lastMessageText = "Sorry! The last Message wasn't found!";
+                    }
+                    if (dataSnapshot.child("timeStamp").getValue() != null){
+                        lastDateFromMessage = dateFormatter(dataSnapshot.child("timeStamp").getValue().toString());
+                        lastMessageTime = Long.valueOf(dataSnapshot.child("timeStamp").getValue().toString());
+                    } else {
+                        lastDateFromMessage = "Date Not Found!";
+                    }
+                    userLastMessage.set(position, lastMessageText);
+                    userTimeStamp.set(position, lastDateFromMessage);
+                    mAdapter.notifyDataSetChanged();
+
+                    Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ ONE_HOUR;
+                    Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
+
+                            /*if (timeInHours < maxTimeForNotifications && !isInLayout()) {
+                                String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
+                                sendNotification(notificationText);
+                            }*/
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            };
+
+            Log.d(TAG, "Looking data for: " + userKey.get(position));
+
+            databaseReferenceUsers.child(userKey.get(position))
+                    .child("preferences").child("alias")
+                    .addValueEventListener(valueEventListenerUsers);
 
             storageReference.child(userKey.get(position))
                     .child("profile_pic")
@@ -252,43 +308,10 @@ public class ChatUserList extends ListFragment {
                     mAdapter.notifyDataSetChanged();
                 }
             });
+
             databaseReferenceLastMessage
                     .child(userChatID.get(position))
-                    .addListenerForSingleValueEvent(new ValueEventListener() {
-                        @Override
-                        public void onDataChange(DataSnapshot dataSnapshot) {
-                            String lastMessageText;
-                            String lastDateFromMessage;
-                            Long lastMessageTime = 0L;
-                            if (dataSnapshot.child("text").getValue() != null){
-                                lastMessageText = dataSnapshot.child("text").getValue().toString();
-                            } else {
-                                lastMessageText = "Sorry! The last Message wasn't found!";
-                            }
-                            if (dataSnapshot.child("timeStamp").getValue() != null){
-                                lastDateFromMessage = dateFormatter(dataSnapshot.child("timeStamp").getValue().toString());
-                                lastMessageTime = Long.valueOf(dataSnapshot.child("timeStamp").getValue().toString());
-                            } else {
-                                lastDateFromMessage = "Date Not Found!";
-                            }
-                            userLastMessage.set(position, lastMessageText);
-                            userTimeStamp.set(position, lastDateFromMessage);
-                            mAdapter.notifyDataSetChanged();
-
-                            Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ ONE_HOUR;
-                            Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
-
-                            /*if (timeInHours < maxTimeForNotifications && !isInLayout()) {
-                                String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
-                                sendNotification(notificationText);
-                            }*/
-                        }
-
-                        @Override
-                        public void onCancelled(DatabaseError databaseError) {
-
-                        }
-                    });
+                    .addValueEventListener(valueEventListenerLastMessage);
         }
     }
 
@@ -333,6 +356,17 @@ public class ChatUserList extends ListFragment {
         userTimeStamp.clear();
     }
 
+    private void removeListeners(){
+        try{
+            databaseReferenceMyUsers.removeEventListener(valueEventListenerMyUsers);
+            databaseReferenceUsers.removeEventListener(valueEventListenerUsers);
+            databaseReferenceLastMessage.removeEventListener(valueEventListenerLastMessage);
+        } catch (NullPointerException e){
+            Log.i(TAG, "Failed to remove Listeners");
+            e.printStackTrace();
+        }
+    }
+
     @Override
     public void onPause() {
         super.onPause();
@@ -347,5 +381,6 @@ public class ChatUserList extends ListFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        removeListeners();
     }
 }
