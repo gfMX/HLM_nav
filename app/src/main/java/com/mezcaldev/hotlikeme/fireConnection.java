@@ -150,7 +150,6 @@ public class FireConnection {
         } else {
             Log.i(TAG, "There's no User Logged");
         }
-        //return usersList;
     }
 
 }

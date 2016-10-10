@@ -4,8 +4,6 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Bundle;
@@ -38,8 +36,6 @@ import com.facebook.login.LoginResult;
 import com.facebook.login.widget.LoginButton;
 import com.facebook.login.widget.ProfilePictureView;
 import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
@@ -66,6 +62,8 @@ public class LoginFragment extends Fragment {
 
     private static final String TAG = "Login Details";
     //Delay Time to load Profile Picture if exists.
+    Handler handler = new Handler();
+    Runnable runnable;
     Integer minDelayTime = 100;
     Integer delayTime = 250;
     Boolean oneTime = false;
@@ -108,7 +106,7 @@ public class LoginFragment extends Fragment {
     Boolean flagImagesOnFirebase = false;
 
     //Other elements
-    ImageSaver imageSaver = new ImageSaver();
+    //ImageSaver imageSaver = new ImageSaver();
     File profileImageCheck;
 
 
@@ -333,9 +331,9 @@ public class LoginFragment extends Fragment {
 
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
-                            if (!oneTime) {
-                                //FireConnection.getInstance().getFirebaseUsers(getActivity().getApplicationContext(), HLMActivity.mCurrentLocation);
-                            }
+                            /* if (!oneTime) {
+                                FireConnection.getInstance().getFirebaseUsers(getActivity().getApplicationContext(), HLMActivity.mCurrentLocation);
+                            } */
                         }
                     } else {
                         // User signed out
@@ -418,8 +416,7 @@ public class LoginFragment extends Fragment {
         }
     }
     private void loadProfileDetails (Integer delayTime){
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
+        runnable = new Runnable() {
             @Override
             public void run() {
                 if (profile != null) {
@@ -433,9 +430,10 @@ public class LoginFragment extends Fragment {
                     //fireProfilePic();
                 }
             }
-        }, delayTime);
+        };
+        handler.postDelayed(runnable, delayTime);
     }
-    private void fireProfilePic (){
+    /*private void fireProfilePic (){
         if (user != null) {
             storageRef
                     .child(user.getUid())
@@ -461,7 +459,7 @@ public class LoginFragment extends Fragment {
                 }
             });
         }
-    }
+    }*/
     private boolean deleteLocalProfilePic(){
         boolean isDeleted = !profileImageCheck.exists();
         if (!isDeleted) {
@@ -553,6 +551,14 @@ public class LoginFragment extends Fragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        try {
+            handler.removeCallbacks(runnable);
+            handler.removeCallbacksAndMessages(null);
+        } catch (NullPointerException e){
+            Log.e(TAG, "Failed to remove Callbacks");
+            e.printStackTrace();
+        }
+
         accessTokenTracker.stopTracking();
         profileTracker.stopTracking();
     }

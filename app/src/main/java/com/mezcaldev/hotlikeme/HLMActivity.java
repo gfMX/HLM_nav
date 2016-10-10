@@ -14,7 +14,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.FragmentPagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.PagerAdapter;
@@ -190,8 +190,7 @@ public class HLMActivity extends AppCompatActivity implements
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        //mPager.setOffscreenPageLimit(OFFSCREEN_PAGES);
-        //mPager.setPageTransformer(true, new RotatePageTransformer());
+        //mPager.setPageTransformer(true, new ZoomOutPageTransformer());
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
                                        public boolean onTouch(View view, MotionEvent event) {
@@ -272,7 +271,7 @@ public class HLMActivity extends AppCompatActivity implements
 
     @SuppressWarnings("StatementWithEmptyBody")
     @Override
-    public boolean onNavigationItemSelected(MenuItem item) {
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         // Handle navigation view item clicks here.
         int id = item.getItemId();
@@ -302,37 +301,35 @@ public class HLMActivity extends AppCompatActivity implements
         return true;
     }
 
-    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+    private class ScreenSlidePagerAdapter extends FragmentPagerAdapter {
+        FragmentManager fm;
+        Fragment[] fragments;
+
         private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
+            fm = fragmentManager;
+            fragments = new Fragment[HLM_PAGES_MAX];
+            fragments[0] = new LoginFragment();
+            fragments[1] = new HLMUsers();
+            fragments[2] = new ChatUserList();
         }
 
         @Override
         public Fragment getItem(int position) {
-
-            switch (position) {
-                case PAGE_LOGIN:
-                    return LoginFragment.newInstance();
-
-                case PAGE_HLM:
-                    return HLMUsers.newInstance();
-
-                case PAGE_CHAT:
-                    return ChatUserList.newInstance();
-
-                default:
-                    return null;
-            }
+           return fragments[position];
         }
         @Override
         public int getCount() {
-            return HLM_PAGES;
+            return fragments.length;
         }
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
+            fm.beginTransaction().remove(fragments[position]).commit();
         }
     }
+
+
 
     private void userConnected(){
         if (user != null){
@@ -407,7 +404,7 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onRequestPermissionsResult(int requestCode, String permissions[], int[] grantResults) {
+    public void onRequestPermissionsResult(int requestCode, @NonNull String permissions[], @NonNull int[] grantResults) {
         switch (requestCode) {
             case MY_PERMISSION_ACCESS_FINE_LOCATION: {
                 if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
@@ -437,7 +434,7 @@ public class HLMActivity extends AppCompatActivity implements
 
         result.setResultCallback(new ResultCallback<LocationSettingsResult>() {
             @Override
-            public void onResult(LocationSettingsResult result) {
+            public void onResult(@NonNull LocationSettingsResult result) {
                 final Status status = result.getStatus();
                 //final LocationSettingsStates locationSettingsStates = result.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
@@ -578,7 +575,7 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onConnectionFailed(ConnectionResult result) {
+    public void onConnectionFailed(@NonNull ConnectionResult result) {
         // TODO Auto-generated method stub
     }
 
@@ -601,7 +598,7 @@ public class HLMActivity extends AppCompatActivity implements
         mGoogleApiClient.connect();
     }
 
-    public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
+    /*public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.85f;
         private static final float MIN_ALPHA = 0.5f;
 
@@ -638,7 +635,7 @@ public class HLMActivity extends AppCompatActivity implements
                 view.setAlpha(0);
             }
         }
-    }
+    } */
 
     @Override
     protected void onStart() {

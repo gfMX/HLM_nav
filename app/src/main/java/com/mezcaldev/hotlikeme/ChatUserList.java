@@ -4,6 +4,12 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.drawable.BitmapDrawable;
+import android.graphics.drawable.Drawable;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
@@ -11,6 +17,7 @@ import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -53,7 +60,7 @@ public class ChatUserList extends ListFragment {
     }
 
 
-    int maxTimeForNotifications = 48;       /* Time in Hours */
+    //int maxTimeForNotifications = 48;       /* Time in Hours */
 
     FirebaseUser user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -67,6 +74,9 @@ public class ChatUserList extends ListFragment {
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
 
+    Handler handler;
+    Runnable runnable;
+    int delayTime = 2500;
     Boolean undoFlag = false;
 
     RecyclerView mRecyclerView;
@@ -81,11 +91,12 @@ public class ChatUserList extends ListFragment {
     DatabaseReference databaseReferenceLastMessage;
 
     //Value Event Listeners:
-    ValueEventListener valueEventListenerMessageReference;
-    ValueEventListener valueEventListenerReferenceCurrent;
     ValueEventListener valueEventListenerMyUsers;
     ValueEventListener valueEventListenerUsers;
     ValueEventListener valueEventListenerLastMessage;
+
+    Bitmap icon;
+    Paint paint = new Paint();
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -101,9 +112,9 @@ public class ChatUserList extends ListFragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_chat_user_list, container, false);
+        //ViewGroup rootView = (ViewGroup) inflater.inflate(R.layout.activity_chat_user_list, container, false);
 
-        return rootView;
+        return inflater.inflate(R.layout.activity_chat_user_list, container, false);
     }
 
     @Override
@@ -120,73 +131,114 @@ public class ChatUserList extends ListFragment {
         mAdapter = new ChatRecyclerAdapter(getContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
         mRecyclerView.setAdapter(mAdapter);
 
-        ItemTouchHelper mIth = new ItemTouchHelper(
-                new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
-                        ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-                    public boolean onMove(RecyclerView recyclerView,
-                                          RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                        final int fromPos = viewHolder.getAdapterPosition();
-                        final int toPos = target.getAdapterPosition();
-                        // move item in `fromPos` to `toPos` in adapter.
-                        Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
-                        return true;// true if moved, false otherwise
-                    }
+        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+            public boolean onMove(RecyclerView recyclerView,
+                                  RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                //final int fromPos = viewHolder.getAdapterPosition();
+                //final int toPos = target.getAdapterPosition();
+                // move item in `fromPos` to `toPos` in adapter.
+                Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
+                return true;// true if moved, false otherwise
+            }
 
-                    public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                        // remove from adapter
-                        if (direction == ItemTouchHelper.LEFT){
-                            final int position = viewHolder.getAdapterPosition();
-                            System.out.println("Delete here: " + position);
-                            System.out.println("User: " + userName.get(position) + " Key: " + userKey.get(position));
-                            Snackbar snackbar = Snackbar.make(getActivity().getWindow().getDecorView(), "Disconnected from User", Snackbar.LENGTH_LONG)
-                                    .setAction("UNDO", new View.OnClickListener() {
+            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                // remove from adapter
+                if (direction == ItemTouchHelper.LEFT || direction == ItemTouchHelper.RIGHT){
+                    final int position = viewHolder.getAdapterPosition();
+                    System.out.println("Delete here: " + position);
+                    System.out.println("User: " + userName.get(position) + " Key: " + userKey.get(position));
+                    Snackbar snackbar = Snackbar.make(getActivity().getWindow().getDecorView(), "Disconnected from User", Snackbar.LENGTH_LONG)
+                            .setAction("UNDO", new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
                                     undoFlag =true;
                                 }
                             });
-                            snackbar.show();
-                            Handler handler = new Handler();
-                            handler.postDelayed(new Runnable() {
-                                @Override
-                                public void run() {
-                                    if (!undoFlag) {
-                                        weLike = false;
+                    snackbar.show();
+                    handler = new Handler();
+                    runnable = new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!undoFlag) {
+                                weLike = false;
 
-                                        try {
-                                            databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
-                                            databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
-                                            databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
-                                            databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
-                                        } catch (NullPointerException e){
-                                            Log.e(TAG, "Missing values to delete!");
-                                        }
-
-                                        userKey.remove(position);
-                                        userChatID.remove(position);
-                                        userName.remove(position);
-                                        userProfilePic.remove(position);
-                                        userLastMessage.remove(position);
-                                        userTimeStamp.remove(position);
-
-
-                                        Log.i(TAG, "User removed!");
-                                    } else {
-                                        Log.i(TAG, "User NOT removed!");
-                                    }
-                                    mAdapter.notifyDataSetChanged();
-                                    undoFlag = false;
+                                try {
+                                    databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
+                                    databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
+                                    databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
+                                    databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
+                                } catch (NullPointerException e){
+                                    Log.e(TAG, "Missing values to delete!");
                                 }
-                            }, (2500));
+
+                                userKey.remove(position);
+                                userChatID.remove(position);
+                                userName.remove(position);
+                                userProfilePic.remove(position);
+                                userLastMessage.remove(position);
+                                userTimeStamp.remove(position);
+
+
+                                Log.i(TAG, "User removed!");
+                            } else {
+                                Log.i(TAG, "User NOT removed!");
+                            }
+                            mAdapter.notifyDataSetChanged();
+                            undoFlag = false;
                         }
+                    };
+
+                    handler.postDelayed(runnable, (delayTime));
+                    if (icon != null){
+                        icon.recycle();
                     }
-                });
+                }
+            }
+
+            @Override
+            public void onChildDraw(Canvas canvas, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
+
+
+                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+
+                    View itemView = viewHolder.itemView;
+                    float height = (float) itemView.getBottom() - (float) itemView.getTop();
+                    float width = height / 3;
+
+                    icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_delete_white_24dp));
+                    if (dX > 0) {
+                        paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
+                        RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom());
+                        canvas.drawRect(background, paint);
+                        //icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_menu_send_white));
+                        RectF icon_dest = new RectF((float) itemView.getLeft() + width, (float) itemView.getTop() + width, (float) itemView.getLeft() + 2 * width, (float) itemView.getBottom() - width);
+                        canvas.drawBitmap(icon, null, icon_dest, paint);
+                    } else if (dX < 0) {
+                        paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
+                        RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom());
+                        canvas.drawRect(background, paint);
+                        //icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_delete_white_24dp));
+                        RectF icon_dest = new RectF((float) itemView.getRight() - 2 * width, (float) itemView.getTop() + width, (float) itemView.getRight() - width, (float) itemView.getBottom() - width);
+                        canvas.drawBitmap(icon, null, icon_dest, paint);
+                    }
+                    // Fade out the view as it is swiped out of the parent's bounds
+                    final float alpha = 1 - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
+                    viewHolder.itemView.setAlpha(alpha);
+                    viewHolder.itemView.setTranslationX(dX);
+                }
+                super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+            }
+
+        };
+
+        ItemTouchHelper mIth = new ItemTouchHelper(simpleCallback);
         mIth.attachToRecyclerView(mRecyclerView);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        int id = item.getItemId();
+        //int id = item.getItemId();
 
         return true;
     }
@@ -315,6 +367,20 @@ public class ChatUserList extends ListFragment {
         }
     }
 
+    public static Bitmap drawableToBitmap (Drawable drawable) {
+
+        if (drawable instanceof BitmapDrawable) {
+            return ((BitmapDrawable)drawable).getBitmap();
+        }
+
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(bitmap);
+        drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
+        drawable.draw(canvas);
+
+        return bitmap;
+    }
+
     private void sendNotification(String messageBody) {
         Intent intent = new Intent(getActivity(), MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
@@ -365,6 +431,9 @@ public class ChatUserList extends ListFragment {
             Log.i(TAG, "Failed to remove Listeners");
             e.printStackTrace();
         }
+        valueEventListenerMyUsers = null;
+        valueEventListenerUsers = null;
+        valueEventListenerLastMessage = null;
     }
 
     @Override
@@ -382,5 +451,8 @@ public class ChatUserList extends ListFragment {
     public void onDestroy() {
         super.onDestroy();
         removeListeners();
+        //handler.removeCallbacks(runnable);
+        //handler.removeCallbacksAndMessages(null);
+        //handler.postDelayed(runnable, delayTime);
     }
 }

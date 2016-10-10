@@ -1,14 +1,11 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.drawable.LayerDrawable;
-import android.location.Location;
 import android.os.Bundle;
 import android.os.Handler;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ListFragment;
@@ -85,19 +82,17 @@ public class HLMUsers extends ListFragment {
 
     Bitmap image;
     Handler handlerBeforeNewUser = new Handler();
+    Handler handlerWaitingUsers = new Handler();
+    Runnable runnableWaitingUsers;
+    Runnable runnableBeforeNewUser;
+
 
     //Sampled Image:
     int reqWidth = 700;
     int reqHeight = 700;
 
-    /* Position */
-    int maxUserDistance = 250;
     int delayBeforeNewUser = 500;
     int delayTime = 2500;
-
-    /* Location with Google API */
-    Location mCurrentLocation;
-    Boolean mRequestingLocationUpdates;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -112,18 +107,12 @@ public class HLMUsers extends ListFragment {
 
     boolean flagOne = false;
     boolean flagTwo = false;
-    //boolean weLike = false;
-    //boolean noUserFlag = true;
 
     String uniqueChatID;
 
     TextView viewUserDescription;
     Toast toast1;
     Toast toast2;
-
-    String gender;
-    SharedPreferences sharedPreferences;
-    //static List<String> users = new ArrayList<>();
 
     //Firebase Initialization:
     FirebaseUser user = getInstance().getUser();
@@ -160,20 +149,12 @@ public class HLMUsers extends ListFragment {
 
         user = FireConnection.getInstance().getUser();
         weLike = false;
-        mCurrentLocation = HLMActivity.mCurrentLocation;
-        Log.v(TAG, "Location from HLMActivity: " + mCurrentLocation);
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        gender = sharedPreferences.getString("looking_for", "both");
-        maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
-        mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
         //users = usersList;
         Log.i(TAG, "Number of Users from Singleton: " + usersList.size());
-        //if (user != null) {
         out.println("Actual user: " + user.getUid());
         if (usersList == null) {
-            FireConnection.getInstance().getFirebaseUsers(getContext(), mCurrentLocation);
+            FireConnection.getInstance().getFirebaseUsers(getContext(), HLMActivity.mCurrentLocation);
             Log.v(TAG, "Users from Singleton Empty");
         }
     }
@@ -225,8 +206,7 @@ public class HLMUsers extends ListFragment {
             userKey = genNoRepeatedKey(userKey);
             changeUserKey(userKey);
         } else {
-            Handler handler = new Handler();
-            handler.postDelayed(new Runnable() {
+            runnableWaitingUsers = new Runnable() {
                 @Override
                 public void run() {
                     if (usersList.size() > 0) {
@@ -236,7 +216,9 @@ public class HLMUsers extends ListFragment {
                         Log.e(TAG, "There are no users around");
                     }
                 }
-            }, delayTime);
+            };
+
+            handlerWaitingUsers.postDelayed(runnableWaitingUsers, delayTime);
         }
 
         /*ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
@@ -286,7 +268,7 @@ public class HLMUsers extends ListFragment {
 
                             //Generate new Key and Load new User before the given time
                             if (usersList.size() > 1) {
-                                handlerBeforeNewUser.postDelayed(new Runnable() {
+                                runnableBeforeNewUser = new Runnable() {
                                     @Override
                                     public void run() {
                                         oldKey = userKey;
@@ -294,7 +276,8 @@ public class HLMUsers extends ListFragment {
                                         Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
                                         changeUserKey(userKey);
                                     }
-                                }, delayBeforeNewUser);
+                                };
+                                handlerBeforeNewUser.postDelayed(runnableBeforeNewUser, delayBeforeNewUser);
                             } else {
                                 Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
                                 Log.i(TAG, "No more users around!");
@@ -394,6 +377,7 @@ public class HLMUsers extends ListFragment {
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                     @Override
                     public void onSuccess(byte[] bytes) {
+                        viewUserImage.setImageBitmap(null);
                         if (image != null){
                             image.recycle();
                         }
@@ -612,6 +596,10 @@ public class HLMUsers extends ListFragment {
             Log.i(TAG, "Failed to remove Listeners");
             //e.printStackTrace();
         }
+        valueEventListenerGetUserDetails = null;
+        valueEventListenerUserRating = null;
+        valueEventListenerDidWeLike = null;
+        valueEventListenerCheckChat = null;
     }
 
     private boolean keyChecker (){
@@ -654,6 +642,17 @@ public class HLMUsers extends ListFragment {
         if (image != null) {
             image.recycle();
         }
+        try {
+            handlerWaitingUsers.removeCallbacks(runnableWaitingUsers);
+            handlerBeforeNewUser.removeCallbacks(runnableBeforeNewUser);
+
+            handlerBeforeNewUser.removeCallbacksAndMessages(null);
+            handlerWaitingUsers.removeCallbacksAndMessages(null);
+        } catch (NullPointerException e){
+            Log.e(TAG, "Failed to remove Callbacks");
+            e.printStackTrace();
+        }
+
         removeReferences();
     }
     private void resetFlags() {
