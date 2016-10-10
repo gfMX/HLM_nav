@@ -592,9 +592,10 @@ public class HLMUsers extends ListFragment {
             databaseReferenceRating.removeEventListener(valueEventListenerUserRating);
             databaseReferenceCurrent.removeEventListener(valueEventListenerDidWeLike);
             databaseReferenceSetCurrentUserChat.removeEventListener(valueEventListenerCheckChat);
+            Log.i(TAG, "Listeners Removed!");
         } catch (NullPointerException e){
-            Log.i(TAG, "Failed to remove Listeners");
-            //e.printStackTrace();
+            Log.e(TAG, "Failed to remove Listeners");
+            e.printStackTrace();
         }
         valueEventListenerGetUserDetails = null;
         valueEventListenerUserRating = null;
@@ -648,9 +649,10 @@ public class HLMUsers extends ListFragment {
 
             handlerBeforeNewUser.removeCallbacksAndMessages(null);
             handlerWaitingUsers.removeCallbacksAndMessages(null);
+            Log.i(TAG, "Callbacks Removed!");
         } catch (NullPointerException e){
             Log.e(TAG, "Failed to remove Callbacks");
-            e.printStackTrace();
+            //e.printStackTrace();
         }
 
         removeReferences();

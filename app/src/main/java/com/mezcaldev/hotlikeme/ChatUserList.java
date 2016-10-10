@@ -184,7 +184,7 @@ public class ChatUserList extends ListFragment {
                             } else {
                                 Log.i(TAG, "User NOT removed!");
                             }
-                            mAdapter.notifyDataSetChanged();
+                            notifyDataChanged();
                             undoFlag = false;
                         }
                     };
@@ -288,7 +288,8 @@ public class ChatUserList extends ListFragment {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     //Log.i(TAG, "Alias found: " + dataSnapshot.getValue());
                     userName.set(position, dataSnapshot.getValue().toString());
-                    mAdapter.notifyDataSetChanged();
+
+                    //notifyDataChanged();
                     Log.d(TAG, "User Name: " + userName);
                 }
 
@@ -317,7 +318,8 @@ public class ChatUserList extends ListFragment {
                     }
                     userLastMessage.set(position, lastMessageText);
                     userTimeStamp.set(position, lastDateFromMessage);
-                    mAdapter.notifyDataSetChanged();
+
+                    notifyDataChanged();
 
                     Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ ONE_HOUR;
                     Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
@@ -349,7 +351,8 @@ public class ChatUserList extends ListFragment {
                 public void onSuccess(Uri uri) {
                     //Log.d(TAG, "Pic URL: " + uri);
                     userProfilePic.set(position, uri);
-                    mAdapter.notifyDataSetChanged();
+
+                    notifyDataChanged();
                     Log.d(TAG, "Pic URL: " + userProfilePic);
                 }
             }).addOnFailureListener(new OnFailureListener() {
@@ -357,7 +360,7 @@ public class ChatUserList extends ListFragment {
                 public void onFailure(@NonNull Exception e) {
                     //Log.d(TAG, "Pic Not Available");
                     userProfilePic.set(position, null);
-                    mAdapter.notifyDataSetChanged();
+                    notifyDataChanged();
                 }
             });
 
@@ -413,6 +416,14 @@ public class ChatUserList extends ListFragment {
         return sdf.format(currentDate);
     }
 
+    private void notifyDataChanged(){
+        if (mAdapter != null) {
+            mAdapter.notifyDataSetChanged();
+        } else {
+            Log.e(TAG, "Adapter NULL");
+        }
+    }
+
     private void cleanVars(){
         userKey.clear();
         userName.clear();
@@ -423,13 +434,15 @@ public class ChatUserList extends ListFragment {
     }
 
     private void removeListeners(){
-        try{
+
+        try {
             databaseReferenceMyUsers.removeEventListener(valueEventListenerMyUsers);
             databaseReferenceUsers.removeEventListener(valueEventListenerUsers);
             databaseReferenceLastMessage.removeEventListener(valueEventListenerLastMessage);
-        } catch (NullPointerException e){
-            Log.i(TAG, "Failed to remove Listeners");
-            e.printStackTrace();
+            Log.i(TAG, "Listeners Successfully removed!");
+        } catch(NullPointerException e){
+            Log.e(TAG, "Failed to remove Listeners");
+            //e.printStackTrace();
         }
         valueEventListenerMyUsers = null;
         valueEventListenerUsers = null;
@@ -440,11 +453,16 @@ public class ChatUserList extends ListFragment {
     public void onPause() {
         super.onPause();
     }
+    @Override
+    public void onStop(){
+        super.onStop();
+        removeListeners();
+    }
 
     @Override
     public void onResume() {
         super.onResume();
-        getData(userKey.size());
+        //getData(userKey.size());
     }
 
     @Override
