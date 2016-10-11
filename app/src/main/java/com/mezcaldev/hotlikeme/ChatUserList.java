@@ -31,7 +31,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -48,6 +47,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
+import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
@@ -60,9 +60,8 @@ public class ChatUserList extends ListFragment {
     }
 
 
-    //int maxTimeForNotifications = 48;       /* Time in Hours */
+    int maxTimeForNotifications = 48;       /* Time in Hours */
 
-    FirebaseUser user;
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageReference = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
@@ -70,6 +69,7 @@ public class ChatUserList extends ListFragment {
     List<String> userName = new ArrayList<>();
     List<String> userKey = new ArrayList<>();
     List<String> userLastMessage = new ArrayList<>();
+    List<String> userLastMessageId = new ArrayList<>();
     List<String> userTimeStamp = new ArrayList<>();
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
@@ -103,7 +103,6 @@ public class ChatUserList extends ListFragment {
         super.onCreate(savedInstanceState);
 
         cleanVars();
-        user = FireConnection.getInstance().getUser();
 
         if (user!= null){
             getUsers();
@@ -177,6 +176,7 @@ public class ChatUserList extends ListFragment {
                                 userName.remove(position);
                                 userProfilePic.remove(position);
                                 userLastMessage.remove(position);
+                                userLastMessageId.remove(position);
                                 userTimeStamp.remove(position);
 
 
@@ -257,6 +257,7 @@ public class ChatUserList extends ListFragment {
                     userName.add("");
                     userProfilePic.add(null);
                     userLastMessage.add("");
+                    userLastMessageId.add("");
                     userTimeStamp.add("");
 
                     Log.i(TAG, "Chat Key: " + data.getKey());
@@ -303,12 +304,18 @@ public class ChatUserList extends ListFragment {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     String lastMessageText;
+                    String lastMessageId;
                     String lastDateFromMessage;
                     Long lastMessageTime = 0L;
                     if (dataSnapshot.child("text").getValue() != null){
                         lastMessageText = dataSnapshot.child("text").getValue().toString();
                     } else {
                         lastMessageText = "Sorry! The last Message wasn't found!";
+                    }
+                    if (dataSnapshot.child("userId").getValue() != null){
+                        lastMessageId = dataSnapshot.child("userId").getValue().toString();
+                    } else {
+                        lastMessageId = "null";
                     }
                     if (dataSnapshot.child("timeStamp").getValue() != null){
                         lastDateFromMessage = dateFormatter(dataSnapshot.child("timeStamp").getValue().toString());
@@ -317,6 +324,7 @@ public class ChatUserList extends ListFragment {
                         lastDateFromMessage = "Date Not Found!";
                     }
                     userLastMessage.set(position, lastMessageText);
+                    userLastMessageId.set(position, lastMessageId);
                     userTimeStamp.set(position, lastDateFromMessage);
 
                     notifyDataChanged();
@@ -324,10 +332,10 @@ public class ChatUserList extends ListFragment {
                     Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ ONE_HOUR;
                     Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
 
-                            /*if (timeInHours < maxTimeForNotifications && !isInLayout()) {
+                            if (timeInHours < maxTimeForNotifications && !isInLayout() && !lastMessageId.equals(user.getUid())) {
                                 String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
-                                sendNotification(notificationText);
-                            }*/
+                                sendNotification(getActivity(), notificationText);
+                            }
                 }
 
                 @Override
@@ -384,15 +392,15 @@ public class ChatUserList extends ListFragment {
         return bitmap;
     }
 
-    private void sendNotification(String messageBody) {
-        Intent intent = new Intent(getActivity(), MainActivity.class);
+    private void sendNotification(Context context, String messageBody) {
+        Intent intent = new Intent(context, HLMActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(getActivity())
-                .setSmallIcon(R.drawable.ic_notifications_black_24dp)
+        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
+                .setSmallIcon(R.drawable.ic_notifications_white_24dp)
                 .setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(messageBody)
                 .setAutoCancel(true)
@@ -400,7 +408,7 @@ public class ChatUserList extends ListFragment {
                 .setContentIntent(pendingIntent);
 
         NotificationManager notificationManager =
-                (NotificationManager) getActivity().getSystemService(Context.NOTIFICATION_SERVICE);
+                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
 
         notificationManager.notify(0, notificationBuilder.build());
     }

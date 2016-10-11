@@ -148,11 +148,11 @@ public class HLMActivity extends AppCompatActivity implements
             headerView = navigationView.getHeaderView(0);
         }
 
-        Bundle bundle = getIntent().getExtras();
+        /* Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             HLM_PAGES = bundle.getInt("pages");
         }
-        System.out.println("Bundle: " + bundle);
+        System.out.println("Bundle: " + bundle); */
 
         //Local FIrebase Initialization.
         mAuthListener = new FirebaseAuth.AuthStateListener() {
@@ -316,21 +316,6 @@ public class HLMActivity extends AppCompatActivity implements
 
         @Override
         public Fragment getItem(int position) {
-
-            /* switch (position) {
-                case PAGE_LOGIN:
-                    return LoginFragment.newInstance();
-
-                case PAGE_HLM:
-                    return HLMUsers.newInstance();
-
-                case PAGE_CHAT:
-                    return ChatUserList.newInstance();
-
-                default:
-                    return null;
-            } */
-
             return fragments[position];
         }
         @Override
@@ -344,36 +329,6 @@ public class HLMActivity extends AppCompatActivity implements
             fm.beginTransaction().remove(fragments[position]).commit();
         }
     }
-
-    /* private class ScreenSlidePagerAdapter extends FragmentPagerAdapter {
-        FragmentManager fm;
-        Fragment[] fragments;
-
-        private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
-            super(fragmentManager);
-            fm = fragmentManager;
-            fragments = new Fragment[HLM_PAGES_MAX];
-            fragments[0] = new LoginFragment();
-            fragments[1] = new HLMUsers();
-            fragments[2] = new ChatUserList();
-        }
-
-        @Override
-        public Fragment getItem(int position) {
-           return fragments[position];
-        }
-        @Override
-        public int getCount() {
-            return fragments.length;
-        }
-        @Override
-        public void destroyItem(ViewGroup container, int position, Object object) {
-            super.destroyItem(container, position, object);
-            fm.beginTransaction().remove(fragments[position]).commit();
-        }
-    } */
-
-
 
     private void userConnected(){
         if (user != null){
@@ -394,6 +349,8 @@ public class HLMActivity extends AppCompatActivity implements
             drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
             drawerUserAlias.setText(R.string.app_name);
         }
+        mPager.setOffscreenPageLimit(HLM_PAGES);
+        Log.i(TAG, "Offscreen Limit: " + HLM_PAGES);
     }
 
     protected synchronized void buildGoogleApiClient() {
