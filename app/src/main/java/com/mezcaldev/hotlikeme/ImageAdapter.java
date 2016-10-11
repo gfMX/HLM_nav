@@ -3,6 +3,7 @@ package com.mezcaldev.hotlikeme;
 import android.content.Context;
 import android.graphics.Color;
 import android.net.Uri;
+import android.support.annotation.NonNull;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,7 +19,7 @@ import java.util.List;
  * Created by Abraham on 27/06/16.
  */
 public class ImageAdapter extends ArrayAdapter {
-    private final String TAG_i = "Image Resource: ";
+    //private final String TAG = "Image Resource: ";
 
     private List<String> imageUrls;
     private List<Integer> imageSelection;
@@ -40,7 +41,7 @@ public class ImageAdapter extends ArrayAdapter {
     }
 
     // create a new ImageView for each item referenced by the Adapter
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public @NonNull View getView(int position, View convertView, @NonNull ViewGroup parent) {
         if (convertView == null) {
             convertView = inflater.inflate(R.layout.grid_item_layout, parent, false);
         }

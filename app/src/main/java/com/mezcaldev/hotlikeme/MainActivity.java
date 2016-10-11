@@ -115,7 +115,7 @@ public class MainActivity extends AppCompatActivity {
         return location;
     }
 
-    public static Context getContext() {
+    private static Context getContext() {
         return mContext;
     }
 

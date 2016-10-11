@@ -72,10 +72,10 @@ public class HLMUsers extends ListFragment {
     String oldKey = nullKey;
     private static final String TAG = "HLMUsers";
 
-    static HLMUsers newInstance() {
+    /* static HLMUsers newInstance() {
 
         return new HLMUsers();
-    }
+    } */
 
     TextView viewUserAlias;
     ImageView viewUserImage;

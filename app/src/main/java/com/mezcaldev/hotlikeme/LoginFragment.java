@@ -384,12 +384,17 @@ public class LoginFragment extends Fragment {
                 profilePic.setProfileId(accessToken.getUserId());
             }
             imageProfileHLM.setClickable(true);
-            //Glide do better RAM Optimization:
-            Glide
-                    .with(getContext())
-                    .load(user.getPhotoUrl())
-                    .centerCrop()
-                    .into(imageProfileHLM);
+            if (user.getPhotoUrl() != null) {
+                //Glide do better RAM Optimization:
+                Glide
+                        .with(getContext())
+                        .load(user.getPhotoUrl())
+                        .centerCrop()
+                        .into(imageProfileHLM);
+                flagImagesOnFirebase = true;
+            } else {
+                flagImagesOnFirebase = false;
+            }
             btn_image.setVisibility(View.VISIBLE);
             btn_start.setVisibility(View.VISIBLE);
             btn_settings.setVisibility(View.VISIBLE);

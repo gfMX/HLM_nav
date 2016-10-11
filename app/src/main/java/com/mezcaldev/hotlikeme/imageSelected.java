@@ -97,11 +97,11 @@ public class imageSelected extends DialogFragment {
                         Bitmap pImage = BitmapFactory.decodeStream(inputStream);
                         if (pImage != null) {
                             ImageSaver saveImage = new ImageSaver();
-                            saveImage.iSaveToInternalStorage(
+                            /*saveImage.iSaveToInternalStorage(
                                     pImage,
                                     imageProfileFileName,
                                     getActivity().getApplicationContext()
-                            );
+                            );*/
                             saveImage.iUploadProfileImageToFirebase(
                                     localStorage.getAbsolutePath(),
                                     firebaseUser
@@ -114,11 +114,7 @@ public class imageSelected extends DialogFragment {
                 }
             });
             thread.start();
-            /*try {
-                thread.join();
-            } catch (InterruptedException e){
-                e.printStackTrace();
-            }*/
+
             final Handler handler = new Handler();
             handler.postDelayed(new Runnable() {
                 @Override

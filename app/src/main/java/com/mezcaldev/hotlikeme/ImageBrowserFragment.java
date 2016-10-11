@@ -14,7 +14,6 @@ import com.facebook.FacebookSdk;
 import com.facebook.GraphRequest;
 import com.facebook.GraphResponse;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -36,7 +35,6 @@ public class ImageBrowserFragment extends Fragment {
     String limitParams = "120";
 
     //Firebase//Initialize Firebase
-    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     FirebaseDatabase database;
     FirebaseStorage storage;
     StorageReference storageRef;
@@ -79,10 +77,9 @@ public class ImageBrowserFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        View view = inflater.inflate(R.layout.fragment_image_browser, container, false);
 
 
-        return view;
+        return inflater.inflate(R.layout.fragment_image_browser, container, false);
     }
     @Override
     public void onViewCreated(View view, Bundle savedInstances){

@@ -48,7 +48,6 @@ import java.util.Locale;
 
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
-import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
     final static String TAG = "Chat: ";
@@ -160,7 +159,7 @@ public class ChatUserList extends ListFragment {
                         @Override
                         public void run() {
                             if (!undoFlag) {
-                                weLike = false;
+                                //weLike = false;     //Not sure this is needed
 
                                 try {
                                     databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
@@ -178,6 +177,8 @@ public class ChatUserList extends ListFragment {
                                 userLastMessage.remove(position);
                                 userLastMessageId.remove(position);
                                 userTimeStamp.remove(position);
+
+                                mAdapter.notifyItemRemoved(position);
 
 
                                 Log.i(TAG, "User removed!");
