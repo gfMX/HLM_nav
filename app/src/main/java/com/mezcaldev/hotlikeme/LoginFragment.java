@@ -213,7 +213,6 @@ public class LoginFragment extends Fragment {
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
 
-
         btn_image.setTransformationMethod(null);
         btn_start.setTransformationMethod(null);
         btn_settings.setTransformationMethod(null);
@@ -337,11 +336,12 @@ public class LoginFragment extends Fragment {
                         }
                     } else {
                         // User signed out
-                        deleteLocalProfilePic();
+                        //deleteLocalProfilePic();
                         Log.d(TAG, "Firebase: Signed Out");
                         System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
                     }
                     FireConnection.getInstance().getUser();
+                    //FireConnection.getInstance().getFirebaseUsers(getActivity().getApplicationContext(), HLMActivity.mCurrentLocation);
                     updateUI();
                 }
             };

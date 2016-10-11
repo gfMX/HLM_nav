@@ -14,7 +14,7 @@ import android.support.design.widget.NavigationView;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import android.support.v4.app.FragmentStatePagerAdapter;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.PagerAdapter;
@@ -301,7 +301,51 @@ public class HLMActivity extends AppCompatActivity implements
         return true;
     }
 
-    private class ScreenSlidePagerAdapter extends FragmentPagerAdapter {
+    private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
+        FragmentManager fm;
+        Fragment[] fragments;
+
+        private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
+            super(fragmentManager);
+            fm = fragmentManager;
+            fragments = new Fragment[HLM_PAGES_MAX];
+            fragments[0] = new LoginFragment();
+            fragments[1] = new HLMUsers();
+            fragments[2] = new ChatUserList();
+        }
+
+        @Override
+        public Fragment getItem(int position) {
+
+            /* switch (position) {
+                case PAGE_LOGIN:
+                    return LoginFragment.newInstance();
+
+                case PAGE_HLM:
+                    return HLMUsers.newInstance();
+
+                case PAGE_CHAT:
+                    return ChatUserList.newInstance();
+
+                default:
+                    return null;
+            } */
+
+            return fragments[position];
+        }
+        @Override
+        public int getCount() {
+            return HLM_PAGES;
+        }
+        @Override
+        public void destroyItem(ViewGroup container, int position, Object object) {
+            super.destroyItem(container, position, object);
+
+            fm.beginTransaction().remove(fragments[position]).commit();
+        }
+    }
+
+    /* private class ScreenSlidePagerAdapter extends FragmentPagerAdapter {
         FragmentManager fm;
         Fragment[] fragments;
 
@@ -327,7 +371,7 @@ public class HLMActivity extends AppCompatActivity implements
             super.destroyItem(container, position, object);
             fm.beginTransaction().remove(fragments[position]).commit();
         }
-    }
+    } */
 
 
 

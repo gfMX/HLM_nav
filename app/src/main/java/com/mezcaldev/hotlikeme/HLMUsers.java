@@ -12,6 +12,9 @@ import android.support.v4.app.ListFragment;
 import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +25,6 @@ import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -46,7 +48,7 @@ import static android.view.View.OnClickListener;
 import static android.view.View.VISIBLE;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
-import static com.mezcaldev.hotlikeme.FireConnection.getInstance;
+import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 import static com.mezcaldev.hotlikeme.R.color.colorAccent;
@@ -68,7 +70,7 @@ public class HLMUsers extends ListFragment {
     String nullKey = "nullKey";
     String userKey = nullKey;
     String oldKey = nullKey;
-    private static final String TAG = "UserView";
+    private static final String TAG = "HLMUsers";
 
     static HLMUsers newInstance() {
 
@@ -115,7 +117,6 @@ public class HLMUsers extends ListFragment {
     Toast toast2;
 
     //Firebase Initialization:
-    FirebaseUser user = getInstance().getUser();
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
@@ -147,12 +148,12 @@ public class HLMUsers extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        user = FireConnection.getInstance().getUser();
+        setHasOptionsMenu(true);
+
         weLike = false;
 
         //users = usersList;
         Log.i(TAG, "Number of Users from Singleton: " + usersList.size());
-        out.println("Actual user: " + user.getUid());
         if (usersList == null) {
             FireConnection.getInstance().getFirebaseUsers(getContext(), HLMActivity.mCurrentLocation);
             Log.v(TAG, "Users from Singleton Empty");
@@ -245,6 +246,9 @@ public class HLMUsers extends ListFragment {
 
                         case ACTION_UP:
                             out.println("Up");
+
+                            referenceUserRated.setValue(starsRating);       //Set the New User Rating 
+
                             v.setTranslationY(0);
                             v.setTranslationX(0);
 
@@ -266,7 +270,7 @@ public class HLMUsers extends ListFragment {
                             didWeLike(userKey);
                             removeReferences();
 
-                            //Generate new Key and Load new User before the given time
+                            //Generate new Key and Load new User
                             if (usersList.size() > 1) {
                                 runnableBeforeNewUser = new Runnable() {
                                     @Override
@@ -337,7 +341,7 @@ public class HLMUsers extends ListFragment {
                                 //Way too low of the screen
                                 System.out.println("None");
                             }
-                            referenceUserRated.setValue(starsRating);
+                            //referenceUserRated.setValue(starsRating);
                             ratingBar.setRating(starsRating);
                             break;
 
@@ -350,6 +354,24 @@ public class HLMUsers extends ListFragment {
             Toast.makeText(getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
         } */
 
+    }
+
+    @Override
+    public void onCreateOptionsMenu (Menu menu, MenuInflater inflater){
+        inflater.inflate(R.menu.menu_users, menu);
+        super.onCreateOptionsMenu(menu, inflater);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item){
+
+        switch (item.getItemId()){
+            case R.id.action_reloadUsers:
+                Toast.makeText(getContext(), "Not working yet!", Toast.LENGTH_SHORT).show();
+                return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void getUserDetails(String key) {
@@ -554,35 +576,37 @@ public class HLMUsers extends ListFragment {
     }
 
     private void changeUserKey(String newKey){
-        weLike = false;
-        starsRating = 0;
-        if (image != null) {
-            viewUserImage.setImageBitmap(null);
-            viewUserImage.setImageResource(R.drawable.ic_person_gray);
-            image.recycle();
+        if (user != null) {
+            weLike = false;
+            starsRating = 0;
+            if (image != null) {
+                viewUserImage.setImageBitmap(null);
+                viewUserImage.setImageResource(R.drawable.ic_person_gray);
+                image.recycle();
+            }
+            ratingBar.setRating(starsRating);
+            fabMessage.setVisibility(INVISIBLE);
+            //First Remove old Listeners:
+            removeReferences();
+
+            //Adds the users that Current User likes
+            referenceLikeUser = database.getReference()
+                    .child("users")
+                    .child(user.getUid())
+                    .child("like_user")
+                    .child(newKey);
+
+            //Adds the rate of the Current User to the rating of the external user
+            referenceUserRated = database.getReference()
+                    .child("users")
+                    .child(newKey)
+                    .child("user_rate")
+                    .child(user.getUid());
+
+            getUserDetails(newKey);
+            userRating(newKey);
+            didWeLike(newKey);
         }
-        ratingBar.setRating(starsRating);
-        fabMessage.setVisibility(INVISIBLE);
-        //First Remove old Listeners:
-        removeReferences();
-
-        //Adds the users that Current User likes
-        referenceLikeUser = database.getReference()
-                .child("users")
-                .child(user.getUid())
-                .child("like_user")
-                .child(newKey);
-
-        //Adds the rate of the Current User to the rating of the external user
-        referenceUserRated = database.getReference()
-                .child("users")
-                .child(newKey)
-                .child("user_rate")
-                .child(user.getUid());
-
-        getUserDetails(newKey);
-        userRating(newKey);
-        didWeLike(newKey);
     }
 
     private void removeReferences (){
@@ -594,8 +618,9 @@ public class HLMUsers extends ListFragment {
             databaseReferenceSetCurrentUserChat.removeEventListener(valueEventListenerCheckChat);
             Log.i(TAG, "Listeners Removed!");
         } catch (NullPointerException e){
-            Log.e(TAG, "Failed to remove Listeners");
-            e.printStackTrace();
+            Log.e(TAG, "  Failed to remove Listeners");
+            Log.e(TAG, "!----------------------------!");
+            //e.printStackTrace();
         }
         valueEventListenerGetUserDetails = null;
         valueEventListenerUserRating = null;
@@ -678,5 +703,6 @@ public class HLMUsers extends ListFragment {
     public void onDestroy() {
         super.onDestroy();
         littleCleaning();
+        ratingBar.setRating(0);
     }
 }

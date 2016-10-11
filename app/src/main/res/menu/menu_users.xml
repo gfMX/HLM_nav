@@ -1,0 +1,12 @@
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.mezcaldev.hotlikeme.HLMActivity">
+    <item
+        android:id="@+id/action_reloadUsers"
+        android:title="@string/action_delete"
+        android:icon="@drawable/ic_sync_white_24dp"
+        android:visible="true"
+        app:showAsAction="ifRoom"
+        />
+</menu>

@@ -26,7 +26,7 @@ import java.util.List;
  */
 public class FireConnection {
     String TAG = "Singleton";
-    FirebaseUser user;
+    static FirebaseUser user;
     FirebaseAuth mAuth;
     FirebaseAuth.AuthStateListener mAuthListener;
     FirebaseDatabase database;
