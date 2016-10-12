@@ -72,10 +72,10 @@ public class HLMUsers extends ListFragment {
     String oldKey;
     private static final String TAG = "HLMUsers";
 
-    /* static HLMUsers newInstance() {
+    static HLMUsers newInstance() {
 
         return new HLMUsers();
-    } */
+    }
 
     TextView viewUserAlias;
     ImageView viewUserImage;
@@ -186,8 +186,6 @@ public class HLMUsers extends ListFragment {
                 startActivity(intent);
             }
         });
-
-        viewUserImage.setRotation(5 * ((float) random() * 2 - 1));
 
         ratingBar = (RatingBar) view.findViewById(rating);
         LayerDrawable stars = (LayerDrawable) ratingBar.getProgressDrawable();
@@ -372,7 +370,12 @@ public class HLMUsers extends ListFragment {
 
         switch (item.getItemId()){
             case R.id.action_reloadUsers:
-                Toast.makeText(getContext(), "Not working yet!", Toast.LENGTH_SHORT).show();
+                if (usersList.size() > 0) {
+                    userKey = genNoRepeatedKey(userKey);
+                    changeUserKey(userKey);
+                } else {
+                    Toast.makeText(getContext(), "There are no users around", Toast.LENGTH_SHORT).show();
+                }
                 return true;
         }
 
@@ -427,6 +430,8 @@ public class HLMUsers extends ListFragment {
                                 .load(uri)
                                 .fitCenter()
                                 .into(viewUserImage);
+
+                        viewUserImage.setRotation(5 * ((float) random() * 2 - 1));
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override

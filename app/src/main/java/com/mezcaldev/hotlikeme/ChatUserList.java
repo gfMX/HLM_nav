@@ -18,6 +18,7 @@ import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -48,18 +49,21 @@ import java.util.Locale;
 
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
+import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
     final static String TAG = "Chat: ";
 
-    /* static ChatUserList newInstance() {
+    static ChatUserList newInstance() {
         ChatUserList newFragment = new ChatUserList();
 
         return newFragment;
-    } */
+    }
 
-
+    //Notifications
     int maxTimeForNotifications = 48;       /* Time in Hours */
+    int NOTIFICATION_ID = 71843;
+    NotificationManager notificationManager;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -81,6 +85,7 @@ public class ChatUserList extends ListFragment {
     RecyclerView mRecyclerView;
     RecyclerView.Adapter mAdapter;
     RecyclerView.LayoutManager mLayoutManager;
+    SwipeRefreshLayout swipeRefreshLayout;
 
     //Database References:
     DatabaseReference databaseMessageReference;
@@ -120,6 +125,9 @@ public class ChatUserList extends ListFragment {
         databaseMessageReference = database.getReference();
         databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
+        notificationManager = (NotificationManager) getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshUserList);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.user_list);
         mLayoutManager = new LinearLayoutManager(getActivity());
         mRecyclerView.setLayoutManager(mLayoutManager);
@@ -128,6 +136,18 @@ public class ChatUserList extends ListFragment {
         // specify an adapter (see also next example)
         mAdapter = new ChatRecyclerAdapter(getContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
         mRecyclerView.setAdapter(mAdapter);
+
+        swipeRefreshLayout.setOnRefreshListener(
+                new SwipeRefreshLayout.OnRefreshListener() {
+                    @Override
+                    public void onRefresh() {
+                        Log.i(TAG, "Refresh called!");
+
+                        getUsers();
+                    }
+                }
+        );
+
 
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
                 ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
@@ -160,7 +180,11 @@ public class ChatUserList extends ListFragment {
                         @Override
                         public void run() {
                             if (!undoFlag) {
-                                //weLike = false;     //Not sure this is needed
+                                weLike = false;     //Could Cause conflict with User View if not set to False
+
+                                Log.v(TAG, "Data to be removed: " + userKey.get(position) + userChatID.get(position)
+                                        + userName.get(position) + userProfilePic.get(position) + userLastMessage.get(position)
+                                        + userLastMessageId.get(position) + userTimeStamp.get(position) + " || Position: " + position);
 
                                 try {
                                     databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
@@ -181,13 +205,11 @@ public class ChatUserList extends ListFragment {
 
                                 mAdapter.notifyItemRemoved(position);
 
-
                                 Log.i(TAG, "User removed!");
                             } else {
                                 Log.i(TAG, "User NOT removed!");
                                 notifyDataChanged();
                             }
-                            //notifyDataChanged();
                             undoFlag = false;
                         }
                     };
@@ -198,7 +220,6 @@ public class ChatUserList extends ListFragment {
 
             @Override
             public void onChildDraw(Canvas canvas, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-
 
                 if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
 
@@ -211,14 +232,12 @@ public class ChatUserList extends ListFragment {
                         paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
                         RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom());
                         canvas.drawRect(background, paint);
-                        //icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_menu_send_white));
                         RectF icon_dest = new RectF((float) itemView.getLeft() + width, (float) itemView.getTop() + width, (float) itemView.getLeft() + 2 * width, (float) itemView.getBottom() - width);
                         canvas.drawBitmap(icon, null, icon_dest, paint);
                     } else if (dX < 0) {
                         paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
                         RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom());
                         canvas.drawRect(background, paint);
-                        //icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_delete_white_24dp));
                         RectF icon_dest = new RectF((float) itemView.getRight() - 2 * width, (float) itemView.getTop() + width, (float) itemView.getRight() - width, (float) itemView.getBottom() - width);
                         canvas.drawBitmap(icon, null, icon_dest, paint);
                     }
@@ -323,19 +342,22 @@ public class ChatUserList extends ListFragment {
                     } else {
                         lastDateFromMessage = "Date Not Found!";
                     }
-                    userLastMessage.set(position, lastMessageText);
-                    userLastMessageId.set(position, lastMessageId);
-                    userTimeStamp.set(position, lastDateFromMessage);
+                    if (position < userLastMessage.size()) {
+                        userLastMessage.set(position, lastMessageText);
+                        userLastMessageId.set(position, lastMessageId);
+                        userTimeStamp.set(position, lastDateFromMessage);
 
-                    notifyDataChanged();
 
-                    Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime)/ ONE_HOUR;
-                    Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
+                        notifyDataChanged();
 
-                            if (timeInHours < maxTimeForNotifications && !isInLayout() && !lastMessageId.equals(user.getUid())) {
-                                String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
-                                sendNotification(getActivity(), notificationText);
-                            }
+                        Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime) / ONE_HOUR;
+                        Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
+
+                        if (timeInHours < maxTimeForNotifications && !isInLayout() && !lastMessageId.equals(user.getUid())) {
+                            String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
+                            sendNotification(getActivity(), notificationText);
+                        }
+                    }
                 }
 
                 @Override
@@ -375,6 +397,15 @@ public class ChatUserList extends ListFragment {
             databaseReferenceLastMessage
                     .child(userChatID.get(position))
                     .addValueEventListener(valueEventListenerLastMessage);
+
+        }
+        if (swipeRefreshLayout.isRefreshing()){
+            swipeRefreshLayout.setRefreshing(false);
+
+            notificationManager.cancel(NOTIFICATION_ID);
+
+            Log.i(TAG, "  Reloading Data Finished");
+            Log.i(TAG, "¡-------------------------¡");
         }
     }
 
@@ -384,7 +415,10 @@ public class ChatUserList extends ListFragment {
             return ((BitmapDrawable)drawable).getBitmap();
         }
 
-        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(), drawable.getIntrinsicHeight(), Bitmap.Config.ARGB_8888);
+        Bitmap bitmap = Bitmap.createBitmap(drawable.getIntrinsicWidth(),
+                drawable.getIntrinsicHeight(),
+                Bitmap.Config.ARGB_8888);
+
         Canvas canvas = new Canvas(bitmap);
         drawable.setBounds(0, 0, canvas.getWidth(), canvas.getHeight());
         drawable.draw(canvas);
@@ -407,10 +441,7 @@ public class ChatUserList extends ListFragment {
                 .setSound(defaultSoundUri)
                 .setContentIntent(pendingIntent);
 
-        NotificationManager notificationManager =
-                (NotificationManager) context.getSystemService(Context.NOTIFICATION_SERVICE);
-
-        notificationManager.notify(0, notificationBuilder.build());
+        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
     }
 
 

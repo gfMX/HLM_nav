@@ -302,21 +302,31 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        FragmentManager fm;
-        Fragment[] fragments;
+        //FragmentManager fm;
+        //Fragment[] fragments;
 
         private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
-            fm = fragmentManager;
+            /* fm = fragmentManager;
             fragments = new Fragment[HLM_PAGES_MAX];
             fragments[0] = new LoginFragment();
             fragments[1] = new HLMUsers();
-            fragments[2] = new ChatUserList();
+            fragments[2] = new ChatUserList(); */
         }
 
         @Override
         public Fragment getItem(int position) {
-            return fragments[position];
+            //return fragments[position];
+            switch (position) {
+                case PAGE_LOGIN:
+                    return LoginFragment.newInstance();
+                case PAGE_HLM:
+                    return HLMUsers.newInstance();
+                case PAGE_CHAT:
+                    return ChatUserList.newInstance();
+                default:
+                    return null;
+            }
         }
         @Override
         public int getCount() {
@@ -326,7 +336,7 @@ public class HLMActivity extends AppCompatActivity implements
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
 
-            fm.beginTransaction().remove(fragments[position]).commit();
+            //fm.beginTransaction().remove(fragments[position]).commit();
         }
     }
 
