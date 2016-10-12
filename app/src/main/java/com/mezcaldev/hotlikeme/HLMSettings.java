@@ -168,7 +168,7 @@ public class HLMSettings extends AppCompatPreferenceActivity {
             databaseReference.child("/preferences/sync_freq/")
                     .setValue(Integer.valueOf(sharedPreferences.getString("sync_frequency", "1000")));
             databaseReference.child("/preferences/sync_distance/")
-                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_distance", "250")));
+                    .setValue(Integer.valueOf(sharedPreferences.getString("sync_distance", "1000")));
 
             databaseReference.child("/preferences/visible/")
                     .setValue(sharedPreferences.getBoolean("visible_switch", true));

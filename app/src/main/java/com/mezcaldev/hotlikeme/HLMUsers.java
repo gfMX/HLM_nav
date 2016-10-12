@@ -93,7 +93,7 @@ public class HLMUsers extends ListFragment {
     //int reqHeight = 700;
 
     int delayBeforeNewUser = 500;
-    int delayTime = 2500;
+    int delayTime = 2000;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -202,160 +202,133 @@ public class HLMUsers extends ListFragment {
 
         //Only if a Key si given proceed, else Show a blank (Default) page.
         if (keyChecker()) {
-            //noUserFlag = false;
-            //userKey = users.get(randomUser(users.size()));
             userKey = genNoRepeatedKey(userKey);
             changeUserKey(userKey);
         } else {
-            runnableWaitingUsers = new Runnable() {
-                @Override
-                public void run() {
-                    if (usersList.size() > 0) {
-                        userKey = genNoRepeatedKey(userKey);
-                        changeUserKey(userKey);
-                    } else {
-                        Log.e(TAG, "There are no users around");
-                    }
-                }
-            };
-
-            handlerWaitingUsers.postDelayed(runnableWaitingUsers, delayTime);
+            waitForUsers();
         }
 
-        /*ratingBar.setOnRatingBarChangeListener(new RatingBar.OnRatingBarChangeListener() {
-            public void onRatingChanged(RatingBar ratingBar, float rating, boolean fromUser) {
-                starsRating = rating;
-                if (starsRating != 0) {
-                    referenceUserRated.setValue(starsRating);
-                }
-            }
-        }); */
+        viewUserImage.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                int x = (int) event.getX();
+                int y = (int) event.getY();
+                //int xRaw = (int) event.getRawX();
+                int yRaw = (int) event.getRawY();
 
-            viewUserImage.setOnTouchListener(new View.OnTouchListener() {
-                @Override
-                public boolean onTouch(View v, MotionEvent event) {
-                    int x = (int) event.getX();
-                    int y = (int) event.getY();
-                    //int xRaw = (int) event.getRawX();
-                    int yRaw = (int) event.getRawY();
+                switch (event.getAction() & ACTION_MASK) {
+                    case ACTION_DOWN:
+                        out.println("Down");
+                        break;
 
-                    switch (event.getAction() & ACTION_MASK) {
-                        case ACTION_DOWN:
-                            out.println("Down");
-                            break;
+                    case ACTION_UP:
+                        out.println("Up");
 
-                        case ACTION_UP:
+                        v.setTranslationY(0);
+                        v.setTranslationX(0);
+
+                        //Add users to the Like List
+                        if (userKey != null) {
+                            //Set the New User Rating
+                            referenceUserRated.setValue(starsRating);
+
+                            if (yRaw < screenUp) {
+                                out.println("User ID: " + userKey);
+                                referenceLikeUser.setValue(true);
+                                //makeText(getContext(), "Added!", LENGTH_SHORT).show();
+
+                            }
+                            //Remove users from the Like List
+                            if (yRaw > screenDown) {
+                                out.println("User ID: " + userKey);
+                                referenceLikeUser.setValue(null);
+                                //makeText(getContext(), "Removed!", LENGTH_SHORT).show();
+                                fabMessage.setVisibility(INVISIBLE);
+                            }
+                            //Check if Users Like each other:
+                            didWeLike(userKey);
+                            removeReferences();
+
+                            //Generate new Key and Load new User
+                            if (usersList.size() > 1) {
+                                runnableBeforeNewUser = new Runnable() {
+                                    @Override
+                                    public void run() {
+                                        oldKey = userKey;
+                                        userKey = genNoRepeatedKey(userKey);
+                                        Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
+                                        changeUserKey(userKey);
+                                    }
+                                };
+                                handlerBeforeNewUser.postDelayed(runnableBeforeNewUser, delayBeforeNewUser);
+                            } else {
+                                Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
+                                Log.i(TAG, "No more users around!");
+                            }
+                        }
+
+                        break;
+
+                    case ACTION_MOVE:
+                        v.setX((v.getX() - v.getWidth() / 2) + x);
+                        v.setY((v.getY() - v.getHeight() / 2) + y);
+                        if (yRaw < screenUp && !flagOne) {
                             out.println("Up");
+                            toast1 = makeText(getContext(), "I'll like to get in touch!", LENGTH_SHORT);
+                            toast1.setGravity(CENTER, 0, 400);
+                            toast1.show();
 
-                            v.setTranslationY(0);
-                            v.setTranslationX(0);
+                            resetFlags();
+                            flagOne = true;
+                        }
+                        if (yRaw > screenDown && !flagTwo) {
+                            out.println("Down");
+                            toast2 = makeText(getContext(), "I don't wan't to get in touch.", LENGTH_SHORT);
+                            toast2.setGravity(CENTER, 0, -350);
+                            toast2.show();
 
-                            //Add users to the Like List
-                            if (userKey != null) {
-                                //Set the New User Rating
-                                referenceUserRated.setValue(starsRating);
+                            resetFlags();
+                            flagTwo = true;
+                        }
 
-                                if (yRaw < screenUp) {
-                                    out.println("User ID: " + userKey);
-                                    referenceLikeUser.setValue(true);
-                                    //makeText(getContext(), "Added!", LENGTH_SHORT).show();
+                        if (yRaw < screenPart) {
+                            //Upper limit of the screen
+                            System.out.println("None");
+                        } else if (yRaw < screenPart * 2) {
+                            starsRating = 5;
+                        } else if (yRaw < screenPart * 3) {
+                            starsRating = 4;
+                        } else if (yRaw < screenPart * 4) {
+                            starsRating = 3;
+                        } else if (yRaw < screenPart * 5) {
+                            starsRating = 2;
+                        } else if (yRaw < screenPart * 6) {
+                            starsRating = 1;
+                        } else if (yRaw < screenPart * 7) {
+                            //Null zone doesn't add or change Rating
+                            starsRating = oldRating;
+                        } else if (yRaw < screenPart * 8) {
+                            starsRating = 1;
+                        } else if (yRaw < screenPart * 9) {
+                            starsRating = 2;
+                        } else if (yRaw < screenPart * 10) {
+                            starsRating = 3;
+                        } else if (yRaw < screenPart * 11) {
+                            starsRating = 4;
+                        } else if (yRaw < screenPart * 12) {
+                            starsRating = 5;
+                        } else if (yRaw < screenPart * 13) {
+                            //Way too low of the screen
+                            System.out.println("None");
+                        }
+                        //referenceUserRated.setValue(starsRating);
+                        ratingBar.setRating(starsRating);
+                        break;
 
-                                }
-                                //Remove users from the Like List
-                                if (yRaw > screenDown) {
-                                    out.println("User ID: " + userKey);
-                                    referenceLikeUser.setValue(null);
-                                    //makeText(getContext(), "Removed!", LENGTH_SHORT).show();
-                                    fabMessage.setVisibility(INVISIBLE);
-                                }
-                                //Check if Users Like each other:
-                                didWeLike(userKey);
-                                removeReferences();
-
-                                //Generate new Key and Load new User
-                                if (usersList.size() > 1) {
-                                    runnableBeforeNewUser = new Runnable() {
-                                        @Override
-                                        public void run() {
-                                            oldKey = userKey;
-                                            userKey = genNoRepeatedKey(userKey);
-                                            Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
-                                            changeUserKey(userKey);
-                                        }
-                                    };
-                                    handlerBeforeNewUser.postDelayed(runnableBeforeNewUser, delayBeforeNewUser);
-                                } else {
-                                    Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
-                                    Log.i(TAG, "No more users around!");
-                                }
-                            }
-
-                            break;
-
-                        case ACTION_MOVE:
-                            v.setX((v.getX() - v.getWidth() / 2) + x);
-                            v.setY((v.getY() - v.getHeight() / 2) + y);
-                            if (yRaw < screenUp && !flagOne) {
-                                out.println("Up");
-                                toast1 = makeText(getContext(), "I'll like to get in touch!", LENGTH_SHORT);
-                                toast1.setGravity(CENTER, 0, 400);
-                                toast1.show();
-
-                                resetFlags();
-                                flagOne = true;
-                            }
-                            if (yRaw > screenDown && !flagTwo) {
-                                out.println("Down");
-                                toast2 = makeText(getContext(), "I don't wan't to get in touch.", LENGTH_SHORT);
-                                toast2.setGravity(CENTER, 0, -350);
-                                toast2.show();
-
-                                resetFlags();
-                                flagTwo = true;
-                            }
-
-                            if (yRaw < screenPart) {
-                                //Upper limit of the screen
-                                System.out.println("None");
-                            } else if (yRaw < screenPart * 2) {
-                                starsRating = 5;
-                            } else if (yRaw < screenPart * 3) {
-                                starsRating = 4;
-                            } else if (yRaw < screenPart * 4) {
-                                starsRating = 3;
-                            } else if (yRaw < screenPart * 5) {
-                                starsRating = 2;
-                            } else if (yRaw < screenPart * 6) {
-                                starsRating = 1;
-                            } else if (yRaw < screenPart * 7) {
-                                //Null zone doesn't add or change Rating
-                                starsRating = oldRating;
-                            } else if (yRaw < screenPart * 8) {
-                                starsRating = 1;
-                            } else if (yRaw < screenPart * 9) {
-                                starsRating = 2;
-                            } else if (yRaw < screenPart * 10) {
-                                starsRating = 3;
-                            } else if (yRaw < screenPart * 11) {
-                                starsRating = 4;
-                            } else if (yRaw < screenPart * 12) {
-                                starsRating = 5;
-                            } else if (yRaw < screenPart * 13) {
-                                //Way too low of the screen
-                                System.out.println("None");
-                            }
-                            //referenceUserRated.setValue(starsRating);
-                            ratingBar.setRating(starsRating);
-                            break;
-
-                    }
-                    return true;
                 }
-            });
-
-        /*} else {
-            Toast.makeText(getActivity(), "There's no one close to you right now", LENGTH_LONG).show();
-        } */
+                return true;
+            }
+        });
 
     }
 
@@ -619,6 +592,25 @@ public class HLMUsers extends ListFragment {
         }
     }
 
+    private void waitForUsers(){
+        runnableWaitingUsers = new Runnable() {
+            @Override
+            public void run() {
+                //FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
+                if (keyChecker()) {
+                    userKey = genNoRepeatedKey(userKey);
+                    changeUserKey(userKey);
+                } else {
+                    Log.e(TAG, "There are no users around");
+                    FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
+                    waitForUsers();
+                }
+            }
+        };
+
+        handlerWaitingUsers.postDelayed(runnableWaitingUsers, delayTime);
+    }
+
     private void removeReferences (){
         try {
             //Avoid LOS for too many references:
@@ -639,6 +631,7 @@ public class HLMUsers extends ListFragment {
     }
 
     private boolean keyChecker (){
+        Log.i(TAG, "Users List size: " + usersList.size());
         return (usersList.size() > 0);
     }
 

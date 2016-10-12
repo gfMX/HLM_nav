@@ -1,11 +1,16 @@
 package com.mezcaldev.hotlikeme;
 
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.IntentSender;
 import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
+import android.media.RingtoneManager;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
@@ -23,6 +28,7 @@ import android.support.v4.widget.DrawerLayout;
 import android.support.v7.app.ActionBarDrawerToggle;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
+import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
@@ -64,13 +70,15 @@ public class HLMActivity extends AppCompatActivity implements
     int HLM_PAGES;
     int HLM_CURRENT_PAGE;
     final int HLM_PAGES_MAX = 3;
-    final int PAGE_LOGIN = 0;
-    final int PAGE_HLM = 1;
-    final int PAGE_CHAT = 2;
+    final static int PAGE_LOGIN = 0;
+    final static int PAGE_HLM = 1;
+    final static int PAGE_CHAT = 2;
 
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     SharedPreferences sharedPreferences;
+
+    NotificationManager notificationManager;
 
     //Location variables Initialization
     /* GPS Constant Permission */
@@ -148,11 +156,11 @@ public class HLMActivity extends AppCompatActivity implements
             headerView = navigationView.getHeaderView(0);
         }
 
-        /* Bundle bundle = getIntent().getExtras();
+        Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
             HLM_PAGES = bundle.getInt("pages");
         }
-        System.out.println("Bundle: " + bundle); */
+        System.out.println("Bundle: " + bundle);
 
         //Local FIrebase Initialization.
         mAuthListener = new FirebaseAuth.AuthStateListener() {
@@ -185,6 +193,8 @@ public class HLMActivity extends AppCompatActivity implements
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
         //mRequestingLocationUpdates = false;
         //System.out.println("Requesting Location: " + mRequestingLocationUpdates);
+
+        notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
@@ -338,6 +348,32 @@ public class HLMActivity extends AppCompatActivity implements
 
             //fm.beginTransaction().remove(fragments[position]).commit();
         }
+    }
+
+    public void selectPage(int page) {
+        if (page < HLM_PAGES) {
+            mPager.setCurrentItem(page);
+        }
+    }
+
+    public void sendNotification(String messageBody, int nID) {
+
+        Intent intent = new Intent(this, HLMActivity.class);
+        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
+                PendingIntent.FLAG_ONE_SHOT);
+
+        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
+        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
+                .setSmallIcon(R.drawable.ic_chat_white_24dp)
+                .setContentTitle(getResources().getString(R.string.app_name))
+                .setContentText(messageBody)
+                .setAutoCancel(true)
+                .setSound(defaultSoundUri)
+                .setContentIntent(pendingIntent);
+
+        notificationManager.notify(nID, notificationBuilder.build());
     }
 
     private void userConnected(){

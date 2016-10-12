@@ -17,7 +17,6 @@ import java.util.ArrayList;
 import java.util.List;
 
 
-
 /**
  * Created by Abraham on 17/08/16.
  * Manage user credentials on Firebase
@@ -31,6 +30,10 @@ public class FireConnection {
     FirebaseDatabase database;
     //Location mCurrentLocation;
     static Boolean weLike = false;
+
+    private String gender;
+    private Integer maxUserDistance;
+    private Boolean mRequestingLocationUpdates;
 
 
     //private Boolean flagOneTime = false;
@@ -58,13 +61,14 @@ public class FireConnection {
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "User credentials granted: " + user.getUid());
-                    /*if (!flagOneTime) {
-                        getFirebaseUsers(null, null);
-                        flagOneTime = true;
-                    } */
                 } else {
                     // User is signed out
                     Log.d(TAG, "User not logged.");
+                }
+                if (user != null && usersList == null) {
+                    //Getting all users on start.
+                    //getFirebaseUsers(null, null);
+                    Log.e(TAG, "Getting Full List of Users <-- Not Implemented Just checking if its called.");
                 }
                 // ...
 
@@ -79,15 +83,13 @@ public class FireConnection {
     public void getFirebaseUsers(SharedPreferences sharedPreferences, final Location mCurrentLocation){
         if (user !=null){
             usersList.clear();
-
             database = FirebaseDatabase.getInstance();
 
+            gender = sharedPreferences.getString("looking_for", "both");
+            maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "1000"));
+            mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
             //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-            Log.i(TAG, "Preferences: " + sharedPreferences);
 
-            String gender = sharedPreferences.getString("looking_for", "both");
-            final Integer maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
-            final Boolean mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
 
             final DatabaseReference databaseReferenceUriProfile = database.getReference().child("groups").child(gender);
             final DatabaseReference databaseReferenceLocation = database.getReference().child("users");

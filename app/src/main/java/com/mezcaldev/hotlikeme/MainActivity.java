@@ -14,14 +14,18 @@ import android.preference.PreferenceManager;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
 import com.google.firebase.auth.FirebaseUser;
 
+import static com.mezcaldev.hotlikeme.FireConnection.usersList;
+
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TAG = "Start";
     Intent intent;
     Handler handler;
     int delayTime = 1000 * 2;
@@ -53,7 +57,11 @@ public class MainActivity extends AppCompatActivity {
         //FacebookSdk.sdkInitialize(this.getApplicationContext());
 
         fireConnection = FireConnection.getInstance();
+        //user = fireConnection.getUser();
+        //FireConnection.getInstance().getFirebaseUsers(sharedPreferences, getLocation());
         checkAccess();
+
+        Log.i(TAG, "Data: " + user + " Users: " + usersList);
     }
 
     private void checkAccess (){

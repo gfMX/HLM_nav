@@ -176,6 +176,7 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public void onTouchEvent(RecyclerView rv, MotionEvent e) {
                 hideSoftKeyboard(ChatActivity.this);
+
             }
 
             @Override

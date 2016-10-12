@@ -1,16 +1,11 @@
 package com.mezcaldev.hotlikeme;
 
-import android.app.NotificationManager;
-import android.app.PendingIntent;
-import android.content.Context;
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
 import android.graphics.RectF;
 import android.graphics.drawable.BitmapDrawable;
 import android.graphics.drawable.Drawable;
-import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -19,7 +14,6 @@ import android.support.design.widget.Snackbar;
 import android.support.v4.app.ListFragment;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
-import android.support.v7.app.NotificationCompat;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
@@ -63,7 +57,7 @@ public class ChatUserList extends ListFragment {
     //Notifications
     int maxTimeForNotifications = 48;       /* Time in Hours */
     int NOTIFICATION_ID = 71843;
-    NotificationManager notificationManager;
+    //NotificationManager notificationManager;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -125,7 +119,7 @@ public class ChatUserList extends ListFragment {
         databaseMessageReference = database.getReference();
         databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
-        notificationManager = (NotificationManager) getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+        //notificationManager = (NotificationManager) getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshUserList);
         mRecyclerView = (RecyclerView) view.findViewById(R.id.user_list);
@@ -141,7 +135,8 @@ public class ChatUserList extends ListFragment {
                 new SwipeRefreshLayout.OnRefreshListener() {
                     @Override
                     public void onRefresh() {
-                        Log.i(TAG, "Refresh called!");
+                        Log.i(TAG, "!-------------------------!");
+                        Log.i(TAG, "     Refresh called!");
 
                         getUsers();
                     }
@@ -355,7 +350,7 @@ public class ChatUserList extends ListFragment {
 
                         if (timeInHours < maxTimeForNotifications && !isInLayout() && !lastMessageId.equals(user.getUid())) {
                             String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
-                            sendNotification(getActivity(), notificationText);
+                            ((HLMActivity) getActivity()).sendNotification(notificationText, NOTIFICATION_ID);    //Need adjustments, still crashes
                         }
                     }
                 }
@@ -402,7 +397,7 @@ public class ChatUserList extends ListFragment {
         if (swipeRefreshLayout.isRefreshing()){
             swipeRefreshLayout.setRefreshing(false);
 
-            notificationManager.cancel(NOTIFICATION_ID);
+            //notificationManager.cancel(NOTIFICATION_ID);
 
             Log.i(TAG, "  Reloading Data Finished");
             Log.i(TAG, "¡-------------------------¡");
@@ -426,15 +421,18 @@ public class ChatUserList extends ListFragment {
         return bitmap;
     }
 
-    private void sendNotification(Context context, String messageBody) {
-        Intent intent = new Intent(context, HLMActivity.class);
+    /*private void sendNotification(String messageBody) {
+        Context mContext = getActivity();
+
+        Intent intent = new Intent(mContext, HLMActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+
         PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent,
                 PendingIntent.FLAG_ONE_SHOT);
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context)
-                .setSmallIcon(R.drawable.ic_notifications_white_24dp)
+        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
+                .setSmallIcon(R.drawable.ic_chat_white_24dp)
                 .setContentTitle(getResources().getString(R.string.app_name))
                 .setContentText(messageBody)
                 .setAutoCancel(true)
@@ -442,7 +440,7 @@ public class ChatUserList extends ListFragment {
                 .setContentIntent(pendingIntent);
 
         notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
-    }
+    } */
 
 
     private String dateFormatter (String millis) {
