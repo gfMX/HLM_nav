@@ -52,11 +52,11 @@ import static com.mezcaldev.hotlikeme.FireConnection.user;
 public class ChatUserList extends ListFragment {
     final static String TAG = "Chat: ";
 
-    static ChatUserList newInstance() {
+    /* static ChatUserList newInstance() {
         ChatUserList newFragment = new ChatUserList();
 
         return newFragment;
-    }
+    } */
 
 
     int maxTimeForNotifications = 48;       /* Time in Hours */
@@ -133,9 +133,10 @@ public class ChatUserList extends ListFragment {
                 ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
             public boolean onMove(RecyclerView recyclerView,
                                   RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                //final int fromPos = viewHolder.getAdapterPosition();
+                final int fromPos = viewHolder.getAdapterPosition();
                 //final int toPos = target.getAdapterPosition();
                 // move item in `fromPos` to `toPos` in adapter.
+                System.out.println("Delete here: " + fromPos);
                 Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
                 return true;// true if moved, false otherwise
             }
@@ -184,16 +185,14 @@ public class ChatUserList extends ListFragment {
                                 Log.i(TAG, "User removed!");
                             } else {
                                 Log.i(TAG, "User NOT removed!");
+                                notifyDataChanged();
                             }
-                            notifyDataChanged();
+                            //notifyDataChanged();
                             undoFlag = false;
                         }
                     };
 
                     handler.postDelayed(runnable, (delayTime));
-                    if (icon != null){
-                        icon.recycle();
-                    }
                 }
             }
 

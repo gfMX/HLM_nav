@@ -68,9 +68,8 @@ import static java.util.UUID.randomUUID;
 
 public class HLMUsers extends ListFragment {
 
-    String nullKey = "nullKey";
-    String userKey = nullKey;
-    String oldKey = nullKey;
+    String userKey;
+    String oldKey;
     private static final String TAG = "HLMUsers";
 
     /* static HLMUsers newInstance() {
@@ -250,44 +249,47 @@ public class HLMUsers extends ListFragment {
                         case ACTION_UP:
                             out.println("Up");
 
-                            referenceUserRated.setValue(starsRating);       //Set the New User Rating 
-
                             v.setTranslationY(0);
                             v.setTranslationX(0);
 
                             //Add users to the Like List
-                            if (yRaw < screenUp) {
-                                out.println("User ID: " + userKey);
-                                referenceLikeUser.setValue(true);
-                                //makeText(getContext(), "Added!", LENGTH_SHORT).show();
+                            if (userKey != null) {
+                                //Set the New User Rating
+                                referenceUserRated.setValue(starsRating);
 
-                            }
-                            //Remove users from the Like List
-                            if (yRaw > screenDown) {
-                                out.println("User ID: " + userKey);
-                                referenceLikeUser.setValue(null);
-                                //makeText(getContext(), "Removed!", LENGTH_SHORT).show();
-                                fabMessage.setVisibility(INVISIBLE);
-                            }
-                            //Check if Users Like each other:
-                            didWeLike(userKey);
-                            removeReferences();
+                                if (yRaw < screenUp) {
+                                    out.println("User ID: " + userKey);
+                                    referenceLikeUser.setValue(true);
+                                    //makeText(getContext(), "Added!", LENGTH_SHORT).show();
 
-                            //Generate new Key and Load new User
-                            if (usersList.size() > 1) {
-                                runnableBeforeNewUser = new Runnable() {
-                                    @Override
-                                    public void run() {
-                                        oldKey = userKey;
-                                        userKey = genNoRepeatedKey(userKey);
-                                        Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
-                                        changeUserKey(userKey);
-                                    }
-                                };
-                                handlerBeforeNewUser.postDelayed(runnableBeforeNewUser, delayBeforeNewUser);
-                            } else {
-                                Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
-                                Log.i(TAG, "No more users around!");
+                                }
+                                //Remove users from the Like List
+                                if (yRaw > screenDown) {
+                                    out.println("User ID: " + userKey);
+                                    referenceLikeUser.setValue(null);
+                                    //makeText(getContext(), "Removed!", LENGTH_SHORT).show();
+                                    fabMessage.setVisibility(INVISIBLE);
+                                }
+                                //Check if Users Like each other:
+                                didWeLike(userKey);
+                                removeReferences();
+
+                                //Generate new Key and Load new User
+                                if (usersList.size() > 1) {
+                                    runnableBeforeNewUser = new Runnable() {
+                                        @Override
+                                        public void run() {
+                                            oldKey = userKey;
+                                            userKey = genNoRepeatedKey(userKey);
+                                            Log.v(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey);
+                                            changeUserKey(userKey);
+                                        }
+                                    };
+                                    handlerBeforeNewUser.postDelayed(runnableBeforeNewUser, delayBeforeNewUser);
+                                } else {
+                                    Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
+                                    Log.i(TAG, "No more users around!");
+                                }
                             }
 
                             break;
