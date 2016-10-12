@@ -38,6 +38,8 @@
             android:layout_width="wrap_content"
             android:maxHeight="320dp"
             android:maxWidth="340dp"
+            android:minHeight="320dp"
+            android:minWidth="340dp"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
             android:src="@drawable/ic_person_gray"

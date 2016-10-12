@@ -1,9 +1,7 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Context;
 import android.content.SharedPreferences;
 import android.location.Location;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
@@ -29,11 +27,13 @@ public class FireConnection {
     static FirebaseUser user;
     FirebaseAuth mAuth;
     FirebaseAuth.AuthStateListener mAuthListener;
+    SharedPreferences sharedPreferences;
     FirebaseDatabase database;
-    Location mCurrentLocation;
+    //Location mCurrentLocation;
     static Boolean weLike = false;
 
-    private Boolean flagOneTime = false;
+
+    //private Boolean flagOneTime = false;
     static List<String> usersList = new ArrayList<>();
 
     static final int ONE_SECOND = 1000;
@@ -49,6 +49,7 @@ public class FireConnection {
     private FireConnection() {
         user = getUser();
     }
+
     public FirebaseUser getUser(){
         mAuthListener = new FirebaseAuth.AuthStateListener() {
             @Override
@@ -57,10 +58,10 @@ public class FireConnection {
                 if (user != null) {
                     // User is signed in
                     Log.d(TAG, "User credentials granted: " + user.getUid());
-                    if (!flagOneTime) {
-                        getFirebaseUsers(MainActivity.getContext(), MainActivity.getLocation());
+                    /*if (!flagOneTime) {
+                        getFirebaseUsers(null, null);
                         flagOneTime = true;
-                    }
+                    } */
                 } else {
                     // User is signed out
                     Log.d(TAG, "User not logged.");
@@ -72,16 +73,16 @@ public class FireConnection {
 
         mAuth = FirebaseAuth.getInstance();
         mAuth.addAuthStateListener(mAuthListener);
-      return this.user;
+      return user;
     }
 
-    public void getFirebaseUsers(final Context mContext, final Location mCurrentLocation){
+    public void getFirebaseUsers(SharedPreferences sharedPreferences, final Location mCurrentLocation){
         if (user !=null){
             usersList.clear();
 
             database = FirebaseDatabase.getInstance();
 
-            SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
+            //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
             Log.i(TAG, "Preferences: " + sharedPreferences);
 
             String gender = sharedPreferences.getString("looking_for", "both");

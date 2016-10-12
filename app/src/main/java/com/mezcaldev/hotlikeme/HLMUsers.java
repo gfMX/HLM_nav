@@ -1,11 +1,12 @@
 package com.mezcaldev.hotlikeme;
 
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.content.SharedPreferences;
 import android.graphics.drawable.LayerDrawable;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.app.ListFragment;
@@ -23,6 +24,7 @@ import android.widget.RatingBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
@@ -60,7 +62,6 @@ import static com.mezcaldev.hotlikeme.R.id.userDescription;
 import static com.mezcaldev.hotlikeme.R.layout.hlm_screen_slide_page;
 import static com.mezcaldev.hotlikeme.R.string.welcome_msg;
 import static java.lang.Float.valueOf;
-import static java.lang.Long.MAX_VALUE;
 import static java.lang.Math.random;
 import static java.lang.System.out;
 import static java.util.UUID.randomUUID;
@@ -82,16 +83,15 @@ public class HLMUsers extends ListFragment {
     RatingBar ratingBar;
     FloatingActionButton fabMessage;
 
-    Bitmap image;
+    //Bitmap image;
     Handler handlerBeforeNewUser = new Handler();
     Handler handlerWaitingUsers = new Handler();
     Runnable runnableWaitingUsers;
     Runnable runnableBeforeNewUser;
 
-
     //Sampled Image:
-    int reqWidth = 700;
-    int reqHeight = 700;
+    //int reqWidth = 700;
+    //int reqHeight = 700;
 
     int delayBeforeNewUser = 500;
     int delayTime = 2500;
@@ -115,6 +115,8 @@ public class HLMUsers extends ListFragment {
     TextView viewUserDescription;
     Toast toast1;
     Toast toast2;
+
+    SharedPreferences sharedPreferences;
 
     //Firebase Initialization:
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -150,12 +152,13 @@ public class HLMUsers extends ListFragment {
 
         setHasOptionsMenu(true);
 
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         weLike = false;
 
         //users = usersList;
         Log.i(TAG, "Number of Users from Singleton: " + usersList.size());
         if (usersList == null) {
-            FireConnection.getInstance().getFirebaseUsers(getContext(), HLMActivity.mCurrentLocation);
+            FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
             Log.v(TAG, "Users from Singleton Empty");
         }
     }
@@ -395,7 +398,7 @@ public class HLMUsers extends ListFragment {
 
         databaseReferenceUserDetails.addListenerForSingleValueEvent(valueEventListenerGetUserDetails);
 
-        storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
+        /*storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
                 .addOnSuccessListener(new OnSuccessListener<byte[]>() {
                     @Override
                     public void onSuccess(byte[] bytes) {
@@ -412,8 +415,8 @@ public class HLMUsers extends ListFragment {
                 // Handle any errors
                 exception.printStackTrace();
             }
-        });
-        /*storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getDownloadUrl()
+        });*/
+        storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getDownloadUrl()
                 .addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
@@ -428,7 +431,7 @@ public class HLMUsers extends ListFragment {
             public void onFailure(@NonNull Exception e) {
                 e.printStackTrace();
             }
-        }); */
+        });
     }
 
     private void userRating(final String key) {
@@ -537,7 +540,7 @@ public class HLMUsers extends ListFragment {
         databaseReferenceSetCurrentUserChat.addListenerForSingleValueEvent(valueEventListenerCheckChat);
     }
 
-    public static int calculateInSampleSize(
+    /* public static int calculateInSampleSize(
             BitmapFactory.Options options, int reqWidth, int reqHeight) {
         // Raw height and width of image
         final int height = options.outHeight;
@@ -573,17 +576,17 @@ public class HLMUsers extends ListFragment {
         // Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
         return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-    }
+    } */
 
     private void changeUserKey(String newKey){
         if (user != null) {
             weLike = false;
             starsRating = 0;
-            if (image != null) {
-                viewUserImage.setImageBitmap(null);
-                viewUserImage.setImageResource(R.drawable.ic_person_gray);
-                image.recycle();
-            }
+            //if (image != null) {
+            viewUserImage.setImageBitmap(null);
+            viewUserImage.setImageResource(R.drawable.ic_person_gray);
+                //image.recycle();
+            //}
             ratingBar.setRating(starsRating);
             fabMessage.setVisibility(INVISIBLE);
             //First Remove old Listeners:
@@ -665,9 +668,9 @@ public class HLMUsers extends ListFragment {
     private void littleCleaning(){
         viewUserImage.setImageBitmap(null);
         viewUserImage.destroyDrawingCache();
-        if (image != null) {
+        /*if (image != null) {
             image.recycle();
-        }
+        } */
         try {
             handlerWaitingUsers.removeCallbacks(runnableWaitingUsers);
             handlerBeforeNewUser.removeCallbacks(runnableBeforeNewUser);

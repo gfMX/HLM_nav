@@ -376,7 +376,7 @@ public class HLMActivity extends AppCompatActivity implements
             mLastUpdateDay = DateFormat.getDateInstance().format(new Date());
             if (user != null) {
                 //Update Users List:
-                FireConnection.getInstance().getFirebaseUsers(getApplicationContext(), mCurrentLocation);
+                FireConnection.getInstance().getFirebaseUsers(sharedPreferences, mCurrentLocation);
                 //New Location:
                 DatabaseReference databaseReferenceNewLocation = database.getReference()
                         .child("users")

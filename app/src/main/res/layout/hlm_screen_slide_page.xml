@@ -29,6 +29,8 @@
             android:layout_width="wrap_content"
             android:maxHeight="380dp"
             android:maxWidth="380dp"
+            android:minWidth="380dp"
+            android:minHeight="380dp"
             android:layout_margin="10dp"
             android:scaleType="fitXY"
             android:adjustViewBounds="true"
