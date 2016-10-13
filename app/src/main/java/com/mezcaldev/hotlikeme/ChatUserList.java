@@ -75,6 +75,7 @@ public class ChatUserList extends ListFragment {
 
     Handler handlerUserWaiting;
     Runnable runnableUserWaiting;
+    int delayTimeForWaiting = 5000;
     Handler handler;
     Runnable runnable;
     int delayTime = 2500;
@@ -458,7 +459,7 @@ public class ChatUserList extends ListFragment {
                 }
             }
         };
-        handlerUserWaiting.postDelayed(runnableUserWaiting,delayTime);
+        handlerUserWaiting.postDelayed(runnableUserWaiting, delayTimeForWaiting);
     }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {
