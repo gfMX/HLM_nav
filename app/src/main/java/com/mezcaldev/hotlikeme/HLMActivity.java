@@ -20,6 +20,7 @@ import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentStatePagerAdapter;
+import android.support.v4.app.TaskStackBuilder;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.view.GravityCompat;
 import android.support.v4.view.PagerAdapter;
@@ -158,9 +159,14 @@ public class HLMActivity extends AppCompatActivity implements
 
         Bundle bundle = getIntent().getExtras();
         if (bundle != null) {
-            HLM_PAGES = bundle.getInt("pages");
+            if (bundle.containsKey("pages")) {
+                HLM_PAGES = bundle.getInt("pages");
+            }
+            if (bundle.containsKey("currentPage")){
+                HLM_CURRENT_PAGE = bundle.getInt("currentPage");
+            }
         }
-        System.out.println("Bundle: " + bundle);
+        Log.i(TAG, "Bundle: " + bundle);
 
         //Local FIrebase Initialization.
         mAuthListener = new FirebaseAuth.AuthStateListener() {
@@ -193,8 +199,7 @@ public class HLMActivity extends AppCompatActivity implements
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
         //mRequestingLocationUpdates = false;
         //System.out.println("Requesting Location: " + mRequestingLocationUpdates);
-
-        notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
+        //notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
@@ -312,16 +317,9 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     private class ScreenSlidePagerAdapter extends FragmentStatePagerAdapter {
-        //FragmentManager fm;
-        //Fragment[] fragments;
 
         private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
-            /* fm = fragmentManager;
-            fragments = new Fragment[HLM_PAGES_MAX];
-            fragments[0] = new LoginFragment();
-            fragments[1] = new HLMUsers();
-            fragments[2] = new ChatUserList(); */
         }
 
         @Override
@@ -346,7 +344,6 @@ public class HLMActivity extends AppCompatActivity implements
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
 
-            //fm.beginTransaction().remove(fragments[position]).commit();
         }
     }
 
@@ -358,22 +355,39 @@ public class HLMActivity extends AppCompatActivity implements
 
     public void sendNotification(String messageBody, int nID) {
 
-        Intent intent = new Intent(this, HLMActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT);
-
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(this)
-                .setSmallIcon(R.drawable.ic_chat_white_24dp)
-                .setContentTitle(getResources().getString(R.string.app_name))
-                .setContentText(messageBody)
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent);
 
-        notificationManager.notify(nID, notificationBuilder.build());
+        Bundle bundle = new Bundle();
+        bundle.putInt("pages", HLM_PAGES);
+        bundle.putInt("currentPage", PAGE_CHAT);
+
+        Intent resultIntent = new Intent(this, HLMActivity.class);
+        resultIntent.putExtras(bundle);
+
+
+        TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+        stackBuilder.addParentStack(MainActivity.class);
+        stackBuilder.addNextIntent(resultIntent);
+        PendingIntent resultPendingIntent =
+                stackBuilder.getPendingIntent(
+                        0,
+                        PendingIntent.FLAG_UPDATE_CURRENT
+                );
+
+        android.support.v4.app.NotificationCompat.Builder mBuilder =
+                new NotificationCompat.Builder(this)
+                        .setSmallIcon(R.drawable.ic_chat_white_24dp)
+                        .setContentTitle(getResources().getString(R.string.app_name))
+                        .setContentText(messageBody)
+                        .setAutoCancel(true)
+                        .setSound(defaultSoundUri)
+                        .setContentIntent(resultPendingIntent);
+        mBuilder.setContentIntent(resultPendingIntent);
+
+        NotificationManager mNotificationManager =
+                (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+        mNotificationManager.notify(nID, mBuilder.build());
     }
 
     private void userConnected(){
@@ -486,19 +500,19 @@ public class HLMActivity extends AppCompatActivity implements
                 //final LocationSettingsStates locationSettingsStates = result.getLocationSettingsStates();
                 switch (status.getStatusCode()) {
                     case LocationSettingsStatusCodes.SUCCESS:
-                        System.out.println("Access GRANTED by the User!");
+                        Log.i(TAG, "Access GRANTED by the User!");
                         startLocationUpdates();
                         break;
                     case LocationSettingsStatusCodes.RESOLUTION_REQUIRED:
                         try {
                             status.startResolutionForResult(HLMActivity.this, REQUEST_CHECK_SETTINGS);
-                            System.out.println("Access requested.");
+                            Log.w(TAG, "Access requested.");
                         } catch (IntentSender.SendIntentException e) {
                             // Ignore the error.
                         }
                         break;
                     case LocationSettingsStatusCodes.SETTINGS_CHANGE_UNAVAILABLE:
-                        System.out.println("Nothing to do.");
+                        Log.e(TAG, "Nothing to do.");
                         break;
                 }
             }
@@ -510,12 +524,12 @@ public class HLMActivity extends AppCompatActivity implements
                 == PackageManager.PERMISSION_GRANTED) {
             LocationServices.FusedLocationApi.requestLocationUpdates(
                     mGoogleApiClient, mLocationRequest, this);
-            System.out.println("Permission GRANTED! Start tracking Location!");
+            Log.i(TAG, "Permission GRANTED! Start tracking Location!");
         } else {
             ActivityCompat.requestPermissions(this,
                     new String[] { android.Manifest.permission.ACCESS_FINE_LOCATION },
                     MY_PERMISSION_ACCESS_FINE_LOCATION);
-            System.out.println("Access Location services NOT ALLOWED! Requesting permission.");
+            Log.e(TAG, "Access Location services NOT ALLOWED! Requesting permission.");
         }
     }
 
@@ -574,8 +588,9 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     private void updateValuesFromBundle(Bundle savedInstanceState) {
+
         if (savedInstanceState != null) {
-            System.out.println("Updating from Bundle." + savedInstanceState);
+            Log.i(TAG, "Updating from Bundle." + savedInstanceState);
             // Update the value of mRequestingLocationUpdates from the Bundle, and
             if (savedInstanceState.keySet().contains(REQUESTING_LOCATION_UPDATES_KEY)) {
                 mRequestingLocationUpdates = savedInstanceState.getBoolean(
@@ -598,10 +613,13 @@ public class HLMActivity extends AppCompatActivity implements
                 HLM_CURRENT_PAGE = savedInstanceState.getInt(
                         NUMBER_OF_CURRENT_PAGE);
             }
+        } else if (HLM_PAGES > 1 && HLM_CURRENT_PAGE == PAGE_CHAT){
+            HLM_CURRENT_PAGE = PAGE_CHAT;
+
         } else if (HLM_PAGES > 1){
             HLM_CURRENT_PAGE = PAGE_HLM;
         }
-        System.out.println("Recovered State: " + savedInstanceState);
+        Log.i(TAG, "Recovered State: " + savedInstanceState);
         mPager.setCurrentItem(HLM_CURRENT_PAGE);
     }
 
@@ -635,7 +653,7 @@ public class HLMActivity extends AppCompatActivity implements
             mLastUpdateTime = DateFormat.getTimeInstance().format(new Date());
         }
         if (mRequestingLocationUpdates) {
-            System.out.println("Requesting Location");
+            Log.i(TAG, "Requesting Location");
             startLocationUpdates();
         }
     }

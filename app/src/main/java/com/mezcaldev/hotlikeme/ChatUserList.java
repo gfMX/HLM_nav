@@ -70,6 +70,7 @@ public class ChatUserList extends ListFragment {
     List<String> userTimeStamp = new ArrayList<>();
     List<String> userChatID = new ArrayList<>();
     List<Uri> userProfilePic = new ArrayList<>();
+    List<Boolean> userMessageRead = new ArrayList<>();
 
     Handler handler;
     Runnable runnable;
@@ -197,6 +198,7 @@ public class ChatUserList extends ListFragment {
                                 userLastMessage.remove(position);
                                 userLastMessageId.remove(position);
                                 userTimeStamp.remove(position);
+                                userMessageRead.remove(position);
 
                                 mAdapter.notifyItemRemoved(position);
 
@@ -273,6 +275,7 @@ public class ChatUserList extends ListFragment {
                     userLastMessage.add("");
                     userLastMessageId.add("");
                     userTimeStamp.add("");
+                    userMessageRead.add(null);
 
                     Log.i(TAG, "Chat Key: " + data.getKey());
                     Log.i(TAG, "Chat Id: " + data.getValue());
@@ -320,6 +323,7 @@ public class ChatUserList extends ListFragment {
                     String lastMessageText;
                     String lastMessageId;
                     String lastDateFromMessage;
+                    Boolean lastMessageRead;
                     Long lastMessageTime = 0L;
                     if (dataSnapshot.child("text").getValue() != null){
                         lastMessageText = dataSnapshot.child("text").getValue().toString();
@@ -337,22 +341,36 @@ public class ChatUserList extends ListFragment {
                     } else {
                         lastDateFromMessage = "Date Not Found!";
                     }
+                    if (dataSnapshot.child("readIt").getValue() != null){
+                        lastMessageRead = Boolean.parseBoolean(dataSnapshot.child("readIt").getValue().toString());
+                    } else {
+                        lastMessageRead = true;
+                    }
+                    Log.i(TAG,"Message Read: " + lastMessageRead);
+
                     if (position < userLastMessage.size()) {
                         userLastMessage.set(position, lastMessageText);
                         userLastMessageId.set(position, lastMessageId);
                         userTimeStamp.set(position, lastDateFromMessage);
-
+                        userMessageRead.set(position, lastMessageRead);
 
                         notifyDataChanged();
-
-                        Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime) / ONE_HOUR;
-                        Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
-
-                        if (timeInHours < maxTimeForNotifications && !isInLayout() && !lastMessageId.equals(user.getUid())) {
-                            String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
-                            ((HLMActivity) getActivity()).sendNotification(notificationText, NOTIFICATION_ID);    //Need adjustments, still crashes
-                        }
                     }
+
+                    Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime) / ONE_HOUR;
+                    Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
+                    if (timeInHours < maxTimeForNotifications
+                            && !isInLayout()
+                            && !lastMessageId.equals(user.getUid())
+                            && !lastMessageRead) {
+
+                        String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
+                        if (getActivity() != null) {
+                            ((HLMActivity) getActivity()).sendNotification(notificationText, NOTIFICATION_ID);
+                        }
+
+                    }
+
                 }
 
                 @Override
@@ -420,28 +438,6 @@ public class ChatUserList extends ListFragment {
 
         return bitmap;
     }
-
-    /*private void sendNotification(String messageBody) {
-        Context mContext = getActivity();
-
-        Intent intent = new Intent(mContext, HLMActivity.class);
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
-
-        PendingIntent pendingIntent = PendingIntent.getActivity(getActivity(), 0, intent,
-                PendingIntent.FLAG_ONE_SHOT);
-
-        Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
-        android.support.v4.app.NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(mContext)
-                .setSmallIcon(R.drawable.ic_chat_white_24dp)
-                .setContentTitle(getResources().getString(R.string.app_name))
-                .setContentText(messageBody)
-                .setAutoCancel(true)
-                .setSound(defaultSoundUri)
-                .setContentIntent(pendingIntent);
-
-        notificationManager.notify(NOTIFICATION_ID, notificationBuilder.build());
-    } */
-
 
     private String dateFormatter (String millis) {
 

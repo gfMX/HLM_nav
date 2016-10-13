@@ -93,6 +93,7 @@ public class ChatActivity extends AppCompatActivity implements
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
     private String mUsername;
+    private String mUserChatId;
     private String mPhotoUrl;
     SharedPreferences mSharedPreferences;
 
@@ -128,8 +129,9 @@ public class ChatActivity extends AppCompatActivity implements
         Bundle bundle = getIntent().getExtras();
 
         if (bundle.getString("userChat")!= null) {
-            MESSAGES_CHILD = "/chats/" + bundle.getString("userChat");
-            MESSAGES_RESUME = "/chats_resume/" + bundle.getString("userChat");
+            mUserChatId = bundle.getString("userChat");
+            MESSAGES_CHILD = "/chats/" + mUserChatId;
+            MESSAGES_RESUME = "/chats_resume/" + mUserChatId;
         }
         if (bundle.getString("userName")!= null) {
             setTitle(bundle.getString("userName"));
@@ -155,7 +157,6 @@ public class ChatActivity extends AppCompatActivity implements
         }
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-
 
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -223,6 +224,8 @@ public class ChatActivity extends AppCompatActivity implements
                     return RIGHT_MSG;
                 }else{
                     //System.out.println("Message Left");
+                    //Set Last Message from the Other User to Read It!
+                    mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
                     return LEFT_MSG;
                 }
             }
@@ -280,7 +283,7 @@ public class ChatActivity extends AppCompatActivity implements
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 140L);
+        defaultConfigMap.put("friendly_msg_length", 160L);
 
         // Apply config settings and default values.
         mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
@@ -321,7 +324,7 @@ public class ChatActivity extends AppCompatActivity implements
             public void onClick(View view) {
 
                 ChatMessageModel chatMessageModel = new ChatMessageModel(mMessageEditText.getText().toString(), mUsername,
-                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid());
+                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false);
 
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);

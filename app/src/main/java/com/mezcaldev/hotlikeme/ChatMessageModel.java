@@ -23,16 +23,18 @@ public class ChatMessageModel {
     private String userId;
     private String photoUrl;
     private String timeStamp;
+    private Boolean readIt;
 
     public ChatMessageModel() {
     }
 
-    public ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId) {
+    public ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId, Boolean readIt) {
         this.text = text;
         this.name = name;
         this.userId = userId;
         this.photoUrl = photoUrl;
         this.timeStamp = timeStamp;
+        this.readIt = readIt;
     }
 
     public String getId() {
@@ -81,5 +83,13 @@ public class ChatMessageModel {
 
     public void setTimeStamp(String timeStamp) {
         this.timeStamp = timeStamp;
+    }
+
+    public void setReadIt(Boolean read) {
+        this.readIt = read;
+    }
+
+    public Boolean getReadIt(){
+        return readIt;
     }
 }
