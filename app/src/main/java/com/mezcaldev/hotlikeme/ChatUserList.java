@@ -530,6 +530,8 @@ public class ChatUserList extends ListFragment {
     public void onStop(){
         super.onStop();
         removeListeners();
+        handlerUserWaiting.removeCallbacks(runnableUserWaiting);
+        handlerUserWaiting.removeCallbacksAndMessages(null);
     }
 
     @Override
@@ -545,5 +547,7 @@ public class ChatUserList extends ListFragment {
         //handler.removeCallbacks(runnable);
         //handler.removeCallbacksAndMessages(null);
         //handler.postDelayed(runnable, delayTime);
+        handlerUserWaiting.removeCallbacks(runnableUserWaiting);
+        handlerUserWaiting.removeCallbacksAndMessages(null);
     }
 }
