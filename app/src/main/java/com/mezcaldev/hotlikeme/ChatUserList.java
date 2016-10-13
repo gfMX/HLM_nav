@@ -46,7 +46,7 @@ import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
-    final static String TAG = "Chat: ";
+    final static String TAG = "Chat";
 
     static ChatUserList newInstance() {
         ChatUserList newFragment = new ChatUserList();
@@ -73,6 +73,8 @@ public class ChatUserList extends ListFragment {
     List<Uri> userProfilePic = new ArrayList<>();
     List<Boolean> userMessageRead = new ArrayList<>();
 
+    Handler handlerUserWaiting;
+    Runnable runnableUserWaiting;
     Handler handler;
     Runnable runnable;
     int delayTime = 2500;
@@ -117,10 +119,7 @@ public class ChatUserList extends ListFragment {
     }
 
     @Override
-    public void onViewCreated(final View view, Bundle savedInstanceState){
-        databaseMessageReference = database.getReference();
-        databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
-
+    public void onViewCreated(final View view, Bundle savedInstanceState) {
         //notificationManager = (NotificationManager) getActivity().getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
 
         swipeRefreshLayout = (SwipeRefreshLayout) view.findViewById(R.id.swipeRefreshUserList);
@@ -139,118 +138,128 @@ public class ChatUserList extends ListFragment {
                     public void onRefresh() {
                         Log.i(TAG, "!-------------------------!");
                         Log.i(TAG, "     Refresh called!");
-
-                        getUsers();
+                        if (user != null) {
+                            getUsers();
+                        } else {
+                            Log.e(TAG, "User not logged! How could this happened?");
+                        }
                     }
                 }
         );
 
+        if (user != null){
+            databaseMessageReference = database.getReference();
+            databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
 
-        ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
-                ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
-            public boolean onMove(RecyclerView recyclerView,
-                                  RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
-                final int fromPos = viewHolder.getAdapterPosition();
-                //final int toPos = target.getAdapterPosition();
-                // move item in `fromPos` to `toPos` in adapter.
-                System.out.println("Delete here: " + fromPos);
-                Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
-                return true;// true if moved, false otherwise
-            }
+            ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
+                    ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+                public boolean onMove(RecyclerView recyclerView,
+                                      RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
+                    final int fromPos = viewHolder.getAdapterPosition();
+                    //final int toPos = target.getAdapterPosition();
+                    // move item in `fromPos` to `toPos` in adapter.
+                    System.out.println("Delete here: " + fromPos);
+                    Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
+                    return true;// true if moved, false otherwise
+                }
 
-            public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
-                // remove from adapter
-                if (direction == ItemTouchHelper.LEFT || direction == ItemTouchHelper.RIGHT){
-                    final int position = viewHolder.getAdapterPosition();
-                    System.out.println("Delete here: " + position);
-                    System.out.println("User: " + userName.get(position) + " Key: " + userKey.get(position));
-                    Snackbar snackbar = Snackbar.make(getActivity().getWindow().getDecorView(), "Disconnected from User", Snackbar.LENGTH_LONG)
-                            .setAction("UNDO", new View.OnClickListener() {
-                                @Override
-                                public void onClick(View v) {
-                                    undoFlag =true;
+                public void onSwiped(RecyclerView.ViewHolder viewHolder, int direction) {
+                    // remove from adapter
+                    if (direction == ItemTouchHelper.LEFT || direction == ItemTouchHelper.RIGHT) {
+                        final int position = viewHolder.getAdapterPosition();
+                        System.out.println("Delete here: " + position);
+                        System.out.println("User: " + userName.get(position) + " Key: " + userKey.get(position));
+                        Snackbar snackbar = Snackbar.make(getActivity().getWindow().getDecorView(), "Disconnected from User", Snackbar.LENGTH_LONG)
+                                .setAction("UNDO", new View.OnClickListener() {
+                                    @Override
+                                    public void onClick(View v) {
+                                        undoFlag = true;
+                                    }
+                                });
+                        snackbar.show();
+                        handler = new Handler();
+                        runnable = new Runnable() {
+                            @Override
+                            public void run() {
+                                if (!undoFlag) {
+                                    weLike = false;     //Could Cause conflict with User View if not set to False
+
+                                    Log.v(TAG, "Data to be removed: " + userKey.get(position) + userChatID.get(position)
+                                            + userName.get(position) + userProfilePic.get(position) + userLastMessage.get(position)
+                                            + userLastMessageId.get(position) + userTimeStamp.get(position) + " || Position: " + position);
+
+                                    try {
+                                        databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
+                                        databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
+                                        databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
+                                        databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
+                                    } catch (NullPointerException e) {
+                                        Log.e(TAG, "Missing values to delete!");
+                                    }
+
+                                    userKey.remove(position);
+                                    userChatID.remove(position);
+                                    userName.remove(position);
+                                    userProfilePic.remove(position);
+                                    userLastMessage.remove(position);
+                                    userLastMessageId.remove(position);
+                                    userTimeStamp.remove(position);
+                                    userMessageRead.remove(position);
+
+                                    mAdapter.notifyItemRemoved(position);
+
+                                    Log.i(TAG, "User removed!");
+                                } else {
+                                    Log.i(TAG, "User NOT removed!");
+                                    notifyDataChanged();
                                 }
-                            });
-                    snackbar.show();
-                    handler = new Handler();
-                    runnable = new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!undoFlag) {
-                                weLike = false;     //Could Cause conflict with User View if not set to False
-
-                                Log.v(TAG, "Data to be removed: " + userKey.get(position) + userChatID.get(position)
-                                        + userName.get(position) + userProfilePic.get(position) + userLastMessage.get(position)
-                                        + userLastMessageId.get(position) + userTimeStamp.get(position) + " || Position: " + position);
-
-                                try {
-                                    databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
-                                    databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
-                                    databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
-                                    databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
-                                } catch (NullPointerException e){
-                                    Log.e(TAG, "Missing values to delete!");
-                                }
-
-                                userKey.remove(position);
-                                userChatID.remove(position);
-                                userName.remove(position);
-                                userProfilePic.remove(position);
-                                userLastMessage.remove(position);
-                                userLastMessageId.remove(position);
-                                userTimeStamp.remove(position);
-                                userMessageRead.remove(position);
-
-                                mAdapter.notifyItemRemoved(position);
-
-                                Log.i(TAG, "User removed!");
-                            } else {
-                                Log.i(TAG, "User NOT removed!");
-                                notifyDataChanged();
+                                undoFlag = false;
                             }
-                            undoFlag = false;
-                        }
-                    };
+                        };
 
-                    handler.postDelayed(runnable, (delayTime));
-                }
-            }
-
-            @Override
-            public void onChildDraw(Canvas canvas, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
-
-                if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
-
-                    View itemView = viewHolder.itemView;
-                    float height = (float) itemView.getBottom() - (float) itemView.getTop();
-                    float width = height / 3;
-
-                    icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_delete_white_24dp));
-                    if (dX > 0) {
-                        paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
-                        RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom());
-                        canvas.drawRect(background, paint);
-                        RectF icon_dest = new RectF((float) itemView.getLeft() + width, (float) itemView.getTop() + width, (float) itemView.getLeft() + 2 * width, (float) itemView.getBottom() - width);
-                        canvas.drawBitmap(icon, null, icon_dest, paint);
-                    } else if (dX < 0) {
-                        paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
-                        RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom());
-                        canvas.drawRect(background, paint);
-                        RectF icon_dest = new RectF((float) itemView.getRight() - 2 * width, (float) itemView.getTop() + width, (float) itemView.getRight() - width, (float) itemView.getBottom() - width);
-                        canvas.drawBitmap(icon, null, icon_dest, paint);
+                        handler.postDelayed(runnable, delayTime);
                     }
-                    // Fade out the view as it is swiped out of the parent's bounds
-                    final float alpha = 1 - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
-                    viewHolder.itemView.setAlpha(alpha);
-                    viewHolder.itemView.setTranslationX(dX);
                 }
-                super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
-            }
 
-        };
+                @Override
+                public void onChildDraw(Canvas canvas, RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder, float dX, float dY, int actionState, boolean isCurrentlyActive) {
 
-        ItemTouchHelper mIth = new ItemTouchHelper(simpleCallback);
-        mIth.attachToRecyclerView(mRecyclerView);
+                    if (actionState == ItemTouchHelper.ACTION_STATE_SWIPE) {
+
+                        View itemView = viewHolder.itemView;
+                        float height = (float) itemView.getBottom() - (float) itemView.getTop();
+                        float width = height / 3;
+
+                        icon = drawableToBitmap(ContextCompat.getDrawable(getActivity(), R.drawable.ic_delete_white_24dp));
+                        if (dX > 0) {
+                            paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
+                            RectF background = new RectF((float) itemView.getLeft(), (float) itemView.getTop(), dX, (float) itemView.getBottom());
+                            canvas.drawRect(background, paint);
+                            RectF icon_dest = new RectF((float) itemView.getLeft() + width, (float) itemView.getTop() + width, (float) itemView.getLeft() + 2 * width, (float) itemView.getBottom() - width);
+                            canvas.drawBitmap(icon, null, icon_dest, paint);
+                        } else if (dX < 0) {
+                            paint.setColor(ContextCompat.getColor(getActivity(), R.color.colorAccent));
+                            RectF background = new RectF((float) itemView.getRight() + dX, (float) itemView.getTop(), (float) itemView.getRight(), (float) itemView.getBottom());
+                            canvas.drawRect(background, paint);
+                            RectF icon_dest = new RectF((float) itemView.getRight() - 2 * width, (float) itemView.getTop() + width, (float) itemView.getRight() - width, (float) itemView.getBottom() - width);
+                            canvas.drawBitmap(icon, null, icon_dest, paint);
+                        }
+                        // Fade out the view as it is swiped out of the parent's bounds
+                        final float alpha = 1 - Math.abs(dX) / (float) viewHolder.itemView.getWidth();
+                        viewHolder.itemView.setAlpha(alpha);
+                        viewHolder.itemView.setTranslationX(dX);
+                    }
+                    super.onChildDraw(canvas, recyclerView, viewHolder, dX, dY, actionState, isCurrentlyActive);
+                }
+
+            };
+
+            ItemTouchHelper mIth = new ItemTouchHelper(simpleCallback);
+            mIth.attachToRecyclerView(mRecyclerView);
+
+        } else {
+            waitForLogin();
+        }
     }
 
     @Override
@@ -433,6 +442,23 @@ public class ChatUserList extends ListFragment {
             Log.i(TAG, "  Reloading Data Finished");
             Log.i(TAG, "¡-------------------------¡");
         }
+    }
+
+    private void waitForLogin (){
+        Log.e(TAG,"Waiting for Users");
+        handlerUserWaiting = new Handler();
+        runnableUserWaiting = new Runnable() {
+            @Override
+            public void run() {
+                if (user!= null){
+                    getUsers();
+                }
+                else {
+                    waitForLogin();
+                }
+            }
+        };
+        handlerUserWaiting.postDelayed(runnableUserWaiting,delayTime);
     }
 
     public static Bitmap drawableToBitmap (Drawable drawable) {
