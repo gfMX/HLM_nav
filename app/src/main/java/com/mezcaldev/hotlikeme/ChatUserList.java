@@ -55,8 +55,9 @@ public class ChatUserList extends ListFragment {
     }
 
     //Notifications
-    int maxTimeForNotifications = 48;       /* Time in Hours */
+    int maxTimeForNotifications = 72;       /* Time in Hours */
     int NOTIFICATION_ID = 71843;
+    int newMessagecount;
     //NotificationManager notificationManager;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -295,6 +296,7 @@ public class ChatUserList extends ListFragment {
     }
     private void getData(long size){
         Log.d(TAG, "Looking data for: " + userKey);
+        newMessagecount = 0;
         //int size = userKey.size();
         databaseReferenceUsers = database.getReference().child("users");
         databaseReferenceLastMessage = database.getReference().child("chats_resume");
@@ -346,7 +348,7 @@ public class ChatUserList extends ListFragment {
                     } else {
                         lastMessageRead = true;
                     }
-                    Log.i(TAG,"Message Read: " + lastMessageRead);
+                    Log.i(TAG,"Message read it: " + lastMessageRead);
 
                     if (position < userLastMessage.size()) {
                         userLastMessage.set(position, lastMessageText);
@@ -363,10 +365,21 @@ public class ChatUserList extends ListFragment {
                             && !isInLayout()
                             && !lastMessageId.equals(user.getUid())
                             && !lastMessageRead) {
+                        newMessagecount ++;
 
-                        String notificationText = userName.get(position) + ": " + userLastMessage.get(position);
+                        Log.d(TAG, "Message Count: " + newMessagecount);
+                        String notificationText;
+                        String notificationTitle;
+
+                        if (newMessagecount > 1){
+                            notificationTitle = "HLM: New Messages";
+                            notificationText = newMessagecount + " Conversations with New Messages";
+                        } else {
+                            notificationTitle = "HLM: " + userName.get(position);
+                            notificationText = userLastMessage.get(position);
+                        }
                         if (getActivity() != null) {
-                            ((HLMActivity) getActivity()).sendNotification(notificationText, NOTIFICATION_ID);
+                            ((HLMActivity) getActivity()).sendNotification(notificationTitle, notificationText, NOTIFICATION_ID);
                         }
 
                     }

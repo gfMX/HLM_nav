@@ -10,12 +10,15 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.media.RingtoneManager;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.NavigationView;
+import android.support.design.widget.Snackbar;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -58,6 +61,8 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 
+import org.apache.commons.lang3.StringUtils;
+
 import java.text.DateFormat;
 import java.util.Date;
 
@@ -79,9 +84,10 @@ public class HLMActivity extends AppCompatActivity implements
     PagerAdapter mPagerAdapter;
     SharedPreferences sharedPreferences;
 
-    NotificationManager notificationManager;
+    // Notifications:
+    int MAX_NOTIFICATION_LENGTH = 42;
 
-    //Location variables Initialization
+    // Location variables Initialization
     /* GPS Constant Permission */
     private static final int MY_PERMISSION_ACCESS_FINE_LOCATION = 12;
 
@@ -115,6 +121,7 @@ public class HLMActivity extends AppCompatActivity implements
     int y;
 
     String gender;
+    Snackbar snackNetworkRequired;
 
     //Firebase Initialization
     FirebaseUser user;
@@ -185,6 +192,10 @@ public class HLMActivity extends AppCompatActivity implements
             }
         };
 
+        snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
+                getResources().getString(R.string.text_network_access_required),
+                Snackbar.LENGTH_INDEFINITE);
+
         mAuth = FirebaseAuth.getInstance();
         mAuth.addAuthStateListener(mAuthListener);
 
@@ -197,9 +208,6 @@ public class HLMActivity extends AppCompatActivity implements
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
         minInterval = (Integer.valueOf(sharedPreferences.getString("sync_frequency","1")) * ONE_MINUTE);
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
-        //mRequestingLocationUpdates = false;
-        //System.out.println("Requesting Location: " + mRequestingLocationUpdates);
-        //notificationManager = (NotificationManager) this.getSystemService(Context.NOTIFICATION_SERVICE);
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
@@ -225,6 +233,8 @@ public class HLMActivity extends AppCompatActivity implements
                 }
             }
         });
+
+        checkAccess();
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
@@ -353,7 +363,7 @@ public class HLMActivity extends AppCompatActivity implements
         }
     }
 
-    public void sendNotification(String messageBody, int nID) {
+    public void sendNotification(String messageTitle, String messageBody, int nID) {
 
         Uri defaultSoundUri= RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION);
 
@@ -377,8 +387,8 @@ public class HLMActivity extends AppCompatActivity implements
         android.support.v4.app.NotificationCompat.Builder mBuilder =
                 new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_chat_white_24dp)
-                        .setContentTitle(getResources().getString(R.string.app_name))
-                        .setContentText(messageBody)
+                        .setContentTitle(messageTitle)
+                        .setContentText(StringUtils.abbreviate(messageBody, MAX_NOTIFICATION_LENGTH))
                         .setAutoCancel(true)
                         .setSound(defaultSoundUri)
                         .setContentIntent(resultPendingIntent);
@@ -388,6 +398,27 @@ public class HLMActivity extends AppCompatActivity implements
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         mNotificationManager.notify(nID, mBuilder.build());
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private void checkAccess (){
+        if (!isNetworkAvailable()) {
+            /*snackNetworkRequired.setAction("OK", new View.OnClickListener() {
+                @Override
+                public void onClick(View view) {
+                    snackNetworkRequired.dismiss();
+                }
+            }); */
+            snackNetworkRequired.show();
+        } else if (snackNetworkRequired.isShown()) {
+            snackNetworkRequired.dismiss();
+        }
     }
 
     private void userConnected(){
@@ -709,6 +740,7 @@ public class HLMActivity extends AppCompatActivity implements
         if (user ==null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
             mGoogleApiClient.disconnect();
         }
+        checkAccess();
     }
     @Override
     protected void onStop() {
@@ -725,6 +757,7 @@ public class HLMActivity extends AppCompatActivity implements
         } else if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
             stopLocationUpdates();
         }
+        checkAccess();
     }
     @Override
     protected void onPause() {

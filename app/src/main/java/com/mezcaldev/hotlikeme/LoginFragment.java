@@ -4,13 +4,10 @@ import android.content.Context;
 import android.content.ContextWrapper;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
-import android.support.design.widget.Snackbar;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -91,7 +88,6 @@ public class LoginFragment extends Fragment {
     private Button btn_image;
     private Button btn_start;
     private Button btn_settings;
-    Snackbar snackNetworkRequired;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
@@ -105,10 +101,6 @@ public class LoginFragment extends Fragment {
     static StorageReference storageRef;
     Boolean flagImagesOnFirebase = false;
 
-    //Other elements
-    //ImageSaver imageSaver = new ImageSaver();
-    File profileImageCheck;
-
 
     public LoginFragment() {
 
@@ -120,14 +112,6 @@ public class LoginFragment extends Fragment {
 
         FacebookSdk.sdkInitialize(getActivity().getApplicationContext());
         callbackManager = CallbackManager.Factory.create();
-
-        snackNetworkRequired = Snackbar.make(getActivity().getWindow().getDecorView(),
-                getResources().getString(R.string.text_network_access_required),
-                Snackbar.LENGTH_LONG);
-
-        if (!isNetworkAvailable()) {
-            snackNetworkRequired.show();
-        }
 
         //Path to save and load images locally:
         Context context = getContext();
@@ -161,8 +145,6 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(final View view, Bundle savedInstanceState){
         //Gaining Tokens in Background:
         getUserAccess();
-
-        profileImageCheck = new File(pathProfileImage + "/" + imageProfileFileName);
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -230,43 +212,39 @@ public class LoginFragment extends Fragment {
     //Buttons for different settings
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
       public void onClick (View v){
-          if (isNetworkAvailable()){
-              switch (v.getId()) {
-                  case R.id.btn_choose_img:
-                      Toast.makeText(getActivity(),
-                              getResources().getString(R.string.text_choose_images),
-                              Toast.LENGTH_LONG)
-                              .show();
+          switch (v.getId()) {
+              case R.id.btn_choose_img:
+                  Toast.makeText(getActivity(),
+                          getResources().getString(R.string.text_choose_images),
+                          Toast.LENGTH_LONG)
+                          .show();
 
-                      startActivity(new Intent(getActivity(), ImageBrowser.class));
-                      break;
-                  case R.id.btn_start:
-                      Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
+                  startActivity(new Intent(getActivity(), ImageBrowser.class));
+                  break;
+              case R.id.btn_start:
+                  Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
+                          Toast.LENGTH_LONG).show();
+
+                  ((HLMActivity) getActivity()).selectPage(HLMActivity.PAGE_HLM);
+
+                  break;
+              case R.id.btn_settings:
+                  Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
+                          Toast.LENGTH_LONG).show();
+                  startActivity(new Intent(getActivity(), HLMSettings.class));
+                  break;
+              case R.id.hlm_image:
+
+                  if (flagImagesOnFirebase) {
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
                               Toast.LENGTH_LONG).show();
 
-                      ((HLMActivity) getActivity()).selectPage(HLMActivity.PAGE_HLM);
-
-                      break;
-                  case R.id.btn_settings:
-                      Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
+                      startActivity(new Intent(getActivity(), FireBrowserActivity.class));
+                  } else {
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
                               Toast.LENGTH_LONG).show();
-                      startActivity(new Intent(getActivity(), HLMSettings.class));
-                      break;
-                  case R.id.hlm_image:
-
-                      if (flagImagesOnFirebase) {
-                          Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
-                                  Toast.LENGTH_LONG).show();
-
-                          startActivity(new Intent(getActivity(), FireBrowserActivity.class));
-                      } else {
-                          Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
-                                  Toast.LENGTH_LONG).show();
-                      }
-                      break;
-              }
-          } else {
-              snackNetworkRequired.show();
+                  }
+                  break;
           }
       }
     };
@@ -332,9 +310,6 @@ public class LoginFragment extends Fragment {
 
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
-                            /* if (!oneTime) {
-                                FireConnection.getInstance().getFirebaseUsers(getActivity().getApplicationContext(), HLMActivity.mCurrentLocation);
-                            } */
                         }
                     } else {
                         // User signed out
@@ -343,7 +318,6 @@ public class LoginFragment extends Fragment {
                         System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
                     }
                     FireConnection.getInstance().getUser();
-                    //FireConnection.getInstance().getFirebaseUsers(getActivity().getApplicationContext(), HLMActivity.mCurrentLocation);
                     updateUI();
                 }
             };
@@ -386,7 +360,7 @@ public class LoginFragment extends Fragment {
                 profilePic.setProfileId(accessToken.getUserId());
             }
             imageProfileHLM.setClickable(true);
-            if (user.getPhotoUrl() != null) {
+            if (user.getPhotoUrl() != null && getContext() != null) {
                 //Glide do better RAM Optimization:
                 Glide
                         .with(getContext())
@@ -410,16 +384,6 @@ public class LoginFragment extends Fragment {
             btn_image.setVisibility(View.GONE);
             btn_start.setVisibility(View.GONE);
             btn_settings.setVisibility(View.GONE);
-
-            /*boolean isDeleted = profileImageCheck.exists();
-            if (isDeleted) {
-                try {
-                    isDeleted = profileImageCheck.delete();
-                } catch (Exception e){
-                    e.printStackTrace();
-                }
-            }
-            Log.v(TAG, "File Deleted: " + isDeleted);*/
         }
     }
     private void loadProfileDetails (Integer delayTime){
@@ -429,55 +393,9 @@ public class LoginFragment extends Fragment {
                 if (profile != null) {
                     fb_welcome_text.setText(welcomeText);
                 }
-                if (profileImageCheck.exists()) {
-                    flagImagesOnFirebase = true;
-                    //imageProfileHLM.setImageBitmap(imageSaver.iLoadImageFromStorage(pathProfileImage,imageProfileFileName));
-                } else {
-                    Log.i(TAG, "No need to store Image Profile locally...");
-                    //fireProfilePic();
-                }
             }
         };
         handler.postDelayed(runnable, delayTime);
-    }
-    /*private void fireProfilePic (){
-        if (user != null) {
-            storageRef
-                    .child(user.getUid())
-                    .child("/profile_pic/" + imageProfileFileName)
-                    .getBytes(Long.MAX_VALUE)
-                    .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                        @Override
-                        public void onSuccess(byte[] bytes) {
-                            // Use the bytes to display the image
-                            ImageSaver saveBitmap = new ImageSaver();
-                            Bitmap image = BitmapFactory.decodeByteArray(bytes, 0, bytes.length);
-                            //Bitmap image = saveBitmap.decodeSampledBitmap(bytes, reqWidth, reqHeight);
-                            saveBitmap.iSaveToInternalStorage(image, imageProfileFileName, getContext());
-
-                            flagImagesOnFirebase = true;
-                        }
-                    }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception exception) {
-                    // Handle any errors
-                    flagImagesOnFirebase = false;
-                    exception.printStackTrace();
-                }
-            });
-        }
-    }*/
-    private boolean deleteLocalProfilePic(){
-        boolean isDeleted = !profileImageCheck.exists();
-        if (!isDeleted) {
-            try {
-                isDeleted = profileImageCheck.delete();
-            } catch (Exception e){
-                e.printStackTrace();
-            }
-        }
-        Log.v(TAG, "Profile Image Deleted: " + isDeleted);
-        return isDeleted;
     }
 
     private void getFacebookDetails (){
@@ -513,13 +431,6 @@ public class LoginFragment extends Fragment {
         parameters.putString("fields", "gender");
         request.setParameters(parameters);
         request.executeAsync();
-    }
-
-    private boolean isNetworkAvailable() {
-        ConnectivityManager connectivityManager
-                = (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
-        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
     @Override
