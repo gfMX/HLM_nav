@@ -88,10 +88,6 @@ public class HLMUsers extends ListFragment {
     Runnable runnableWaitingUsers;
     Runnable runnableBeforeNewUser;
 
-    //Sampled Image:
-    //int reqWidth = 700;
-    //int reqHeight = 700;
-
     int delayBeforeNewUser = 500;
     int delayTime = 2000;
 
@@ -382,24 +378,6 @@ public class HLMUsers extends ListFragment {
 
         databaseReferenceUserDetails.addListenerForSingleValueEvent(valueEventListenerGetUserDetails);
 
-        /*storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getBytes(MAX_VALUE)
-                .addOnSuccessListener(new OnSuccessListener<byte[]>() {
-                    @Override
-                    public void onSuccess(byte[] bytes) {
-                        viewUserImage.setImageBitmap(null);
-                        if (image != null){
-                            image.recycle();
-                        }
-                        image = decodeSampledBitmap(bytes, reqWidth, reqHeight);
-                        viewUserImage.setImageBitmap(image);
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle any errors
-                exception.printStackTrace();
-            }
-        });*/
         storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getDownloadUrl()
                 .addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
@@ -525,44 +503,6 @@ public class HLMUsers extends ListFragment {
 
         databaseReferenceSetCurrentUserChat.addListenerForSingleValueEvent(valueEventListenerCheckChat);
     }
-
-    /* public static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
-
-    public static Bitmap decodeSampledBitmap(byte[] bytes, int reqWidth, int reqHeight) {
-
-        // First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-
-        // Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-    } */
 
     private void changeUserKey(String newKey){
         if (user != null) {
