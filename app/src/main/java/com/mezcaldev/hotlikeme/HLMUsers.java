@@ -305,8 +305,14 @@ public class HLMUsers extends ListFragment {
                         } else if (yRaw < screenPart * 6) {
                             starsRating = 1;
                         } else if (yRaw < screenPart * 7) {
-                            //Null zone doesn't add or change Rating
+
+                            /*** (Center of Screen) Doesn't change Rating
+                            The image Snaps to the Origin to let Users Know it is the center ***/
+
+                            v.setTranslationX(0);
+                            v.setTranslationY(0);
                             starsRating = oldRating;
+
                         } else if (yRaw < screenPart * 8) {
                             starsRating = 1;
                         } else if (yRaw < screenPart * 9) {
