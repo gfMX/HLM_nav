@@ -97,11 +97,11 @@ public class imageSelected extends DialogFragment {
                         Bitmap pImage = BitmapFactory.decodeStream(inputStream);
                         if (pImage != null) {
                             ImageSaver saveImage = new ImageSaver();
-                            /*saveImage.iSaveToInternalStorage(
+                            saveImage.iSaveToInternalStorage(
                                     pImage,
                                     imageProfileFileName,
                                     getActivity().getApplicationContext()
-                            );*/
+                            );
                             saveImage.iUploadProfileImageToFirebase(
                                     localStorage.getAbsolutePath(),
                                     firebaseUser

@@ -1,77 +1,89 @@
 <!-- hlm_screen_slide_page.xml -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    android:id="@+id/content"
+
+<android.support.design.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="wrap_content"
+    android:layout_centerVertical="true"
+    android:fitsSystemWindows="true">
 
-    <android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    <!--
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeGetNewUser"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:fitsSystemWindows="true">
+        android:layout_height="match_parent">
+        -->
 
-    <RelativeLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="center">
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center">
 
-        <TextView style="?android:textAppearanceLarge"
-            android:layout_marginTop="80dp"
-            android:textStyle="bold"
+            <TextView style="?android:textAppearanceLarge"
+                android:layout_marginTop="80dp"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"
+                android:textStyle="bold"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/text_user_name"
+                android:id="@+id/textView"
+                android:layout_toRightOf="@+id/imageView"
+                android:layout_toEndOf="@+id/imageView" />
+            <RatingBar style="?android:attr/ratingBarStyle"
+                android:id="@+id/rating"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:numStars="5"
+                android:stepSize="1"
+                android:isIndicator="false"
+                android:layout_below="@+id/textView"
+                android:layout_toRightOf="@id/imageView"
+                android:layout_toEndOf="@+id/imageView"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"/>
+
+            <TextView
+                android:layout_width="240dp"
+                android:layout_height="wrap_content"
+                android:id="@+id/userDescription"
+                android:text="@string/text_slide"
+                android:layout_below="@+id/rating"
+                android:layout_toRightOf="@id/imageView"
+                android:layout_toEndOf="@+id/imageView"
+                android:layout_marginLeft="10dp"
+                android:layout_marginStart="10dp"/>
+
+            <ImageView
+                android:layout_height="wrap_content"
+                android:layout_width="300dp"
+                android:minHeight="300dp"
+                android:maxHeight="370dp"
+                android:scaleType="fitCenter"
+                android:adjustViewBounds="true"
+                android:src="@drawable/ic_person_gray"
+                android:contentDescription="@string/text_hlm_users"
+                android:padding="15dp"
+                android:background="@color/colorWhite"
+                android:id="@+id/imageView"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentStart="true"
+                android:layout_margin="10dp" />
+
+        </RelativeLayout>
+
+        <android.support.design.widget.FloatingActionButton
+            android:id="@+id/fab_message"
+            android:visibility="invisible"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="@string/text_user_name"
-            android:id="@+id/textView"
-            android:layout_toRightOf="@+id/imageView"
-            android:layout_toEndOf="@+id/imageView" />
-        <RatingBar style="?android:attr/ratingBarStyle"
-            android:id="@+id/rating"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:numStars="5"
-            android:stepSize="1"
-            android:isIndicator="false"
-            android:layout_below="@+id/textView"
-            android:layout_toRightOf="@id/imageView"
-            android:layout_toEndOf="@+id/imageView" />
-        <ImageView
-            android:layout_height="wrap_content"
-            android:layout_width="wrap_content"
-            android:maxHeight="320dp"
-            android:maxWidth="340dp"
-            android:minHeight="320dp"
-            android:minWidth="340dp"
-            android:scaleType="fitXY"
-            android:adjustViewBounds="true"
-            android:src="@drawable/ic_person_gray"
-            android:contentDescription="@string/text_hlm_users"
-            android:padding="15dp"
-            android:layout_margin="20dp"
-            android:background="@color/colorWhite"
-            android:id="@+id/imageView"
-            android:layout_centerVertical="true"
-            android:layout_alignParentLeft="true"
-            android:layout_alignParentStart="true" />
-        <TextView
-            android:layout_width="240dp"
-            android:layout_height="wrap_content"
-            android:id="@+id/userDescription"
-            android:text="@string/text_slide"
-            android:layout_below="@+id/rating"
-            android:layout_toRightOf="@id/imageView"
-            android:layout_toEndOf="@+id/imageView"  />
+            android:layout_gravity="bottom|end"
+            android:layout_margin="@dimen/fab_margin"
+            android:src="@android:drawable/ic_dialog_email" />
 
-    </RelativeLayout>
+    <!--
+    </android.support.v4.widget.SwipeRefreshLayout>
+    -->
+</android.support.design.widget.CoordinatorLayout>
 
-    <android.support.design.widget.FloatingActionButton
-        android:id="@+id/fab_message"
-        android:visibility="invisible"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/fab_margin"
-        android:src="@android:drawable/ic_dialog_email" />
-
-    </android.support.design.widget.CoordinatorLayout>
-
-</ScrollView>
 

@@ -385,8 +385,14 @@ public class ChatUserList extends ListFragment {
                             notificationTitle = "HLM: New Messages";
                             notificationText = newMessagecount + " Conversations with New Messages";
                         } else {
-                            notificationTitle = "HLM: " + userName.get(position);
-                            notificationText = userLastMessage.get(position);
+                            try {
+                                notificationTitle = "HLM: " + userName.get(position);
+                                notificationText = userLastMessage.get(position);
+                            } catch (IndexOutOfBoundsException e) {
+                                Log.e(TAG, "User Data Not Reachable");
+                                notificationTitle = "HotLikeMe";
+                                notificationText = "Ups! An Empty Notification";
+                            }
                         }
                         if (getActivity() != null) {
                             ((HLMActivity) getActivity()).sendNotification(notificationTitle, notificationText, NOTIFICATION_ID);
@@ -504,6 +510,8 @@ public class ChatUserList extends ListFragment {
         userProfilePic.clear();
         userLastMessage.clear();
         userTimeStamp.clear();
+        userMessageRead.clear();
+        userLastMessageId.clear();
     }
 
     private void removeListeners(){
@@ -529,9 +537,23 @@ public class ChatUserList extends ListFragment {
     @Override
     public void onStop(){
         super.onStop();
+
         removeListeners();
-        handlerUserWaiting.removeCallbacks(runnableUserWaiting);
-        handlerUserWaiting.removeCallbacksAndMessages(null);
+        mRecyclerView.removeAllViews();
+        try {
+            handler.removeCallbacks(runnable);
+            handler.removeCallbacksAndMessages(null);
+            Log.i (TAG, "Callbacks 1 removed");
+        } catch (NullPointerException e){
+            Log.e (TAG, "No callbacks to remove. 1");
+        }
+        try {
+            handlerUserWaiting.removeCallbacks(runnableUserWaiting);
+            handlerUserWaiting.removeCallbacksAndMessages(null);
+            Log.i (TAG, "Callbacks 2 removed");
+        } catch (NullPointerException e) {
+            Log.e (TAG, "No callbacks to remove. 2");
+        }
     }
 
     @Override
@@ -543,11 +565,25 @@ public class ChatUserList extends ListFragment {
     @Override
     public void onDestroy() {
         super.onDestroy();
+        //cleanVars();
         removeListeners();
-        //handler.removeCallbacks(runnable);
-        //handler.removeCallbacksAndMessages(null);
+        mRecyclerView.setAdapter(null);
+        mRecyclerView.removeAllViews();
+
+        try {
+            handler.removeCallbacks(runnable);
+            handler.removeCallbacksAndMessages(null);
+            Log.i (TAG, "Callbacks 1 removed");
+        } catch (NullPointerException e){
+            Log.e (TAG, "No callbacks to remove. 1");
+        }
         //handler.postDelayed(runnable, delayTime);
-        handlerUserWaiting.removeCallbacks(runnableUserWaiting);
-        handlerUserWaiting.removeCallbacksAndMessages(null);
+        try{
+            handlerUserWaiting.removeCallbacks(runnableUserWaiting);
+            handlerUserWaiting.removeCallbacksAndMessages(null);
+            Log.i (TAG, "Callbacks 2 removed");
+        } catch (NullPointerException e) {
+            Log.e (TAG, "No callbacks to remove. 2");
+        }
     }
 }

@@ -330,6 +330,11 @@ public class HLMActivity extends AppCompatActivity implements
 
         private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
+            /*fm = fragmentManager;
+            fragments = new Fragment[HLM_PAGES_MAX];
+            fragments[0] = new LoginFragment();
+            fragments[1] = new HLMUsers();
+            fragments[2] = new ChatUserList(); */
         }
 
         @Override
@@ -353,7 +358,7 @@ public class HLMActivity extends AppCompatActivity implements
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
-
+            //fm.beginTransaction().remove(fragments[position]).commit();
         }
     }
 
@@ -422,23 +427,28 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     private void userConnected(){
-        if (user != null){
+        if (user != null) {
             Glide
                     .with(this.getApplicationContext())
                     .load(user.getPhotoUrl())
                     .centerCrop()
                     .into(drawerUserImage);
             drawerUserAlias.setText(user.getDisplayName());
+        } else {
+            drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
+            drawerUserAlias.setText(R.string.app_name);
+        }
+        checkPager();
+    }
 
+    private void checkPager(){
+        if (user != null){
             HLM_PAGES = HLM_PAGES_MAX;
             mPagerAdapter.notifyDataSetChanged();
 
         } else {
             HLM_PAGES = 1;
             mPagerAdapter.notifyDataSetChanged();
-
-            drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
-            drawerUserAlias.setText(R.string.app_name);
         }
         mPager.setOffscreenPageLimit(HLM_PAGES);
         Log.i(TAG, "Offscreen Limit: " + HLM_PAGES);

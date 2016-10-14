@@ -89,7 +89,7 @@ public class HLMUsers extends ListFragment {
     Runnable runnableBeforeNewUser;
 
     int delayBeforeNewUser = 500;
-    int delayTime = 2000;
+    int delayTime = 2500;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -106,6 +106,7 @@ public class HLMUsers extends ListFragment {
     boolean flagTwo = false;
 
     String uniqueChatID;
+    //SwipeRefreshLayout swipeRefreshLayout;
 
     TextView viewUserDescription;
     Toast toast1;
@@ -196,11 +197,13 @@ public class HLMUsers extends ListFragment {
         screenDown = displayHeight / 2 + tolerancePixels;
         screenPart = displayHeight / screenParts;
 
-        //Only if a Key si given proceed, else Show a blank (Default) page.
-        if (keyChecker()) {
+        //Only if a Key is given proceed, else Show a blank (Default) page.
+        if (user != null && keyChecker()) {
+            Log.i(TAG, "Getting user");
             userKey = genNoRepeatedKey(userKey);
             changeUserKey(userKey);
         } else {
+            Log.i(TAG, "---> Waiting for users <---");
             waitForUsers();
         }
 
@@ -388,7 +391,7 @@ public class HLMUsers extends ListFragment {
                                 .fitCenter()
                                 .into(viewUserImage);
 
-                        viewUserImage.setRotation(5 * ((float) random() * 2 - 1));
+                        viewUserImage.setRotation(4 * ((float) random() * 2 - 1));
                     }
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
@@ -536,14 +539,23 @@ public class HLMUsers extends ListFragment {
             userRating(newKey);
             didWeLike(newKey);
         }
+        /*if (swipeRefreshLayout.isRefreshing()){
+            swipeRefreshLayout.setRefreshing(false);
+
+            //notificationManager.cancel(NOTIFICATION_ID);
+
+            Log.i(TAG, "  Reloading Data Finished");
+            Log.i(TAG, "¡-------------------------¡");
+        } */
     }
 
     private void waitForUsers(){
+        Log.e(TAG, "Waiting users");
         runnableWaitingUsers = new Runnable() {
             @Override
             public void run() {
                 //FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
-                if (keyChecker()) {
+                if (user != null && keyChecker()) {
                     userKey = genNoRepeatedKey(userKey);
                     changeUserKey(userKey);
                 } else {

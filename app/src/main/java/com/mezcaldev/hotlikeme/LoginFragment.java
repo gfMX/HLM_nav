@@ -100,6 +100,7 @@ public class LoginFragment extends Fragment {
     static FirebaseStorage storage;
     static StorageReference storageRef;
     Boolean flagImagesOnFirebase = false;
+    File profileImageCheck;
 
 
     public LoginFragment() {
@@ -145,6 +146,7 @@ public class LoginFragment extends Fragment {
     public void onViewCreated(final View view, Bundle savedInstanceState){
         //Gaining Tokens in Background:
         getUserAccess();
+        profileImageCheck = new File(pathProfileImage + "/" + imageProfileFileName);
 
         //View references for UI elements
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
@@ -384,6 +386,8 @@ public class LoginFragment extends Fragment {
             btn_image.setVisibility(View.GONE);
             btn_start.setVisibility(View.GONE);
             btn_settings.setVisibility(View.GONE);
+
+            deleteLocalProfilePic();
         }
     }
     private void loadProfileDetails (Integer delayTime){
@@ -431,6 +435,19 @@ public class LoginFragment extends Fragment {
         parameters.putString("fields", "gender");
         request.setParameters(parameters);
         request.executeAsync();
+    }
+
+    private boolean deleteLocalProfilePic(){
+        boolean isDeleted = !profileImageCheck.exists();
+        if (!isDeleted) {
+            try {
+                isDeleted = profileImageCheck.delete();
+            } catch (Exception e){
+                e.printStackTrace();
+            }
+        }
+        Log.v(TAG, "Local Profile Image Deleted: " + isDeleted);
+        return isDeleted;
     }
 
     @Override
