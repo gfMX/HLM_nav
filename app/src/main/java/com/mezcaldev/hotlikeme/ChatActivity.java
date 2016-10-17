@@ -207,6 +207,8 @@ public class ChatActivity extends AppCompatActivity implements
                     return new MessageViewHolder(view);
                 } else {
                     view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left,parent,false);
+                    //Set Last Message from the Other User to Read It!
+                    //mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
                     return new MessageViewHolder(view);
                 }
             }
