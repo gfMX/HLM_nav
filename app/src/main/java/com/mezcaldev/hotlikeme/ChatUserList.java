@@ -57,7 +57,11 @@ public class ChatUserList extends ListFragment {
     //Notifications
     int maxTimeForNotifications = 72;       /* Time in Hours */
     int NOTIFICATION_ID = 71843;
-    int newMessagecount;
+    int newMessageCount;
+    Long timeInHours;
+    Boolean oneFlag = true;
+    String lastIdFromLastMessage = "";
+
     //NotificationManager notificationManager;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -208,6 +212,9 @@ public class ChatUserList extends ListFragment {
                                     userMessageRead.remove(position);
 
                                     mAdapter.notifyItemRemoved(position);
+                                    //notifyDataChanged();
+                                    //mAdapter = new ChatRecyclerAdapter(getContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
+                                    //notifyDataChanged();
 
                                     Log.i(TAG, "User removed!");
                                 } else {
@@ -305,8 +312,9 @@ public class ChatUserList extends ListFragment {
 
     }
     private void getData(long size){
+        oneFlag = true;
+        newMessageCount = 0;
         Log.d(TAG, "Looking data for: " + userKey);
-        newMessagecount = 0;
         //int size = userKey.size();
         databaseReferenceUsers = database.getReference().child("users");
         databaseReferenceLastMessage = database.getReference().child("chats_resume");
@@ -369,21 +377,28 @@ public class ChatUserList extends ListFragment {
                         notifyDataChanged();
                     }
 
-                    Long timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime) / ONE_HOUR;
+                    timeInHours = (Calendar.getInstance().getTimeInMillis() - lastMessageTime) / ONE_HOUR;
                     Log.i(TAG, "Time Since last Message: " + timeInHours + " hours.");
+
                     if (timeInHours < maxTimeForNotifications
                             && !isInLayout()
-                            && !lastMessageId.equals(user.getUid())
-                            && !lastMessageRead) {
-                        newMessagecount ++;
+                            && !userLastMessageId.get(position).equals(user.getUid())
+                            && !userMessageRead.get(position)) {
 
-                        Log.d(TAG, "Message Count: " + newMessagecount);
+
+                        //if (!lastIdFromLastMessage.equals(userLastMessageId.get(position))){
+                        newMessageCount++;
+                        //}
+                        oneFlag = false;
+
+
+                        Log.d(TAG, "Message Count: " + newMessageCount);
                         String notificationText;
                         String notificationTitle;
 
-                        if (newMessagecount > 1){
-                            notificationTitle = "HLM: New Messages";
-                            notificationText = newMessagecount + " Conversations with New Messages";
+                        if (newMessageCount > 1){
+                            notificationTitle = "HotLikeMe";
+                            notificationText = newMessageCount + " New Messages";
                         } else {
                             try {
                                 notificationTitle = "HLM: " + userName.get(position);
@@ -397,7 +412,7 @@ public class ChatUserList extends ListFragment {
                         if (getActivity() != null) {
                             ((HLMActivity) getActivity()).sendNotification(notificationTitle, notificationText, NOTIFICATION_ID);
                         }
-
+                        lastIdFromLastMessage = userLastMessageId.get(position);
                     }
 
                 }

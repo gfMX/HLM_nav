@@ -86,6 +86,9 @@ public class HLMActivity extends AppCompatActivity implements
 
     // Notifications:
     int MAX_NOTIFICATION_LENGTH = 42;
+    NotificationManager mNotificationManager;
+    android.support.v4.app.NotificationCompat.Builder mBuilder;
+
 
     // Location variables Initialization
     /* GPS Constant Permission */
@@ -389,8 +392,7 @@ public class HLMActivity extends AppCompatActivity implements
                         PendingIntent.FLAG_UPDATE_CURRENT
                 );
 
-        android.support.v4.app.NotificationCompat.Builder mBuilder =
-                new NotificationCompat.Builder(this)
+        mBuilder = new NotificationCompat.Builder(this)
                         .setSmallIcon(R.drawable.ic_chat_white_24dp)
                         .setContentTitle(messageTitle)
                         .setContentText(StringUtils.abbreviate(messageBody, MAX_NOTIFICATION_LENGTH))
@@ -399,7 +401,7 @@ public class HLMActivity extends AppCompatActivity implements
                         .setContentIntent(resultPendingIntent);
         mBuilder.setContentIntent(resultPendingIntent);
 
-        NotificationManager mNotificationManager =
+        mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         mNotificationManager.notify(nID, mBuilder.build());
