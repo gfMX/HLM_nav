@@ -19,7 +19,9 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
@@ -36,6 +38,10 @@ public class MainActivity extends AppCompatActivity {
     FirebaseUser user;
     FireConnection fireConnection;
     SharedPreferences sharedPreferences;
+
+    //FaceBook
+    AccessToken accessToken;
+    boolean fbTokenStatus;
 
     public MainActivity (){
 
@@ -60,6 +66,7 @@ public class MainActivity extends AppCompatActivity {
         //user = fireConnection.getUser();
         //FireConnection.getInstance().getFirebaseUsers(sharedPreferences, getLocation());
         checkAccess();
+        getFbToken();
 
         Log.i(TAG, "Data: " + user + " Users: " + usersList);
     }
@@ -100,6 +107,23 @@ public class MainActivity extends AppCompatActivity {
                 }
             }, delayTime);
         }
+    }
+
+    private void getFbToken() {
+        //Facebook Access Token & Profile:
+        accessToken = AccessToken.getCurrentAccessToken();
+        Log.i(TAG, "Current Access Token from FaceBook: " + accessToken);
+
+        if (accessToken == null) {
+            FirebaseAuth.getInstance().signOut();
+            Log.e(TAG, "Login out from FireBase, missing Token from FaceBook");
+            fbTokenStatus = false;
+
+        } else {
+            Log.i(TAG, "Valid Token: " + accessToken);
+            fbTokenStatus = true;
+        }
+        //return fbTokenStatus;
     }
 
     private boolean isNetworkAvailable() {

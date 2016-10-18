@@ -5,7 +5,6 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
-import com.facebook.AccessToken;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -23,7 +22,7 @@ import java.util.List;
  * Manage user credentials on Firebase
  */
 public class FireConnection {
-    String TAG = "Singleton";
+    String TAG = "FireConnection";
 
     //Firebase Settings
     static FirebaseUser user;
@@ -33,8 +32,8 @@ public class FireConnection {
     FirebaseDatabase database;
 
     //Facebook Settings
-    static boolean fbTokenStatus;
-    private AccessToken accessToken;
+    //static boolean fbTokenStatus;
+    //private AccessToken accessToken;
 
     //Location mCurrentLocation;
     static Boolean weLike = false;
@@ -77,9 +76,10 @@ public class FireConnection {
                     Log.e(TAG, "Getting Full List of Users <-- Not Implemented Just checking if its called.");
                 }
                 // Check if FaceBook Token is valid, if not Sign Out from FireBase
-                getFbToken();
             }
         };
+
+        //getFbToken();
 
         mAuth = FirebaseAuth.getInstance();
         mAuth.addAuthStateListener(mAuthListener);
@@ -161,7 +161,7 @@ public class FireConnection {
         }
     }
 
-    private void getFbToken() {
+    /* private void getFbToken() {
         //Facebook Access Token & Profile:
         accessToken = AccessToken.getCurrentAccessToken();
         Log.i(TAG, "Current Access Token from FaceBook: " + accessToken);
@@ -177,6 +177,6 @@ public class FireConnection {
             fbTokenStatus = true;
         }
         //return fbTokenStatus;
-    }
+    } */
 
 }
