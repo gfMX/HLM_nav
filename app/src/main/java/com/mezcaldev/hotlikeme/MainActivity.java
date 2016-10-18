@@ -19,8 +19,10 @@ import android.view.View;
 import android.view.Window;
 import android.view.WindowManager;
 
+import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseUser;
 
+import static com.mezcaldev.hotlikeme.FireConnection.fbTokenStatus;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 
 public class MainActivity extends AppCompatActivity {
@@ -43,9 +45,6 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        mContext = getApplicationContext();
-
-        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         getWindow().setFlags(
@@ -54,7 +53,9 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
-        //FacebookSdk.sdkInitialize(this.getApplicationContext());
+        mContext = getApplicationContext();
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+        FacebookSdk.sdkInitialize(this.getApplicationContext());
 
         fireConnection = FireConnection.getInstance();
         //user = fireConnection.getUser();
@@ -87,7 +88,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Bundle bundle = new Bundle();
 
-                    if (user != null){
+                    if (user != null && !fbTokenStatus){
                         System.out.println("User: " + user.getUid());
                         bundle.putInt("pages", HLM_PAGES);
                     } else {

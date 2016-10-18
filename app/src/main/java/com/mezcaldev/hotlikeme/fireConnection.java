@@ -4,7 +4,13 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
+import android.widget.Toast;
 
+import com.facebook.AccessToken;
+import com.facebook.AccessTokenTracker;
+import com.facebook.FacebookSdk;
+import com.facebook.Profile;
+import com.facebook.ProfileTracker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -23,11 +29,19 @@ import java.util.List;
  */
 public class FireConnection {
     String TAG = "Singleton";
+
+    //Firebase Settings
     static FirebaseUser user;
     FirebaseAuth mAuth;
     FirebaseAuth.AuthStateListener mAuthListener;
-    SharedPreferences sharedPreferences;
+    //SharedPreferences sharedPreferences;
     FirebaseDatabase database;
+
+    //Facebook Settings
+    static boolean fbTokenStatus;
+    private AccessToken accessToken;
+    private AccessTokenTracker accessTokenTracker;
+
     //Location mCurrentLocation;
     static Boolean weLike = false;
 
@@ -66,12 +80,10 @@ public class FireConnection {
                     Log.d(TAG, "User not logged.");
                 }
                 if (user != null && usersList == null) {
-                    //Getting all users on start.
-                    //getFirebaseUsers(null, null);
                     Log.e(TAG, "Getting Full List of Users <-- Not Implemented Just checking if its called.");
                 }
-                // ...
-
+                // Check if FaceBook Token is valid, if not Sign Out from FireBase
+                getFbToken();
             }
         };
 
@@ -153,6 +165,25 @@ public class FireConnection {
         } else {
             Log.i(TAG, "There's no User Logged");
         }
+    }
+
+    private void getFbToken() {
+        //Facebook Access Token & Profile:
+        accessToken = AccessToken.getCurrentAccessToken();
+        Log.i(TAG, "Current Access Token from FaceBook: " + accessToken);
+
+        if (accessToken == null) {
+
+            FirebaseAuth.getInstance().signOut();
+            Log.i(TAG, "Login out from FireBase");
+
+            fbTokenStatus = false;
+
+        } else {
+            Log.i(TAG, "Valid Token: " + accessToken);
+            fbTokenStatus = true;
+        }
+        //return fbTokenStatus;
     }
 
 }
