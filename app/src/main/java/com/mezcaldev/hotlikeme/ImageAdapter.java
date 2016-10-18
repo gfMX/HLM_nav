@@ -12,23 +12,24 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Image Adapter for Image Selection.
  * Created by Abraham on 27/06/16.
  */
-public class ImageAdapter extends ArrayAdapter {
+ class ImageAdapter extends ArrayAdapter <String> {
     //private final String TAG = "Image Resource: ";
 
-    private List<String> imageUrls;
-    private List<Integer> imageSelection;
+    private List<String> imageUrls = new ArrayList<>();
+    private List<Integer> imageSelection = new ArrayList<>();
 
     private Context mContext;
     private LayoutInflater inflater;
 
     // Constructor
-    public ImageAdapter(Context context, List<String> urls, List<Integer> selected) {
+     ImageAdapter(Context context, List<String> urls, List<Integer> selected) {
         super(context, R.layout.grid_item_layout, urls);
 
         mContext = context;

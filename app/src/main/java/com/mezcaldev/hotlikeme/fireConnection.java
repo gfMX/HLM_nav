@@ -4,13 +4,8 @@ import android.content.SharedPreferences;
 import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
-import android.widget.Toast;
 
 import com.facebook.AccessToken;
-import com.facebook.AccessTokenTracker;
-import com.facebook.FacebookSdk;
-import com.facebook.Profile;
-import com.facebook.ProfileTracker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -32,15 +27,14 @@ public class FireConnection {
 
     //Firebase Settings
     static FirebaseUser user;
-    FirebaseAuth mAuth;
-    FirebaseAuth.AuthStateListener mAuthListener;
+    private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
     //SharedPreferences sharedPreferences;
     FirebaseDatabase database;
 
     //Facebook Settings
     static boolean fbTokenStatus;
     private AccessToken accessToken;
-    private AccessTokenTracker accessTokenTracker;
 
     //Location mCurrentLocation;
     static Boolean weLike = false;
@@ -92,7 +86,7 @@ public class FireConnection {
       return user;
     }
 
-    public void getFirebaseUsers(SharedPreferences sharedPreferences, final Location mCurrentLocation){
+    void getFirebaseUsers(SharedPreferences sharedPreferences, final Location mCurrentLocation){
         if (user !=null){
             usersList.clear();
             database = FirebaseDatabase.getInstance();
@@ -175,8 +169,7 @@ public class FireConnection {
         if (accessToken == null) {
 
             FirebaseAuth.getInstance().signOut();
-            Log.i(TAG, "Login out from FireBase");
-
+            Log.e(TAG, "Login out from FireBase, missing Token from FaceBook");
             fbTokenStatus = false;
 
         } else {

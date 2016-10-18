@@ -22,7 +22,6 @@ import android.view.WindowManager;
 import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseUser;
 
-import static com.mezcaldev.hotlikeme.FireConnection.fbTokenStatus;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 
 public class MainActivity extends AppCompatActivity {
@@ -88,7 +87,7 @@ public class MainActivity extends AppCompatActivity {
 
                     Bundle bundle = new Bundle();
 
-                    if (user != null && !fbTokenStatus){
+                    if (user != null){
                         System.out.println("User: " + user.getUid());
                         bundle.putInt("pages", HLM_PAGES);
                     } else {

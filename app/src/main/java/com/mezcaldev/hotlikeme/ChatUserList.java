@@ -49,9 +49,9 @@ public class ChatUserList extends ListFragment {
     final static String TAG = "Chat";
 
     static ChatUserList newInstance() {
-        ChatUserList newFragment = new ChatUserList();
+        //ChatUserList newFragment = new ChatUserList();
 
-        return newFragment;
+        return new ChatUserList();
     }
 
     //Notifications
@@ -409,8 +409,10 @@ public class ChatUserList extends ListFragment {
                                 notificationText = "Ups! An Empty Notification";
                             }
                         }
-                        if (getActivity() != null) {
+                        if (getActivity() != null && newMessageCount == 1) {
                             ((HLMActivity) getActivity()).sendNotification(notificationTitle, notificationText, NOTIFICATION_ID);
+                        } else if (getActivity() != null && newMessageCount > 1){
+                            ((HLMActivity) getActivity()).updateNotification(notificationTitle, notificationText, NOTIFICATION_ID);
                         }
                         lastIdFromLastMessage = userLastMessageId.get(position);
                     }

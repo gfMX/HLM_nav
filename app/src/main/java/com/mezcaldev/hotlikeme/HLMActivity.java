@@ -87,7 +87,7 @@ public class HLMActivity extends AppCompatActivity implements
     // Notifications:
     int MAX_NOTIFICATION_LENGTH = 42;
     NotificationManager mNotificationManager;
-    android.support.v4.app.NotificationCompat.Builder mBuilder;
+    static android.support.v4.app.NotificationCompat.Builder mBuilder;
 
 
     // Location variables Initialization
@@ -405,6 +405,16 @@ public class HLMActivity extends AppCompatActivity implements
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
         mNotificationManager.notify(nID, mBuilder.build());
+    }
+
+    public void updateNotification (String messageTitle, String messageBody, int nId){
+        if (mBuilder != null && mNotificationManager != null){
+            mBuilder.setContentTitle(messageTitle);
+            mBuilder.setContentText(messageBody);
+            mNotificationManager.notify(nId, mBuilder.build());
+
+            Log.i(TAG, "Notification Updated!");
+        }
     }
 
     private boolean isNetworkAvailable() {
