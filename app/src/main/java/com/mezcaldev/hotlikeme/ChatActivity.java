@@ -84,6 +84,13 @@ public class ChatActivity extends AppCompatActivity implements
         }
     }
 
+    //Encrypted Message
+    protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
+    private SecureMessage secureMessage;
+    //private String encryptedMessage;
+    private String encryptedMessageToSend;
+    private String decryptedMessage;
+
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
@@ -130,11 +137,17 @@ public class ChatActivity extends AppCompatActivity implements
             mUserChatId = bundle.getString("userChat");
             MESSAGES_CHILD = "/chats/" + mUserChatId;
             MESSAGES_RESUME = "/chats_resume/" + mUserChatId;
+
+            String myFutureKey = new StringBuilder(mUserChatId.replace("chat_", "")).reverse().toString();
+            Log.i(TAG, "-------> KEY For Encryption: " + myFutureKey);
+
+            myKey = secureMessage.getHashKey(myFutureKey);
         }
         if (bundle.getString("userName")!= null) {
             setTitle(bundle.getString("userName"));
         }
 
+        secureMessage = new SecureMessage(myKey);
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
@@ -234,9 +247,11 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(MessageViewHolder viewHolder,
                                               ChatMessageModel chatMessageModel, int position) {
 
+                decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
+
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
-                viewHolder.messageTextView.setText(chatMessageModel.getText());
+                viewHolder.messageTextView.setText(decryptedMessage);
                 viewHolder.messengerTextView.setText(messengerText);
 
                 if (chatMessageModel.getPhotoUrl() == null) {
@@ -322,8 +337,10 @@ public class ChatActivity extends AppCompatActivity implements
         fab_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                //encryptedMessage = secureMessage.encrypt(mMessageEditText.getText().toString());
+                encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
 
-                ChatMessageModel chatMessageModel = new ChatMessageModel(mMessageEditText.getText().toString(), mUsername,
+                ChatMessageModel chatMessageModel = new ChatMessageModel(encryptedMessageToSend, mUsername,
                         mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false);
 
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);

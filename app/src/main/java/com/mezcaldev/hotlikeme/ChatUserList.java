@@ -62,6 +62,11 @@ public class ChatUserList extends ListFragment {
     Boolean oneFlag = true;
     String lastIdFromLastMessage = "";
 
+    //Encrypted Message
+    protected String myKey; //= "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
+    private SecureMessage secureMessage;
+    //private String decryptedMessage;
+
     //NotificationManager notificationManager;
 
     FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -114,6 +119,8 @@ public class ChatUserList extends ListFragment {
         if (user!= null){
             getUsers();
         }
+
+        //secureMessage = new SecureMessage(getApplicationContext(), myKey);
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -346,7 +353,13 @@ public class ChatUserList extends ListFragment {
                     Boolean lastMessageRead;
                     Long lastMessageTime = 0L;
                     if (dataSnapshot.child("text").getValue() != null){
-                        lastMessageText = dataSnapshot.child("text").getValue().toString();
+                        String myFutureKey = new StringBuilder(userChatID.get(position).replace("chat_", "")).reverse().toString();
+                        Log.i(TAG, "-------> KEY For Decryption: " + myFutureKey);
+
+                        myKey = secureMessage.getHashKey(myFutureKey);
+
+                        secureMessage = new SecureMessage(myKey);
+                        lastMessageText = secureMessage.decrypt(dataSnapshot.child("text").getValue().toString());
                     } else {
                         lastMessageText = "Sorry! The last Message wasn't found!";
                     }
@@ -402,7 +415,7 @@ public class ChatUserList extends ListFragment {
                         } else {
                             try {
                                 notificationTitle = "HLM: " + userName.get(position);
-                                notificationText = userLastMessage.get(position);
+                                notificationText = lastMessageText; //userLastMessage.get(position);
                             } catch (IndexOutOfBoundsException e) {
                                 Log.e(TAG, "User Data Not Reachable");
                                 notificationTitle = "HotLikeMe";
