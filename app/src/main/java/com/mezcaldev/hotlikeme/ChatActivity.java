@@ -19,6 +19,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
@@ -138,16 +139,15 @@ public class ChatActivity extends AppCompatActivity implements
             MESSAGES_CHILD = "/chats/" + mUserChatId;
             MESSAGES_RESUME = "/chats_resume/" + mUserChatId;
 
-            String myFutureKey = new StringBuilder(mUserChatId.replace("chat_", "")).reverse().toString();
-            Log.i(TAG, "-------> KEY For Encryption: " + myFutureKey);
+            /*String myFutureKey = new StringBuilder(mUserChatId.replace("chat_", "")).reverse().toString();
+            Log.i(TAG, "-------> KEY For Encryption: " + myFutureKey);*/
 
-            myKey = secureMessage.getHashKey(myFutureKey);
+            myKey = FireConnection.getInstance().genHashKey(mUserChatId);
+            secureMessage = new SecureMessage(myKey);
         }
         if (bundle.getString("userName")!= null) {
             setTitle(bundle.getString("userName"));
         }
-
-        secureMessage = new SecureMessage(myKey);
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
@@ -248,6 +248,7 @@ public class ChatActivity extends AppCompatActivity implements
                                               ChatMessageModel chatMessageModel, int position) {
 
                 decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
+                //decryptedMessage = new DecryptOnBackground().execute(chatMessageModel.getText()).toString();
 
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
@@ -460,7 +461,7 @@ public class ChatActivity extends AppCompatActivity implements
         Long currentDateTime = Long.parseLong(millis);
         Date currentDate = new Date(currentDateTime);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm", Locale.US);
-        System.out.println(sdf.format(currentDate));
+        Log.v(TAG, sdf.format(currentDate));
 
         return sdf.format(currentDate);
     }
@@ -473,6 +474,16 @@ public class ChatActivity extends AppCompatActivity implements
         inputMethodManager.hideSoftInputFromWindow(
                 activity.getCurrentFocus().getWindowToken(), 0);
 
+    }
+
+    class DecryptOnBackground extends AsyncTask <String, Void, String>{
+        protected String doInBackground(String ... messageToDecrypt) {
+
+            return secureMessage.decrypt(messageToDecrypt[0]);
+        }
+        protected void onPostExecute (String result){
+
+        }
     }
 
 }

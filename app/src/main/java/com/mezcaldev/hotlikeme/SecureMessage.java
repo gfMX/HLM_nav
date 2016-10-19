@@ -4,8 +4,6 @@ import android.util.Base64;
 import android.util.Log;
 
 import java.security.AlgorithmParameters;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
 
@@ -35,7 +33,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 class SecureMessage {
     final String TAG = "SecureMessage";
-    private static Cipher ecipher;
+    private static Cipher eCipher;
     private static byte[] salt = new byte[8];
     private static int iterationCount = 2000;
     private static String pass;
@@ -59,9 +57,9 @@ class SecureMessage {
                     256);
             SecretKey secretKey = factory.generateSecret(keySpec);
             secret = new SecretKeySpec(secretKey.getEncoded(), "AES");
-            ecipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-            ecipher.init(Cipher.ENCRYPT_MODE, secret);
-            AlgorithmParameters params = ecipher.getParameters();
+            eCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            eCipher.init(Cipher.ENCRYPT_MODE, secret);
+            AlgorithmParameters params = eCipher.getParameters();
 
             //IV extracted from cipher to be sent with the encrypted text
             iv = params.getParameterSpec(IvParameterSpec.class).getIV();
@@ -78,7 +76,7 @@ class SecureMessage {
             byte[] utf8 = str.getBytes("UTF8");
 
             // Encrypt
-            byte[] enc = ecipher.doFinal(utf8);
+            byte[] enc = eCipher.doFinal(utf8);
 
             // Encode bytes to base64 to get a string]
 
@@ -95,7 +93,7 @@ class SecureMessage {
             byte[] utf8 = str.getBytes("UTF8");
 
             // Encrypt
-            byte[] enc = ecipher.doFinal(utf8);
+            byte[] enc = eCipher.doFinal(utf8);
 
             // Encode bytes to base64 to get a string
             //returning encrypted text+salt+IV. Salt and IV will be used to decrypt it back.
@@ -130,16 +128,16 @@ class SecureMessage {
             KeySpec keySpec2 = new PBEKeySpec(pass.toCharArray(), saltt, iterationCount, 256);
             SecretKey secretKey2 = factory2.generateSecret(keySpec2);
             SecretKeySpec secret2 = new SecretKeySpec(secretKey2.getEncoded(), "AES");
-            Cipher dcipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+            Cipher dCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
 
             //initialising decrypt cipher with received IV
-            dcipher.init(Cipher.DECRYPT_MODE, secret2, new IvParameterSpec(IVV));
+            dCipher.init(Cipher.DECRYPT_MODE, secret2, new IvParameterSpec(IVV));
 
             // Decode base64 to get bytes
             byte[] dec = Base64.decode(text, Base64.DEFAULT);
 
             // Decrypt
-            byte[] utf8 = dcipher.doFinal(dec);
+            byte[] utf8 = dCipher.doFinal(dec);
 
             // Decode using utf-8
             return new String(utf8, "UTF8");
@@ -149,30 +147,6 @@ class SecureMessage {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        }
-    }
-
-    String getHashKey(String myFutureKey){
-        try {
-            MessageDigest md = MessageDigest.getInstance("SHA-256");
-            md.update(myFutureKey.getBytes());
-
-            byte byteData[] = md.digest();
-
-            //convert the byte to hex format method 1
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < byteData.length; i++) {
-                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
-            }
-
-            Log.i(TAG, "-------> HASHKey: " + sb.toString());
-
-            return sb.toString();
-
-        } catch (NoSuchAlgorithmException e){
-            e.printStackTrace();
-
-            return "null";
         }
     }
 

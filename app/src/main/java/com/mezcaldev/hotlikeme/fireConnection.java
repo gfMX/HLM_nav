@@ -13,6 +13,8 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -161,22 +163,32 @@ public class FireConnection {
         }
     }
 
-    /* private void getFbToken() {
-        //Facebook Access Token & Profile:
-        accessToken = AccessToken.getCurrentAccessToken();
-        Log.i(TAG, "Current Access Token from FaceBook: " + accessToken);
+    String genHashKey(String myFutureKey){
+        
+        Log.i(TAG, "-------> KEY For Decryption: " + myFutureKey);
+        myFutureKey = new StringBuilder(myFutureKey.replace("chat_", "")).reverse().toString();
 
-        if (accessToken == null) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("SHA-256");
+            md.update(myFutureKey.getBytes());
 
-            FirebaseAuth.getInstance().signOut();
-            Log.e(TAG, "Login out from FireBase, missing Token from FaceBook");
-            fbTokenStatus = false;
+            byte byteData[] = md.digest();
 
-        } else {
-            Log.i(TAG, "Valid Token: " + accessToken);
-            fbTokenStatus = true;
+            //convert the byte to hex format method 1
+            StringBuilder sb = new StringBuilder();
+            for (int i = 0; i < byteData.length; i++) {
+                sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
+            }
+
+            Log.i(TAG, "-------> HASHKey: " + sb.toString());
+
+            return sb.toString();
+
+        } catch (NoSuchAlgorithmException e){
+            e.printStackTrace();
+
+            return "null";
         }
-        //return fbTokenStatus;
-    } */
+    }
 
 }

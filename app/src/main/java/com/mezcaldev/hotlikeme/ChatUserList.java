@@ -353,12 +353,12 @@ public class ChatUserList extends ListFragment {
                     Boolean lastMessageRead;
                     Long lastMessageTime = 0L;
                     if (dataSnapshot.child("text").getValue() != null){
-                        String myFutureKey = new StringBuilder(userChatID.get(position).replace("chat_", "")).reverse().toString();
-                        Log.i(TAG, "-------> KEY For Decryption: " + myFutureKey);
+                        /*String myFutureKey = new StringBuilder(userChatID.get(position).replace("chat_", "")).reverse().toString();
+                        Log.i(TAG, "-------> KEY For Decryption: " + myFutureKey); */
 
-                        myKey = secureMessage.getHashKey(myFutureKey);
-
+                        myKey = FireConnection.getInstance().genHashKey(userChatID.get(position));
                         secureMessage = new SecureMessage(myKey);
+
                         lastMessageText = secureMessage.decrypt(dataSnapshot.child("text").getValue().toString());
                     } else {
                         lastMessageText = "Sorry! The last Message wasn't found!";
