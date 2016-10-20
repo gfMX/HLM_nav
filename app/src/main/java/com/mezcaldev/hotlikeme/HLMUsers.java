@@ -155,6 +155,7 @@ public class HLMUsers extends ListFragment {
         Log.i(TAG, "Number of Users from Singleton: " + usersList.size());
         if (usersList == null) {
             FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
+            //FireConnection.getInstance().genUserRandomCollection();
             Log.v(TAG, "Users from Singleton Empty");
         }
     }
@@ -561,6 +562,7 @@ public class HLMUsers extends ListFragment {
                 } else {
                     Log.e(TAG, "There are no users around");
                     FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
+                    //FireConnection.getInstance().genUserRandomCollection();
                     waitForUsers();
                 }
             }
@@ -594,6 +596,8 @@ public class HLMUsers extends ListFragment {
     }
 
     private String genNoRepeatedKey (String oldKey){
+
+
         String newKey = usersList.get(randomUser(usersList.size()));
 
         /* if (newKey.equals(oldKey) && usersList.size()>1) {

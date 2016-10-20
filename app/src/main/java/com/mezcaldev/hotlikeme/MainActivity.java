@@ -63,8 +63,7 @@ public class MainActivity extends AppCompatActivity {
         FacebookSdk.sdkInitialize(this.getApplicationContext());
 
         fireConnection = FireConnection.getInstance();
-        //user = fireConnection.getUser();
-        //FireConnection.getInstance().getFirebaseUsers(sharedPreferences, getLocation());
+
         checkAccess();
         getFbToken();
 
@@ -91,6 +90,7 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     user = fireConnection.getUser();
                     FireConnection.getInstance().getFirebaseUsers(sharedPreferences, getLocation());
+                    //FireConnection.getInstance().genUserRandomCollection();
 
                     Bundle bundle = new Bundle();
 

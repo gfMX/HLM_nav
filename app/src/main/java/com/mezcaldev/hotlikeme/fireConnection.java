@@ -16,6 +16,7 @@ import com.google.firebase.database.ValueEventListener;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 
@@ -46,7 +47,9 @@ public class FireConnection {
 
 
     //private Boolean flagOneTime = false;
+    private int numChildren;
     static List<String> usersList = new ArrayList<>();
+    static List<Integer> randomUserList = new ArrayList<>();
 
     static final int ONE_SECOND = 1000;
     static final int ONE_MINUTE = ONE_SECOND * 60;
@@ -105,8 +108,9 @@ public class FireConnection {
             databaseReferenceUriProfile.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
-                    int numChildren = (int) dataSnapshot.getChildrenCount();
+                    numChildren = (int) dataSnapshot.getChildrenCount();
                     Log.i(TAG, "Number of users: " + numChildren);
+                    genUserRandomCollection(numChildren);
 
                     for (DataSnapshot data: dataSnapshot.getChildren()){
                         final String dataKey = data.getKey();
@@ -161,6 +165,20 @@ public class FireConnection {
         } else {
             Log.i(TAG, "There's no User Logged");
         }
+    }
+
+    void genUserRandomCollection(int nUsers){
+        if (nUsers > 0){
+            for (int i = 0; i < nUsers; i++) {
+                randomUserList.add(i);
+            }
+            Log.i(TAG, "Original User List: " + randomUserList);
+            Collections.shuffle(randomUserList);
+            Log.i(TAG, "Shuffled User List: " + randomUserList);
+        } else{
+            Log.e(TAG, "No users found to generate random list");
+        }
+
     }
 
     String genHashKey(String myFutureKey){
