@@ -12,15 +12,20 @@
     android:paddingTop="@dimen/activity_vertical_margin"
     tools:context=".ChatActivity">
 
+    <android.support.v4.widget.SwipeRefreshLayout
+        android:id="@+id/swipeRefreshChat"
+        android:layout_marginTop="45dp"
+        android:layout_above="@+id/linearLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/messageRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="45dp"
-        android:layout_above="@+id/linearLayout"
         android:layout_alignParentTop="true"/>
 
+    </android.support.v4.widget.SwipeRefreshLayout>
 
     <LinearLayout
         android:orientation="horizontal"
@@ -58,4 +63,5 @@
         android:id="@+id/progressBar"
         android:layout_centerVertical="true"
         android:layout_centerHorizontal="true"/>
+
 </RelativeLayout>

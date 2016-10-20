@@ -21,10 +21,12 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v4.content.ContextCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
@@ -57,6 +59,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.Query;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
@@ -86,6 +89,9 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     //Encrypted Message
+    boolean flagBottom = true;
+    DecryptOnBackground decryptOnBackground;
+
     protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
     //private String encryptedMessage;
@@ -96,6 +102,7 @@ public class ChatActivity extends AppCompatActivity implements
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
+    int MESSAGE_LIMIT = 10;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
@@ -104,12 +111,15 @@ public class ChatActivity extends AppCompatActivity implements
     String mPhotoUrl;
     SharedPreferences mSharedPreferences;
 
+    private Query recentMessages;
     private FloatingActionButton fab_send;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private RecyclerView mMessageRecyclerView;
     private LinearLayoutManager mLinearLayoutManager;
     private FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder> mFirebaseAdapter;
     private ProgressBar mProgressBar;
     private DatabaseReference mFirebaseDatabaseReference;
+    private DatabaseReference databaseReferenceLastMessages;
     FirebaseAuth mFirebaseAuth;
     FirebaseUser mFirebaseUser;
     private FirebaseAnalytics mFirebaseAnalytics;
@@ -169,6 +179,7 @@ public class ChatActivity extends AppCompatActivity implements
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
 
+        swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshChat);
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         mMessageRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
@@ -201,93 +212,54 @@ public class ChatActivity extends AppCompatActivity implements
         mLinearLayoutManager.setStackFromEnd(true);
 
         mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-        mFirebaseAdapter = new FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder>(
-                ChatMessageModel.class,
-                R.layout.item_message_left,
-                MessageViewHolder.class,
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD)) {
+        databaseReferenceLastMessages = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
+        recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
-            private static final int RIGHT_MSG = 0;
-            private static final int LEFT_MSG = 1;
+        updateFireBaseRecyclerAdapter();
 
+        swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
-            public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-                View view;
-                if (viewType == RIGHT_MSG){
-                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_right,parent,false);
-                    return new MessageViewHolder(view);
-                } else {
-                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left,parent,false);
-                    //Set Last Message from the Other User to Read It!
-                    //mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
-                    return new MessageViewHolder(view);
-                }
+            public void onRefresh() {
+                MESSAGE_LIMIT += 5;
+                Log.i(TAG, "New Message Limit: " + MESSAGE_LIMIT);
+                recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
+
+                flagBottom = false;
+                mLinearLayoutManager.setStackFromEnd(false);
+                updateFireBaseRecyclerAdapter();
+
+                Handler handler = new Handler();
+                handler.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        if (swipeRefreshLayout.isRefreshing()){
+                            swipeRefreshLayout.setRefreshing(false);
+                        }
+                    }
+                },1000);
             }
-
-            @Override
-            public int getItemViewType(int position) {
-                ChatMessageModel model = getItem(position);
-
-                //System.out.println("------------------------------------------------------------");
-                //System.out.println(model.getUserId() + " = " + mFirebaseUser.getUid());
-
-                if (model.getName().equals(mFirebaseUser.getDisplayName())
-                        || model.getUserId().equals(mFirebaseUser.getUid())){
-                    //System.out.println("Message Right");
-                    return RIGHT_MSG;
-                }else{
-                    //System.out.println("Message Left");
-                    //Set Last Message from the Other User to Read It!
-                    mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
-                    return LEFT_MSG;
-                }
-            }
-
-            @Override
-            protected void populateViewHolder(MessageViewHolder viewHolder,
-                                              ChatMessageModel chatMessageModel, int position) {
-
-                decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
-                //decryptedMessage = new DecryptOnBackground().execute(chatMessageModel.getText()).toString();
-
-                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-                String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
-                viewHolder.messageTextView.setText(decryptedMessage);
-                viewHolder.messengerTextView.setText(messengerText);
-
-                if (chatMessageModel.getPhotoUrl() == null) {
-                    viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
-                            R.drawable.ic_account_circle_black_24dp));
-                } else {
-                    Glide.with(ChatActivity.this)
-                            .load(chatMessageModel.getPhotoUrl())
-                            .into(viewHolder.messengerImageView);
-                }
-            }
-        };
+        });
 
         mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
-                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-                // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
-                // to the bottom of the list to show the newly added message.
-                if (lastVisiblePosition == -1 ||
-                        (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-                    mMessageRecyclerView.scrollToPosition(positionStart);
+                if (flagBottom) {
+                    mLinearLayoutManager.setStackFromEnd(true);
+                    int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                    int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                    // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
+                    // to the bottom of the list to show the newly added message.
+                    if (lastVisiblePosition == -1 ||
+                            (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                        mMessageRecyclerView.scrollToPosition(positionStart);
+                    }
                 }
             }
         });
 
-        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
-        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
-
-        // Initialize Firebase Measurement.
+        // Initialize Firebase
         mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-
-        // Initialize Firebase Remote Config.
         mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
         // Define Firebase Remote Config Settings.
@@ -476,13 +448,132 @@ public class ChatActivity extends AppCompatActivity implements
 
     }
 
-    class DecryptOnBackground extends AsyncTask <String, Void, String>{
-        protected String doInBackground(String ... messageToDecrypt) {
+    class DecryptParameters {
+        MessageViewHolder messageViewHolder;
+        ChatMessageModel chatMessageModel;
 
-            return secureMessage.decrypt(messageToDecrypt[0]);
+        DecryptParameters(MessageViewHolder messageViewHolder, ChatMessageModel chatMessageModel){
+            this.messageViewHolder = messageViewHolder;
+            this.chatMessageModel = chatMessageModel;
         }
-        protected void onPostExecute (String result){
+    }
 
+    private void updateFireBaseRecyclerAdapter(){
+        if (mFirebaseAdapter != null){
+            mFirebaseAdapter.cleanup();
+        }
+
+        mFirebaseAdapter = new FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder>(
+                ChatMessageModel.class,
+                R.layout.item_message_left,
+                MessageViewHolder.class,
+                recentMessages) {
+
+            private static final int RIGHT_MSG = 0;
+            private static final int LEFT_MSG = 1;
+
+            @Override
+            public MessageViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+                View view;
+                if (viewType == RIGHT_MSG){
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_right,parent,false);
+                    return new MessageViewHolder(view);
+                } else {
+                    view = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_message_left,parent,false);
+                    //Set Last Message from the Other User to Read It!
+                    //mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
+                    return new MessageViewHolder(view);
+                }
+            }
+
+            @Override
+            public int getItemViewType(int position) {
+                ChatMessageModel model = getItem(position);
+
+                //System.out.println("------------------------------------------------------------");
+                //System.out.println(model.getUserId() + " = " + mFirebaseUser.getUid());
+
+                if (model.getName().equals(mFirebaseUser.getDisplayName())
+                        || model.getUserId().equals(mFirebaseUser.getUid())){
+                    //System.out.println("Message Right");
+                    return RIGHT_MSG;
+                }else{
+                    //System.out.println("Message Left");
+                    //Set Last Message from the Other User to Read It!
+                    mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
+                    return LEFT_MSG;
+                }
+            }
+
+            @Override
+            protected void populateViewHolder(final MessageViewHolder viewHolder,
+                                              final ChatMessageModel chatMessageModel, int position) {
+
+                /* DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel);
+
+                decryptOnBackground = new DecryptOnBackground();
+                decryptOnBackground.execute(decryptParameters); */
+
+                decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
+
+                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
+                viewHolder.messageTextView.setText(decryptedMessage);
+                viewHolder.messengerTextView.setText(messengerText);
+
+                if (chatMessageModel.getPhotoUrl() == null) {
+                    viewHolder.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
+                            R.drawable.ic_account_circle_black_24dp));
+                } else {
+                    Glide.with(ChatActivity.this)
+                            .load(chatMessageModel.getPhotoUrl())
+                            .into(viewHolder.messengerImageView);
+                }
+            }
+        };
+
+        mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
+        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
+
+        flagBottom = true;
+    }
+
+    class DecryptOnBackground extends AsyncTask <DecryptParameters, Void, Void>{
+        MessageViewHolder v;
+        ChatMessageModel c;
+        String messengerText;
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+        }
+
+        @Override
+        protected Void doInBackground(DecryptParameters ... params) {
+
+            v = params[0].messageViewHolder;
+            c = params[0].chatMessageModel;
+
+            decryptedMessage = secureMessage.decrypt(c.getText());
+            messengerText = dateFormatter(c.getTimeStamp());
+
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute (Void result){
+
+            mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+            v.messageTextView.setText(decryptedMessage);
+            v.messengerTextView.setText(messengerText);
+
+            if (c.getPhotoUrl() == null) {
+                v.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
+                        R.drawable.ic_account_circle_black_24dp));
+            } else {
+                Glide.with(ChatActivity.this)
+                        .load(c.getPhotoUrl())
+                        .into(v.messengerImageView);
+            }
         }
     }
 
