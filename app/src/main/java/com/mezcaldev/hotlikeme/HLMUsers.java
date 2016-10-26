@@ -36,7 +36,6 @@ import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 import java.util.Calendar;
-import java.util.Random;
 
 import static android.graphics.PorterDuff.Mode.SRC_ATOP;
 import static android.support.v4.content.ContextCompat.getColor;
@@ -50,6 +49,7 @@ import static android.view.View.OnClickListener;
 import static android.view.View.VISIBLE;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
+import static com.mezcaldev.hotlikeme.FireConnection.randomUserList;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 import static com.mezcaldev.hotlikeme.FireConnection.weLike;
@@ -90,6 +90,7 @@ public class HLMUsers extends ListFragment {
 
     int delayBeforeNewUser = 500;
     int delayTime = 2500;
+    int nextUser = 0;
 
     DisplayMetrics metrics = new DisplayMetrics();
     int displayHeight;
@@ -106,7 +107,6 @@ public class HLMUsers extends ListFragment {
     boolean flagTwo = false;
 
     String uniqueChatID;
-    //SwipeRefreshLayout swipeRefreshLayout;
 
     TextView viewUserDescription;
     Toast toast1;
@@ -151,11 +151,9 @@ public class HLMUsers extends ListFragment {
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
         weLike = false;
 
-        //users = usersList;
         Log.i(TAG, "Number of Users from Singleton: " + usersList.size());
         if (usersList == null) {
             FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
-            //FireConnection.getInstance().genUserRandomCollection();
             Log.v(TAG, "Users from Singleton Empty");
         }
     }
@@ -512,13 +510,13 @@ public class HLMUsers extends ListFragment {
         if (user != null) {
             weLike = false;
             starsRating = 0;
-            //if (image != null) {
+
             viewUserImage.setImageBitmap(null);
             viewUserImage.setImageResource(R.drawable.ic_person_gray);
-                //image.recycle();
-            //}
+
             ratingBar.setRating(starsRating);
             fabMessage.setVisibility(INVISIBLE);
+
             //First Remove old Listeners:
             removeReferences();
 
@@ -540,14 +538,6 @@ public class HLMUsers extends ListFragment {
             userRating(newKey);
             didWeLike(newKey);
         }
-        /*if (swipeRefreshLayout.isRefreshing()){
-            swipeRefreshLayout.setRefreshing(false);
-
-            //notificationManager.cancel(NOTIFICATION_ID);
-
-            Log.i(TAG, "  Reloading Data Finished");
-            Log.i(TAG, "¡-------------------------¡");
-        } */
     }
 
     private void waitForUsers(){
@@ -597,27 +587,16 @@ public class HLMUsers extends ListFragment {
 
     private String genNoRepeatedKey (String oldKey){
 
+        String newKey = usersList.get(randomUserList.get(nextUser));
+        if (nextUser == (randomUserList.size()-1)){
+            nextUser = 0;
+        } else {
+            nextUser++;
+        }
 
-        String newKey = usersList.get(randomUser(usersList.size()));
-
-        /* if (newKey.equals(oldKey) && usersList.size()>1) {
-            genNoRepeatedKey(newKey);
-        } */
         Log.i(TAG, "New randomKey: " + userKey + " oldKey: " + oldKey + " UserList Size: " + usersList.size());
 
         return newKey;
-    }
-
-    private int randomUser(int noMax){
-        int nMin = 0;
-        int nMax = noMax-1;
-        Random random = new Random();
-
-        if (noMax > 1) {
-            return random.nextInt((nMax - nMin) + 1) + nMin;
-        } else {
-            return nMin;
-        }
     }
 
     private String timeStamp() {

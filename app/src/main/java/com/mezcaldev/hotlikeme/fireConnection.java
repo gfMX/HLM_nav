@@ -110,7 +110,7 @@ public class FireConnection {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     numChildren = (int) dataSnapshot.getChildrenCount();
                     Log.i(TAG, "Number of users: " + numChildren);
-                    genUserRandomCollection(numChildren);
+                    //genUserRandomCollection(numChildren);
 
                     for (DataSnapshot data: dataSnapshot.getChildren()){
                         final String dataKey = data.getKey();
@@ -148,6 +148,7 @@ public class FireConnection {
                                                 }
                                             }
                                         }
+                                        genUserRandomCollection(usersList.size());
                                     }
                                     @Override
                                     public void onCancelled(DatabaseError databaseError) {
@@ -167,7 +168,8 @@ public class FireConnection {
         }
     }
 
-    void genUserRandomCollection(int nUsers){
+    private void genUserRandomCollection(int nUsers){
+        randomUserList.clear();
         if (nUsers > 0){
             for (int i = 0; i < nUsers; i++) {
                 randomUserList.add(i);
