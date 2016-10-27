@@ -23,6 +23,7 @@ import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.FirebaseDatabase;
 
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 
@@ -61,6 +62,7 @@ public class MainActivity extends AppCompatActivity {
         mContext = getApplicationContext();
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         FacebookSdk.sdkInitialize(this.getApplicationContext());
+        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
         fireConnection = FireConnection.getInstance();
 

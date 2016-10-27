@@ -95,8 +95,6 @@ public class FireConnection {
         if (user !=null){
             usersList.clear();
 
-            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
-
             databaseGlobal = FirebaseDatabase.getInstance();
 
             gender = sharedPreferences.getString("looking_for", "both");
