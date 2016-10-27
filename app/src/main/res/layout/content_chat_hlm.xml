@@ -57,7 +57,7 @@
     </LinearLayout>
 
     <ProgressBar
-        style="?android:attr/progressBarStyleSmall"
+        style="@style/Widget.AppCompat.ProgressBar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/progressBar"

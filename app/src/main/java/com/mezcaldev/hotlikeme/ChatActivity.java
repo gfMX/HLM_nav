@@ -95,7 +95,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Encrypted Message
     boolean flagBottom = true;
-    //DecryptOnBackground decryptOnBackground;
+    DecryptOnBackground decryptOnBackground;
 
     protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
@@ -107,7 +107,8 @@ public class ChatActivity extends AppCompatActivity implements
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
-    int MESSAGE_LIMIT = 10;
+    int MESSAGE_LIMIT = 20;
+    int UPDATE_VIEW_DELAY = 500;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
@@ -167,9 +168,6 @@ public class ChatActivity extends AppCompatActivity implements
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
-
-        //Check if Network is available
-        checkNetworkAccess();
 
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -235,6 +233,8 @@ public class ChatActivity extends AppCompatActivity implements
                 Log.i(TAG, "New Message Limit: " + MESSAGE_LIMIT);
                 recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
+                mProgressBar.setVisibility(View.VISIBLE);
+
                 flagBottom = false;
                 mLinearLayoutManager.setStackFromEnd(false);
                 updateFireBaseRecyclerAdapter();
@@ -245,6 +245,7 @@ public class ChatActivity extends AppCompatActivity implements
                     public void run() {
                         if (swipeRefreshLayout.isRefreshing()){
                             swipeRefreshLayout.setRefreshing(false);
+                            mProgressBar.setVisibility(View.INVISIBLE);
                         }
                     }
                 },1000);
@@ -304,6 +305,7 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 //encryptedMessage = secureMessage.encrypt(mMessageEditText.getText().toString());
+                checkNetworkAccess();
                 encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
 
                 ChatMessageModel chatMessageModel = new ChatMessageModel(encryptedMessageToSend, mUsername,
@@ -316,6 +318,9 @@ public class ChatActivity extends AppCompatActivity implements
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
             }
         });
+
+        //Check if Network is available
+        checkNetworkAccess();
     }
 
     @Override
@@ -443,15 +448,18 @@ public class ChatActivity extends AppCompatActivity implements
 
     class DecryptParameters {
         MessageViewHolder messageViewHolder;
-        ChatMessageModel chatMessageModel;
+        String chatMessageModel;
+        int position;
 
-        DecryptParameters(MessageViewHolder messageViewHolder, ChatMessageModel chatMessageModel){
+        DecryptParameters(MessageViewHolder messageViewHolder, String chatMessageModel, int position){
             this.messageViewHolder = messageViewHolder;
             this.chatMessageModel = chatMessageModel;
+            this.position = position;
         }
     }
 
     private void updateFireBaseRecyclerAdapter(){
+
         if (mFirebaseAdapter != null){
             mFirebaseAdapter.cleanup();
         }
@@ -502,16 +510,15 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               final ChatMessageModel chatMessageModel, int position) {
 
-                /* DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel);
+                DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
 
                 decryptOnBackground = new DecryptOnBackground();
-                decryptOnBackground.execute(decryptParameters); */
+                decryptOnBackground.execute(decryptParameters);
 
-                decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
 
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
-                viewHolder.messageTextView.setText(decryptedMessage);
+                //viewHolder.messageTextView.setText(chatMessageModel.getText());
                 viewHolder.messengerTextView.setText(messengerText);
 
                 if (chatMessageModel.getPhotoUrl() == null) {
@@ -532,15 +539,15 @@ public class ChatActivity extends AppCompatActivity implements
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
                 if (flagBottom) {
-                    mLinearLayoutManager.setStackFromEnd(true);
-                    int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                    int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-                    // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
-                    // to the bottom of the list to show the newly added message.
-                    if (lastVisiblePosition == -1 ||
-                            (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-                        mMessageRecyclerView.scrollToPosition(positionStart);
-                    }
+                mLinearLayoutManager.setStackFromEnd(true);
+                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
+                // to the bottom of the list to show the newly added message.
+                if (lastVisiblePosition == -1 ||
+                        (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                    mMessageRecyclerView.scrollToPosition(positionStart);
+                }
                 }
             }
         });
@@ -548,12 +555,21 @@ public class ChatActivity extends AppCompatActivity implements
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
 
+        Handler reloadView = new Handler();
+        reloadView.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                mFirebaseAdapter.notifyDataSetChanged();
+            }
+        }, UPDATE_VIEW_DELAY);
+
     }
 
     class DecryptOnBackground extends AsyncTask <DecryptParameters, Void, Void>{
         MessageViewHolder v;
-        ChatMessageModel c;
-        String messengerText;
+        String c;
+        int p;
+
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
@@ -564,28 +580,16 @@ public class ChatActivity extends AppCompatActivity implements
 
             v = params[0].messageViewHolder;
             c = params[0].chatMessageModel;
+            p = params[0].position;
 
-            decryptedMessage = secureMessage.decrypt(c.getText());
-            messengerText = dateFormatter(c.getTimeStamp());
+            decryptedMessage = secureMessage.decrypt(c);    //<--
 
             return null;
         }
 
         @Override
         protected void onPostExecute (Void result){
-
-            mProgressBar.setVisibility(ProgressBar.INVISIBLE);
-            v.messageTextView.setText(decryptedMessage);
-            v.messengerTextView.setText(messengerText);
-
-            if (c.getPhotoUrl() == null) {
-                v.messengerImageView.setImageDrawable(ContextCompat.getDrawable(ChatActivity.this,
-                        R.drawable.ic_account_circle_black_24dp));
-            } else {
-                Glide.with(ChatActivity.this)
-                        .load(c.getPhotoUrl())
-                        .into(v.messengerImageView);
-            }
+            v.messageTextView.setText(decryptedMessage);              //<--
         }
     }
 
@@ -606,6 +610,16 @@ public class ChatActivity extends AppCompatActivity implements
         } else if (snackNetworkRequired.isShown()) {
             snackNetworkRequired.dismiss();
         }
+    }
+    @Override
+    protected void onStart() {
+        super.onStart();
+        checkNetworkAccess();
+    }
+    @Override
+    protected void onResume() {
+        super.onResume();
+        checkNetworkAccess();
     }
 
 }
