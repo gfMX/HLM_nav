@@ -32,7 +32,7 @@ public class FireConnection {
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
     //SharedPreferences sharedPreferences;
-    FirebaseDatabase database;
+    static FirebaseDatabase databaseGlobal;
 
     //Facebook Settings
     //static boolean fbTokenStatus;
@@ -94,7 +94,10 @@ public class FireConnection {
     void getFirebaseUsers(SharedPreferences sharedPreferences, final Location mCurrentLocation){
         if (user !=null){
             usersList.clear();
-            database = FirebaseDatabase.getInstance();
+
+            FirebaseDatabase.getInstance().setPersistenceEnabled(true);
+
+            databaseGlobal = FirebaseDatabase.getInstance();
 
             gender = sharedPreferences.getString("looking_for", "both");
             maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "1000"));
@@ -102,8 +105,8 @@ public class FireConnection {
             //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
 
 
-            final DatabaseReference databaseReferenceUriProfile = database.getReference().child("groups").child(gender);
-            final DatabaseReference databaseReferenceLocation = database.getReference().child("users");
+            final DatabaseReference databaseReferenceUriProfile = databaseGlobal.getReference().child("groups").child(gender);
+            final DatabaseReference databaseReferenceLocation = databaseGlobal.getReference().child("users");
 
             databaseReferenceUriProfile.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override

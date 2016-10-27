@@ -16,15 +16,19 @@
 package com.mezcaldev.hotlikeme;
 
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.net.ConnectivityManager;
+import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.design.widget.FloatingActionButton;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
@@ -58,7 +62,6 @@ import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.Query;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
 import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
@@ -71,6 +74,8 @@ import java.util.Locale;
 import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
+
+import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 
 public class ChatActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
@@ -90,7 +95,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Encrypted Message
     boolean flagBottom = true;
-    DecryptOnBackground decryptOnBackground;
+    //DecryptOnBackground decryptOnBackground;
 
     protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
@@ -118,6 +123,7 @@ public class ChatActivity extends AppCompatActivity implements
     private LinearLayoutManager mLinearLayoutManager;
     private FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder> mFirebaseAdapter;
     private ProgressBar mProgressBar;
+    //private FirebaseDatabase database;
     private DatabaseReference mFirebaseDatabaseReference;
     private DatabaseReference databaseReferenceLastMessages;
     FirebaseAuth mFirebaseAuth;
@@ -161,6 +167,9 @@ public class ChatActivity extends AppCompatActivity implements
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
+
+        //Check if Network is available
+        checkNetworkAccess();
 
         // Initialize Firebase Auth
         mFirebaseAuth = FirebaseAuth.getInstance();
@@ -211,7 +220,9 @@ public class ChatActivity extends AppCompatActivity implements
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
 
-        mFirebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
+        //database = FirebaseDatabase.getInstance();
+
+        mFirebaseDatabaseReference = databaseGlobal.getReference();
         databaseReferenceLastMessages = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
         recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
@@ -575,6 +586,25 @@ public class ChatActivity extends AppCompatActivity implements
                         .load(c.getPhotoUrl())
                         .into(v.messengerImageView);
             }
+        }
+    }
+
+    private boolean isNetworkAvailable() {
+        ConnectivityManager connectivityManager
+                = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+        NetworkInfo activeNetworkInfo = connectivityManager.getActiveNetworkInfo();
+        return activeNetworkInfo != null && activeNetworkInfo.isConnected();
+    }
+
+    private void checkNetworkAccess (){
+        Snackbar snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
+                getResources().getString(R.string.text_network_access_required),
+                Snackbar.LENGTH_INDEFINITE);
+
+        if (!isNetworkAvailable()) {
+            snackNetworkRequired.show();
+        } else if (snackNetworkRequired.isShown()) {
+            snackNetworkRequired.dismiss();
         }
     }
 

@@ -114,6 +114,8 @@ public class ChatUserList extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        //database.setPersistenceEnabled(true);
+
         cleanVars();
 
         if (user!= null){

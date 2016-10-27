@@ -195,10 +195,6 @@ public class HLMActivity extends AppCompatActivity implements
             }
         };
 
-        snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
-                getResources().getString(R.string.text_network_access_required),
-                Snackbar.LENGTH_INDEFINITE);
-
         mAuth = FirebaseAuth.getInstance();
         mAuth.addAuthStateListener(mAuthListener);
 
@@ -237,7 +233,7 @@ public class HLMActivity extends AppCompatActivity implements
             }
         });
 
-        checkAccess();
+        checkNetworkAccess();
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
@@ -424,14 +420,12 @@ public class HLMActivity extends AppCompatActivity implements
         return activeNetworkInfo != null && activeNetworkInfo.isConnected();
     }
 
-    private void checkAccess (){
+    private void checkNetworkAccess (){
+        snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
+                getResources().getString(R.string.text_network_access_required),
+                Snackbar.LENGTH_INDEFINITE);
+
         if (!isNetworkAvailable()) {
-            /*snackNetworkRequired.setAction("OK", new View.OnClickListener() {
-                @Override
-                public void onClick(View view) {
-                    snackNetworkRequired.dismiss();
-                }
-            }); */
             snackNetworkRequired.show();
         } else if (snackNetworkRequired.isShown()) {
             snackNetworkRequired.dismiss();
@@ -762,7 +756,7 @@ public class HLMActivity extends AppCompatActivity implements
         if (user ==null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
             mGoogleApiClient.disconnect();
         }
-        checkAccess();
+        checkNetworkAccess();
     }
     @Override
     protected void onStop() {
@@ -779,7 +773,7 @@ public class HLMActivity extends AppCompatActivity implements
         } else if (mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
             stopLocationUpdates();
         }
-        checkAccess();
+        checkNetworkAccess();
     }
     @Override
     protected void onPause() {
