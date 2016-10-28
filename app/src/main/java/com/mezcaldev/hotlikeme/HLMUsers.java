@@ -478,11 +478,17 @@ public class HLMUsers extends ListFragment {
                 if (weLike && !dataSnapshot.hasChild(key)) {
                     uniqueChatID = "chat_" + randomUUID();
 
+                    /************** Encrypt the Welcome Message for new conversations *****************/
+                    String myKey = FireConnection.getInstance().genHashKey(uniqueChatID);
+                    SecureMessage secureMessage = new SecureMessage(myKey);
+                    String encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(getResources().getString(welcome_msg));
+                    /************** Encrypt the Welcome Message for new conversations *****************/
+
                     //try {
                         databaseReferenceSetCurrentUserChat.child(key).setValue(uniqueChatID);
                         databaseReferenceSetRemoteUserChat.child(user.getUid()).setValue(uniqueChatID);
 
-                        databaseReferenceChat.child(uniqueChatID).child("text").setValue(getResources().getString(welcome_msg));
+                        databaseReferenceChat.child(uniqueChatID).child("text").setValue(encryptedMessageToSend);
                         databaseReferenceChat.child(uniqueChatID).child("timeStamp").setValue(timeStamp());
                     /*} catch (IllegalStateException ie){
                         Log.e(TAG, "Ups! Listeners detached earlier");

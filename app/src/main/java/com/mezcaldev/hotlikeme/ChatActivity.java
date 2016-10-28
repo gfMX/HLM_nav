@@ -95,6 +95,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Encrypted Message
     boolean flagBottom = true;
+    boolean isInFront;
     DecryptOnBackground decryptOnBackground;
 
     protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
@@ -236,9 +237,10 @@ public class ChatActivity extends AppCompatActivity implements
                 int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
                 // to the bottom of the list to show the newly added message.
-                if (/*flagBottom && */ lastVisiblePosition == -1 ||
+                if (/*flagBottom && */ lastVisiblePosition >= -1 ||
                         (/*flagBottom && */ positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
                     mLinearLayoutManager.setStackFromEnd(true);
+                    //mLinearLayoutManager.scrollToPosition(positionStart);
                     mMessageRecyclerView.scrollToPosition(positionStart);
                     mFirebaseAdapter.notifyDataSetChanged();
                 }
@@ -342,6 +344,7 @@ public class ChatActivity extends AppCompatActivity implements
             public void onClick(View view) {
                 //encryptedMessage = secureMessage.encrypt(mMessageEditText.getText().toString());
                 checkNetworkAccess();
+                mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(false);          //Remove after finding the TRUE leak...
                 encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
 
                 ChatMessageModel chatMessageModel = new ChatMessageModel(encryptedMessageToSend, mUsername,
@@ -541,14 +544,16 @@ public class ChatActivity extends AppCompatActivity implements
                 //System.out.println("------------------------------------------------------------");
                 //System.out.println(model.getUserId() + " = " + mFirebaseUser.getUid());
 
-                if (model.getName().equals(mFirebaseUser.getDisplayName())
-                        || model.getUserId().equals(mFirebaseUser.getUid())){
+                if (model.getUserId().equals(mFirebaseUser.getUid())){
                     //System.out.println("Message Right");
                     return RIGHT_MSG;
                 }else{
                     //System.out.println("Message Left");
                     //Set Last Message from the Other User to Read It!
-                    mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
+                    //Log.i(TAG, "====> Item count: " + getItemCount() + " Item Position: " + position);
+                    if (isInFront && position == getItemCount() && !model.getUserId().equals(mFirebaseUser.getUid())) {
+                        mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
+                    }
                     return LEFT_MSG;
                 }
             }
@@ -661,16 +666,24 @@ public class ChatActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+        isInFront = true;
         checkNetworkAccess();
     }
     @Override
     protected void onResume() {
         super.onResume();
+        isInFront = true;
         checkNetworkAccess();
+    }
+    @Override
+    protected void onPause(){
+        super.onPause();
+        isInFront = false;
     }
     @Override
     protected void onStop() {
         super.onStop();
+        isInFront = false;
         try {
             waitForNewMessageSent.removeCallbacks(waitForNewMessageSentRunnable);
             waitForNewMessageSent.removeCallbacksAndMessages(null);

@@ -3,6 +3,7 @@ package com.mezcaldev.hotlikeme;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Color;
+import android.graphics.Typeface;
 import android.net.Uri;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -23,13 +24,16 @@ import java.util.List;
  */
 public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapter.MyViewHolder> {
 
-    int MAX_LENGTH_SHOW = 42;
+    int MAX_LENGTH_SHOW = 40;
 
+    private String uid;
     private List<Uri> userImage;
     private List<String> userName;
     private List<String> userMessage;
     private List<String> userTime;
     private List<String> userChatID;
+    private List<String> userLastMessageId;
+    private List<Boolean> userMessageRead;
 
 
     private Context mContext;
@@ -52,14 +56,17 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
     }
 
     // Constructor
-    public ChatRecyclerAdapter(Context context, List<Uri> urls, List<String> name, List<String> message, List<String> time, List<String> chatID) {
+    public ChatRecyclerAdapter(Context context, String uid, List<Uri> urls, List<String> name, List<String> message, List<String> time, List<String> chatID, List<String> userLastMessageId, List<Boolean> userMessageRead) {
 
         this.mContext = context;
+        this.uid = uid;
         this.userImage = urls;
         this.userName = name;
         this.userMessage = message;
         this.userTime = time;
         this.userChatID = chatID;
+        this.userLastMessageId =userLastMessageId;
+        this.userMessageRead = userMessageRead;
     }
 
     @Override
@@ -93,6 +100,14 @@ public class ChatRecyclerAdapter extends RecyclerView.Adapter<ChatRecyclerAdapte
                 view.getContext().startActivity(intent);
             }
         });
+
+        if (!userMessageRead.get(position) && !userLastMessageId.get(position).equals(uid)){
+            holder.textName.setTypeface(null, Typeface.BOLD);
+            holder.textMessage.setTypeface(null, Typeface.BOLD);
+        } else {
+            holder.textName.setTypeface(null, Typeface.NORMAL);
+            holder.textMessage.setTypeface(null, Typeface.NORMAL);
+        }
 
         Uri myUri = userImage.get(position);
 

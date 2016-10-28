@@ -143,7 +143,7 @@ public class ChatUserList extends ListFragment {
         mRecyclerView.setHasFixedSize(false);
 
         // specify an adapter (see also next example)
-        mAdapter = new ChatRecyclerAdapter(getContext(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID);
+        mAdapter = new ChatRecyclerAdapter(getContext(), user.getUid(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID, userLastMessageId, userMessageRead);
         mRecyclerView.setAdapter(mAdapter);
 
         swipeRefreshLayout.setOnRefreshListener(
@@ -205,6 +205,7 @@ public class ChatUserList extends ListFragment {
                                     try {
                                         databaseReferenceCurrent.child(userKey.get(position)).setValue(null);
                                         databaseMessageReference.child("users").child(user.getUid()).child("my_chats").child(userKey.get(position)).setValue(null);
+                                        databaseMessageReference.child("users").child(userKey.get(position)).child("my_chats").child(user.getUid()).setValue(null);
                                         databaseMessageReference.child("chats_resume").child(userChatID.get(position)).setValue(null);
                                         databaseMessageReference.child("chats").child(userChatID.get(position)).setValue(null);
                                     } catch (NullPointerException e) {
@@ -302,7 +303,7 @@ public class ChatUserList extends ListFragment {
                     userLastMessage.add("");
                     userLastMessageId.add("");
                     userTimeStamp.add("");
-                    userMessageRead.add(null);
+                    userMessageRead.add(true);
 
                     Log.i(TAG, "Chat Key: " + data.getKey());
                     Log.i(TAG, "Chat Id: " + data.getValue());
@@ -378,6 +379,7 @@ public class ChatUserList extends ListFragment {
                     }
                     if (dataSnapshot.child("readIt").getValue() != null){
                         lastMessageRead = Boolean.parseBoolean(dataSnapshot.child("readIt").getValue().toString());
+                        notifyDataChanged();
                     } else {
                         lastMessageRead = true;
                     }
@@ -401,9 +403,9 @@ public class ChatUserList extends ListFragment {
                             && !userMessageRead.get(position)) {
 
 
-                        //if (!lastIdFromLastMessage.equals(userLastMessageId.get(position))){
-                        newMessageCount++;
-                        //}
+                        if (!lastIdFromLastMessage.equals(userLastMessageId.get(position))){
+                            newMessageCount++;
+                        }
                         oneFlag = false;
 
 

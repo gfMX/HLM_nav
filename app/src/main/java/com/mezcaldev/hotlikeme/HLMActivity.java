@@ -85,6 +85,7 @@ public class HLMActivity extends AppCompatActivity implements
     SharedPreferences sharedPreferences;
 
     // Notifications:
+    boolean isInFront;
     int MAX_NOTIFICATION_LENGTH = 42;
     NotificationManager mNotificationManager;
     static android.support.v4.app.NotificationCompat.Builder mBuilder;
@@ -400,16 +401,24 @@ public class HLMActivity extends AppCompatActivity implements
         mNotificationManager =
                 (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
 
-        mNotificationManager.notify(nID, mBuilder.build());
+        if (!isInFront) {
+            mNotificationManager.notify(nID, mBuilder.build());
+        }
     }
 
     public void updateNotification (String messageTitle, String messageBody, int nId){
-        if (mBuilder != null && mNotificationManager != null){
+        if (mBuilder != null && mNotificationManager != null && !isInFront){
             mBuilder.setContentTitle(messageTitle);
             mBuilder.setContentText(messageBody);
             mNotificationManager.notify(nId, mBuilder.build());
 
             Log.i(TAG, "Notification Updated!");
+        }
+    }
+
+    public void cancelNotifications (){
+        if (mNotificationManager != null && mBuilder != null){
+            mNotificationManager.cancelAll();
         }
     }
 
@@ -752,6 +761,9 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
+
+        isInFront =true;
+
         mGoogleApiClient.connect();
         if (user ==null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
             mGoogleApiClient.disconnect();
@@ -761,11 +773,14 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onStop() {
         super.onStop();
+
+        isInFront =false;
         mGoogleApiClient.disconnect();
     }
     @Override
     protected void onResume(){
         super.onResume();
+        isInFront = true;
         mPagerAdapter.notifyDataSetChanged();
 
         if (user != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
@@ -778,6 +793,8 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     protected void onPause() {
         super.onPause();
+
+        isInFront = false;
 
         if (mGoogleApiClient.isConnected()) {
             stopLocationUpdates();
