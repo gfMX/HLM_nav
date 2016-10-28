@@ -244,6 +244,17 @@ public class ChatActivity extends AppCompatActivity implements
                     mMessageRecyclerView.scrollToPosition(positionStart);
                     mFirebaseAdapter.notifyDataSetChanged();
                 }
+                Handler handlerSetAsRead = new Handler();
+                Runnable runnableSerAsRead = new Runnable() {
+                    @Override
+                    public void run() {
+                        if (isInFront && !mFirebaseAdapter.getItem(mFirebaseAdapter.getItemCount()-1).getUserId().equals(mFirebaseUser.getUid())) {
+                            //Log.i(TAG, "====> Item count: " + getItemCount() + " Item Position: " + position);
+                            mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
+                        }
+                    }
+                };
+                handlerSetAsRead.postDelayed(runnableSerAsRead, 2000);
             }
         });
 
@@ -550,10 +561,7 @@ public class ChatActivity extends AppCompatActivity implements
                 }else{
                     //System.out.println("Message Left");
                     //Set Last Message from the Other User to Read It!
-                    //Log.i(TAG, "====> Item count: " + getItemCount() + " Item Position: " + position);
-                    if (isInFront && position == getItemCount() && !model.getUserId().equals(mFirebaseUser.getUid())) {
-                        mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(true);
-                    }
+
                     return LEFT_MSG;
                 }
             }
