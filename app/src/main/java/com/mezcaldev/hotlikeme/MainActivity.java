@@ -25,6 +25,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
+import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 
 public class MainActivity extends AppCompatActivity {
@@ -59,10 +60,17 @@ public class MainActivity extends AppCompatActivity {
 
         setContentView(R.layout.activity_main);
 
+        if (databaseGlobal == null) {
+            databaseGlobal = FirebaseDatabase.getInstance();
+            databaseGlobal.setPersistenceEnabled(true);
+            Log.i(TAG, "----> FireBase Persistence Enabled <----");
+        } else {
+            Log.e(TAG, "----> FireBase Persistence Not Enabled <----");
+        }
+
         mContext = getApplicationContext();
         sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         FacebookSdk.sdkInitialize(this.getApplicationContext());
-        FirebaseDatabase.getInstance().setPersistenceEnabled(true);
 
         fireConnection = FireConnection.getInstance();
 

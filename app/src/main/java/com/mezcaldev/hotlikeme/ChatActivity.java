@@ -103,6 +103,9 @@ public class ChatActivity extends AppCompatActivity implements
     private String encryptedMessageToSend;
     private String decryptedMessage;
 
+    Handler waitForNewMessageSent;
+    Runnable waitForNewMessageSentRunnable;
+
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
@@ -218,18 +221,35 @@ public class ChatActivity extends AppCompatActivity implements
         mLinearLayoutManager = new LinearLayoutManager(this);
         mLinearLayoutManager.setStackFromEnd(true);
 
-        //database = FirebaseDatabase.getInstance();
-
         mFirebaseDatabaseReference = databaseGlobal.getReference();
         databaseReferenceLastMessages = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
         recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
         updateFireBaseRecyclerAdapter();
 
+        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+            @Override
+            public void onItemRangeInserted(int positionStart, int itemCount) {
+                super.onItemRangeInserted(positionStart, itemCount);
+
+                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
+                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+                // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
+                // to the bottom of the list to show the newly added message.
+                if (/*flagBottom && */ lastVisiblePosition == -1 ||
+                        (/*flagBottom && */ positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                    mLinearLayoutManager.setStackFromEnd(true);
+                    mMessageRecyclerView.scrollToPosition(positionStart);
+                    mFirebaseAdapter.notifyDataSetChanged();
+                }
+            }
+        });
+
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                MESSAGE_LIMIT += 5;
+                final int currentMessagePosition = mLinearLayoutManager.findFirstCompletelyVisibleItemPosition();
+                MESSAGE_LIMIT += 10;
                 Log.i(TAG, "New Message Limit: " + MESSAGE_LIMIT);
                 recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
@@ -237,18 +257,30 @@ public class ChatActivity extends AppCompatActivity implements
 
                 flagBottom = false;
                 mLinearLayoutManager.setStackFromEnd(false);
+                //mLinearLayoutManager.scrollToPosition(0);
                 updateFireBaseRecyclerAdapter();
 
-                Handler handler = new Handler();
-                handler.postDelayed(new Runnable() {
+                Handler handlerRefreshSign = new Handler();
+                handlerRefreshSign.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         if (swipeRefreshLayout.isRefreshing()){
                             swipeRefreshLayout.setRefreshing(false);
-                            mProgressBar.setVisibility(View.INVISIBLE);
                         }
                     }
-                },1000);
+                },750);
+
+                Handler handlerShowOldMessages = new Handler();
+                handlerShowOldMessages.postDelayed(new Runnable() {
+                    @Override
+                    public void run() {
+                        mProgressBar.setVisibility(View.INVISIBLE);
+                        mLinearLayoutManager.scrollToPosition(currentMessagePosition);
+                        //mLinearLayoutManager.setStackFromEnd(true);
+                    }
+                },2000);
+
+
             }
         });
 
@@ -280,10 +312,13 @@ public class ChatActivity extends AppCompatActivity implements
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                mLinearLayoutManager.setStackFromEnd(true);
+                mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
             }
 
             @Override
             public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
                 if (charSequence.toString().trim().length() > 0) {
                     fab_send.setClickable(true);
                     fab_send.setEnabled(true);
@@ -297,6 +332,7 @@ public class ChatActivity extends AppCompatActivity implements
 
             @Override
             public void afterTextChanged(Editable editable) {
+
             }
         });
 
@@ -316,6 +352,17 @@ public class ChatActivity extends AppCompatActivity implements
 
                 mMessageEditText.setText("");
                 mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+
+                // Go to last message
+                waitForNewMessageSent = new Handler();
+                waitForNewMessageSentRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
+                    }
+                };
+                waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 500);
+
             }
         });
 
@@ -431,7 +478,7 @@ public class ChatActivity extends AppCompatActivity implements
         Long currentDateTime = Long.parseLong(millis);
         Date currentDate = new Date(currentDateTime);
         SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy hh:mm", Locale.US);
-        Log.v(TAG, sdf.format(currentDate));
+        //Log.v(TAG, sdf.format(currentDate));
 
         return sdf.format(currentDate);
     }
@@ -534,23 +581,23 @@ public class ChatActivity extends AppCompatActivity implements
 
         flagBottom = true;
 
-        mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
+        /*mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
             @Override
             public void onItemRangeInserted(int positionStart, int itemCount) {
                 super.onItemRangeInserted(positionStart, itemCount);
-                if (flagBottom) {
-                mLinearLayoutManager.setStackFromEnd(true);
+
                 int friendlyMessageCount = mFirebaseAdapter.getItemCount();
                 int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
                 // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
                 // to the bottom of the list to show the newly added message.
-                if (lastVisiblePosition == -1 ||
-                        (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                if (flagBottom && lastVisiblePosition == -1 ||
+                            (flagBottom && positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+                    mLinearLayoutManager.setStackFromEnd(true);
                     mMessageRecyclerView.scrollToPosition(positionStart);
-                }
+                    mFirebaseAdapter.notifyDataSetChanged();
                 }
             }
-        });
+        }); */
 
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
@@ -620,6 +667,21 @@ public class ChatActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         checkNetworkAccess();
+    }
+    @Override
+    protected void onStop() {
+        super.onStop();
+        try {
+            waitForNewMessageSent.removeCallbacks(waitForNewMessageSentRunnable);
+            waitForNewMessageSent.removeCallbacksAndMessages(null);
+        } catch (NullPointerException e){
+            Log.e(TAG, "No handler to remove");
+        }
+    }
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+
     }
 
 }
