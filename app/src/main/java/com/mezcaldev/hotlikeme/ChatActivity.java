@@ -75,6 +75,7 @@ import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 
 public class ChatActivity extends AppCompatActivity implements
@@ -112,6 +113,7 @@ public class ChatActivity extends AppCompatActivity implements
     String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
     int MESSAGE_LIMIT = 20;
+    int ADD_OLD_MESSAGES = 7;
     int UPDATE_VIEW_DELAY = 500;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
     public static final String ANONYMOUS = "anonymous";
@@ -160,8 +162,8 @@ public class ChatActivity extends AppCompatActivity implements
             MESSAGES_CHILD = "/chats/" + mUserChatId;
             MESSAGES_RESUME = "/chats_resume/" + mUserChatId;
 
-            /*String myFutureKey = new StringBuilder(mUserChatId.replace("chat_", "")).reverse().toString();
-            Log.i(TAG, "-------> KEY For Encryption: " + myFutureKey);*/
+            //String myFutureKey = new StringBuilder(mUserChatId.replace("chat_", "")).reverse().toString();
+            /* Log.i(TAG, "-------> KEY For Encryption: " + myFutureKey);*/
 
             myKey = FireConnection.getInstance().genHashKey(mUserChatId);
             secureMessage = new SecureMessage(myKey);
@@ -189,7 +191,7 @@ public class ChatActivity extends AppCompatActivity implements
         }
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
-
+        fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshChat);
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
@@ -245,7 +247,7 @@ public class ChatActivity extends AppCompatActivity implements
                     mFirebaseAdapter.notifyDataSetChanged();
                 }
                 Handler handlerSetAsRead = new Handler();
-                Runnable runnableSerAsRead = new Runnable() {
+                Runnable runnableSetAsRead = new Runnable() {
                     @Override
                     public void run() {
                         if (isInFront && !mFirebaseAdapter.getItem(mFirebaseAdapter.getItemCount()-1).getUserId().equals(mFirebaseUser.getUid())) {
@@ -254,7 +256,7 @@ public class ChatActivity extends AppCompatActivity implements
                         }
                     }
                 };
-                handlerSetAsRead.postDelayed(runnableSerAsRead, 2000);
+                handlerSetAsRead.postDelayed(runnableSetAsRead, 2000);
             }
         });
 
@@ -262,7 +264,7 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public void onRefresh() {
                 final int currentMessagePosition = mLinearLayoutManager.findFirstCompletelyVisibleItemPosition();
-                MESSAGE_LIMIT += 10;
+                MESSAGE_LIMIT += ADD_OLD_MESSAGES;
                 Log.i(TAG, "New Message Limit: " + MESSAGE_LIMIT);
                 recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
@@ -349,7 +351,10 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
-        fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
+        fab_send.setClickable(false);
+        fab_send.setEnabled(false);
+        fab_send.setBackgroundColor(Color.GRAY);
+
         fab_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -359,7 +364,7 @@ public class ChatActivity extends AppCompatActivity implements
                 encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
 
                 ChatMessageModel chatMessageModel = new ChatMessageModel(encryptedMessageToSend, mUsername,
-                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false);
+                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false, mUserChatId);
 
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
@@ -373,9 +378,10 @@ public class ChatActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
+                        mFirebaseAdapter.notifyDataSetChanged();
                     }
                 };
-                waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 500);
+                waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 300);
 
             }
         });
@@ -570,15 +576,17 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               final ChatMessageModel chatMessageModel, int position) {
 
-                DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
+                /*DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
 
                 decryptOnBackground = new DecryptOnBackground();
-                decryptOnBackground.execute(decryptParameters);
+                decryptOnBackground.execute(decryptParameters); */
 
+                //decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
 
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
-                //viewHolder.messageTextView.setText(chatMessageModel.getText());
+                //viewHolder.messageTextView.setText(decryptedMessage);
+                viewHolder.messageTextView.setText(chatMessageModel.getDecryptedText());
                 viewHolder.messengerTextView.setText(messengerText);
 
                 if (chatMessageModel.getPhotoUrl() == null) {
@@ -653,6 +661,17 @@ public class ChatActivity extends AppCompatActivity implements
         }
     }
 
+    private void updateView(){
+        Handler handlerUpdateView = new Handler();
+        Runnable runnableUpdateView = new Runnable() {
+            @Override
+            public void run() {
+                mFirebaseAdapter.notifyDataSetChanged();
+            }
+        };
+        handlerUpdateView.postDelayed(runnableUpdateView,300);
+    }
+
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -674,24 +693,24 @@ public class ChatActivity extends AppCompatActivity implements
     @Override
     protected void onStart() {
         super.onStart();
-        isInFront = true;
+        chatIsInFront = true;
         checkNetworkAccess();
     }
     @Override
     protected void onResume() {
         super.onResume();
-        isInFront = true;
+        chatIsInFront = true;
         checkNetworkAccess();
     }
     @Override
     protected void onPause(){
         super.onPause();
-        isInFront = false;
+        chatIsInFront = false;
     }
     @Override
     protected void onStop() {
         super.onStop();
-        isInFront = false;
+        chatIsInFront = false;
         try {
             waitForNewMessageSent.removeCallbacks(waitForNewMessageSentRunnable);
             waitForNewMessageSent.removeCallbacksAndMessages(null);
@@ -702,7 +721,7 @@ public class ChatActivity extends AppCompatActivity implements
     @Override
     protected void onDestroy() {
         super.onDestroy();
-
+        chatIsInFront = false;
     }
 
 }

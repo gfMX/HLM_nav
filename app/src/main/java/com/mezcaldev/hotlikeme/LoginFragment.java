@@ -49,6 +49,8 @@ import org.json.JSONObject;
 
 import java.io.File;
 
+import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
+
 public class LoginFragment extends Fragment {
 
     static LoginFragment newInstance() {
@@ -95,7 +97,7 @@ public class LoginFragment extends Fragment {
     static FirebaseUser user;
     static FirebaseAuth mAuth;
     static FirebaseAuth.AuthStateListener mAuthListener;
-    static FirebaseDatabase database;
+    //static FirebaseDatabase database;
     static DatabaseReference fireRef;
     static FirebaseStorage storage;
     static StorageReference storageRef;
@@ -120,10 +122,16 @@ public class LoginFragment extends Fragment {
         pathProfileImage = pathP.getAbsolutePath();
 
         //Initialize Firebase
-        database = FirebaseDatabase.getInstance();
+        //databaseGlobal = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
-        fireRef = database.getReference();
+
+        if (databaseGlobal != null) {
+            fireRef = databaseGlobal.getReference();
+        } else {
+            databaseGlobal = FirebaseDatabase.getInstance();
+            fireRef = databaseGlobal.getReference();
+        }
         mAuth = FirebaseAuth.getInstance();
 
 
@@ -307,7 +315,7 @@ public class LoginFragment extends Fragment {
                         Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
                         //Stores references needed by the App on Firebase:
-                        fireRef = database.getReference().child("users").child(user.getUid()).child("preferences").child("name");
+                        fireRef = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences").child("name");
                         fireRef.setValue(user.getDisplayName());
 
                         if (accessToken!=null) {
@@ -412,7 +420,7 @@ public class LoginFragment extends Fragment {
                         try {
                             gender = response.getJSONObject().get("gender").toString();
                             System.out.println("Gender: " + gender);
-                            DatabaseReference databaseReference = database.getReference().child("users").child(user.getUid());
+                            DatabaseReference databaseReference = databaseGlobal.getReference().child("users").child(user.getUid());
                             sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                             editor = sharedPreferences.edit();
                             editor.putString("gender", gender);

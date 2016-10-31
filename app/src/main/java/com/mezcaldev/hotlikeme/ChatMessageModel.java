@@ -15,6 +15,8 @@
  */
 package com.mezcaldev.hotlikeme;
 
+import android.os.AsyncTask;
+
 public class ChatMessageModel {
 
     private String id;
@@ -23,18 +25,25 @@ public class ChatMessageModel {
     private String userId;
     private String photoUrl;
     private String timeStamp;
+    private String userChatId;
     private Boolean readIt;
 
+    private SecureMessage secureMessage;
+
     public ChatMessageModel() {
+
     }
 
-    public ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId, Boolean readIt) {
+    ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId, Boolean readIt, String userChatId) {
         this.text = text;
         this.name = name;
         this.userId = userId;
         this.photoUrl = photoUrl;
         this.timeStamp = timeStamp;
         this.readIt = readIt;
+
+        this.userChatId = userChatId;
+
     }
 
     public String getId() {
@@ -43,6 +52,14 @@ public class ChatMessageModel {
 
     public void setId(String id) {
         this.id = id;
+    }
+
+    public String getUserChatId() {
+        return userChatId;
+    }
+
+    public void setUserChatId(String userChatId) {
+        this.userChatId = userChatId;
     }
 
     public String getText() {
@@ -91,5 +108,12 @@ public class ChatMessageModel {
 
     public Boolean getReadIt(){
         return readIt;
+    }
+
+    public String getDecryptedText(){
+        String mKey = FireConnection.getInstance().genHashKey(userChatId);
+        secureMessage = new SecureMessage(mKey);
+
+        return secureMessage.decrypt(getText());
     }
 }

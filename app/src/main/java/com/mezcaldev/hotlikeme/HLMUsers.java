@@ -49,6 +49,7 @@ import static android.view.View.OnClickListener;
 import static android.view.View.VISIBLE;
 import static android.widget.Toast.LENGTH_SHORT;
 import static android.widget.Toast.makeText;
+import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.randomUserList;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
@@ -115,7 +116,7 @@ public class HLMUsers extends ListFragment {
     SharedPreferences sharedPreferences;
 
     //Firebase Initialization:
-    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
     DatabaseReference referenceLikeUser;
@@ -360,7 +361,7 @@ public class HLMUsers extends ListFragment {
     }
 
     private void getUserDetails(String key) {
-        databaseReferenceUserDetails = database.getReference().child("users").child(key).child("preferences");
+        databaseReferenceUserDetails = databaseGlobal.getReference().child("users").child(key).child("preferences");
 
         valueEventListenerGetUserDetails = new ValueEventListener() {
             @Override
@@ -401,7 +402,7 @@ public class HLMUsers extends ListFragment {
     }
 
     private void userRating(final String key) {
-        databaseReferenceRating = database.getReference().child("users").child(key).child("user_rate");
+        databaseReferenceRating = databaseGlobal.getReference().child("users").child(key).child("user_rate");
 
         valueEventListenerUserRating = new ValueEventListener() {
             @Override
@@ -426,8 +427,8 @@ public class HLMUsers extends ListFragment {
     }
 
     private void didWeLike(final String key) {
-        databaseReferenceUserKey = database.getReference().child("users").child(key).child("like_user");
-        databaseReferenceCurrent = database.getReference().child("users").child(user.getUid()).child("like_user");
+        databaseReferenceUserKey = databaseGlobal.getReference().child("users").child(key).child("like_user");
+        databaseReferenceCurrent = databaseGlobal.getReference().child("users").child(user.getUid()).child("like_user");
 
         valueEventListenerDidWeLike = new ValueEventListener() {
             @Override
@@ -466,9 +467,9 @@ public class HLMUsers extends ListFragment {
 
     private void checkChat(final String key) {
 
-        databaseReferenceSetCurrentUserChat = database.getReference().child("users").child(user.getUid()).child("my_chats");
-        databaseReferenceSetRemoteUserChat = database.getReference().child("users").child(key).child("my_chats");
-        databaseReferenceChat = database.getReference().child("chats_resume");
+        databaseReferenceSetCurrentUserChat = databaseGlobal.getReference().child("users").child(user.getUid()).child("my_chats");
+        databaseReferenceSetRemoteUserChat = databaseGlobal.getReference().child("users").child(key).child("my_chats");
+        databaseReferenceChat = databaseGlobal.getReference().child("chats_resume");
 
         //Check if a chat exists already, if not a new Chat is assigned to the users.
         valueEventListenerCheckChat = new ValueEventListener() {
@@ -527,14 +528,14 @@ public class HLMUsers extends ListFragment {
             removeReferences();
 
             //Adds the users that Current User likes
-            referenceLikeUser = database.getReference()
+            referenceLikeUser = databaseGlobal.getReference()
                     .child("users")
                     .child(user.getUid())
                     .child("like_user")
                     .child(newKey);
 
             //Adds the rate of the Current User to the rating of the external user
-            referenceUserRated = database.getReference()
+            referenceUserRated = databaseGlobal.getReference()
                     .child("users")
                     .child(newKey)
                     .child("user_rate")

@@ -27,6 +27,9 @@ import java.util.List;
 public class FireConnection {
     String TAG = "FireConnection";
 
+    //Flags to Activities / Fragments on Front
+    static boolean chatIsInFront = false;
+
     //Firebase Settings
     static FirebaseUser user;
     private FirebaseAuth mAuth;
@@ -71,6 +74,9 @@ public class FireConnection {
             public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
                 user = firebaseAuth.getCurrentUser();
                 if (user != null) {
+                    if (databaseGlobal == null) {
+                        databaseGlobal = FirebaseDatabase.getInstance();
+                    }
                     // User is signed in
                     Log.d(TAG, "User credentials granted: " + user.getUid());
                 } else {

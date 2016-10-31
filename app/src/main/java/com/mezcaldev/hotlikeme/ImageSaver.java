@@ -40,6 +40,7 @@ import java.util.List;
 import java.util.UUID;
 
 import static android.graphics.BitmapFactory.decodeStream;
+import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 
 /**
  * Methods and functions for general use
@@ -57,7 +58,7 @@ public class ImageSaver {
     int reqHeight = 180;
 
     final FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
-    final FirebaseDatabase database = FirebaseDatabase.getInstance();
+    //final FirebaseDatabase database = FirebaseDatabase.getInstance();
     final FirebaseStorage  storage = FirebaseStorage.getInstance();
     final StorageReference storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
@@ -176,7 +177,7 @@ public class ImageSaver {
                 String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
                 final DatabaseReference databaseReferenceImages =
-                        database.getReference().child("users").child(user.getUid()).child(bPath).child(uniqueID);
+                        databaseGlobal.getReference().child("users").child(user.getUid()).child(bPath).child(uniqueID);
 
                 UploadTask uploadTask;
 
@@ -261,7 +262,7 @@ public class ImageSaver {
                 String fileName = fName + ".jpg";
                 final StorageReference upImageRef = storageRef.child(user.getUid() + bPath + fileName);
                 final DatabaseReference databaseReferenceThumbs =
-                        database.getReference().child("users").child(user.getUid()).child("/thumbs/").child(uniqueID);
+                        databaseGlobal.getReference().child("users").child(user.getUid()).child("/thumbs/").child(uniqueID);
 
                 UploadTask uploadTask;
 
@@ -311,9 +312,9 @@ public class ImageSaver {
     public void updateTotalImagesOnFire () {
         String userId = firebaseUser.getUid();
         final DatabaseReference dbTotalImagesRef =
-                database.getReference().child("users").child(userId).child("/total_images");
+                databaseGlobal.getReference().child("users").child(userId).child("/total_images");
 
-        database.getReference().child("/users/").child(userId).addValueEventListener(
+        databaseGlobal.getReference().child("/users/").child(userId).addValueEventListener(
                 new ValueEventListener() {
                     @Override
                     public void onDataChange(DataSnapshot dataSnapshot) {

@@ -73,6 +73,7 @@ public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
     private static final String TAG = "Location";
+    //FirebaseUser HLM_CURRENT_USER;
     int HLM_PAGES;
     int HLM_CURRENT_PAGE;
     final int HLM_PAGES_MAX = 3;
