@@ -576,17 +576,17 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               final ChatMessageModel chatMessageModel, int position) {
 
-                /*DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
+                DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
 
                 decryptOnBackground = new DecryptOnBackground();
-                decryptOnBackground.execute(decryptParameters); */
+                decryptOnBackground.execute(decryptParameters);
 
                 //decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
 
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
-                //viewHolder.messageTextView.setText(decryptedMessage);
-                viewHolder.messageTextView.setText(chatMessageModel.getDecryptedText());
+                viewHolder.messageTextView.setText(decryptedMessage);
+                //viewHolder.messageTextView.setText(chatMessageModel.getDecryptedText());
                 viewHolder.messengerTextView.setText(messengerText);
 
                 if (chatMessageModel.getPhotoUrl() == null) {
@@ -601,24 +601,6 @@ public class ChatActivity extends AppCompatActivity implements
         };
 
         flagBottom = true;
-
-        /*mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
-            @Override
-            public void onItemRangeInserted(int positionStart, int itemCount) {
-                super.onItemRangeInserted(positionStart, itemCount);
-
-                int friendlyMessageCount = mFirebaseAdapter.getItemCount();
-                int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
-                // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
-                // to the bottom of the list to show the newly added message.
-                if (flagBottom && lastVisiblePosition == -1 ||
-                            (flagBottom && positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
-                    mLinearLayoutManager.setStackFromEnd(true);
-                    mMessageRecyclerView.scrollToPosition(positionStart);
-                    mFirebaseAdapter.notifyDataSetChanged();
-                }
-            }
-        }); */
 
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
