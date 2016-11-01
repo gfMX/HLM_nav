@@ -15,8 +15,6 @@
  */
 package com.mezcaldev.hotlikeme;
 
-import android.os.AsyncTask;
-
 public class ChatMessageModel {
 
     private String id;
@@ -109,7 +107,9 @@ public class ChatMessageModel {
     public Boolean getReadIt(){
         return readIt;
     }
+    public void  setDecryptedText(String textToEncrypt){
 
+    }
     public String getDecryptedText(){
         String mKey = FireConnection.getInstance().genHashKey(userChatId);
         secureMessage = new SecureMessage(mKey);
