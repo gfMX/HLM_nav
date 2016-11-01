@@ -1,11 +1,13 @@
 package com.mezcaldev.hotlikeme;
 
+import android.os.AsyncTask;
 import android.util.Base64;
 import android.util.Log;
 
 import java.security.AlgorithmParameters;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
+import java.util.concurrent.ExecutionException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -107,6 +109,12 @@ class SecureMessage {
 
     String decrypt(String str) {
 
+        try {
+            return new BackgroundDecrypt().execute(str).get();
+        } catch (InterruptedException | ExecutionException e){
+            return "Message not loaded";
+        }
+        /*
         //separate encrypted text from salt and IV
         String text = str.substring(0, (str.length() - 38));
 
@@ -147,6 +155,67 @@ class SecureMessage {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
+        }*/
+    }
+
+    class BackgroundDecrypt extends AsyncTask<String, Void, String> {
+
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+
+        }
+
+        @Override
+        protected String doInBackground(String ... params) {
+            //separate encrypted text from salt and IV
+            String str = params[0];
+
+            String text = str.substring(0, (str.length() - 38));
+
+            //separate salt
+            String RSalt = str.substring((str.length() - 38), (str.length() - 25));
+
+            //separate IV
+            String RIV = str.substring((str.length() - 25));
+
+            byte[] saltt = Base64.decode(RSalt, Base64.DEFAULT);
+            byte[] IVV = Base64.decode(RIV, Base64.DEFAULT);
+
+
+            try {
+                SecretKeyFactory factory2 = SecretKeyFactory
+                        .getInstance("PBKDF2WithHmacSHA1");
+
+                //generating same keyspec with same password and recieved salt
+                KeySpec keySpec2 = new PBEKeySpec(pass.toCharArray(), saltt, iterationCount, 256);
+                SecretKey secretKey2 = factory2.generateSecret(keySpec2);
+                SecretKeySpec secret2 = new SecretKeySpec(secretKey2.getEncoded(), "AES");
+                Cipher dCipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
+
+                //initialising decrypt cipher with received IV
+                dCipher.init(Cipher.DECRYPT_MODE, secret2, new IvParameterSpec(IVV));
+
+                // Decode base64 to get bytes
+                byte[] dec = Base64.decode(text, Base64.DEFAULT);
+
+                // Decrypt
+                byte[] utf8 = dCipher.doFinal(dec);
+
+                // Decode using utf-8
+                return new String(utf8, "UTF8");
+            } catch (BadPaddingException e) {
+                Log.e(TAG, "WRONG KEY!");
+                return null;
+            } catch (Exception e) {
+                e.printStackTrace();
+                return null;
+            }
+        }
+
+        @Override
+        protected void onPostExecute (String result){
+
         }
     }
 

@@ -22,6 +22,7 @@ import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
@@ -101,6 +102,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Encrypted Message
     boolean flagBottom = true;
+    boolean flag = false;
     boolean isInFront;
 
     int positionMessages;
@@ -110,7 +112,8 @@ public class ChatActivity extends AppCompatActivity implements
     private SecureMessage secureMessage;
     //private String encryptedMessage;
     private String encryptedMessageToSend;
-    //private String decryptedMessage;
+    private String decryptedMessage;
+
 
     Handler waitForNewMessageSent;
     Runnable waitForNewMessageSentRunnable;
@@ -234,7 +237,6 @@ public class ChatActivity extends AppCompatActivity implements
         databaseReferenceLastMessages = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
         recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
-        preloadDecryptedMessages();
         //updateFireBaseRecyclerAdapter();
 
         /*mFirebaseAdapter.registerAdapterDataObserver(new RecyclerView.AdapterDataObserver() {
@@ -372,7 +374,7 @@ public class ChatActivity extends AppCompatActivity implements
                 encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
 
                 ChatMessageModel chatMessageModel = new ChatMessageModel(encryptedMessageToSend, mUsername,
-                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false, mUserChatId);
+                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false);
 
                 mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
@@ -396,6 +398,7 @@ public class ChatActivity extends AppCompatActivity implements
 
         //Check if Network is available
         checkNetworkAccess();
+        preloadDecryptedMessages();
     }
 
     @Override
@@ -539,100 +542,32 @@ public class ChatActivity extends AppCompatActivity implements
         mProgressBar.setVisibility(View.VISIBLE);
         Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
 
-        /*databaseReferenceLastMessages.addValueEventListener(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                //positionMessages = (int) dataSnapshot.getChildrenCount() - 1;
-                //decryptedMessages = new ArrayList<>((int) dataSnapshot.getChildrenCount());
-                if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
-                    Log.i(TAG, "Number of Messages: " + dataSnapshot.getChildrenCount());
-                    for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
-                        if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
-                            decryptedMessages.add(null);
-                            //Log.i(TAG, "Number of Messages: " + decryptedMessages.size());
-                        }
-                    }
-                    for (DataSnapshot data : dataSnapshot.getChildren()) {
-
-                        //decryptOnBackground = new DecryptOnBackground();
-
-                        databaseReferenceLastMessages.child(data.getKey()).addValueEventListener(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                decryptedMessage = secureMessage.decrypt(dataSnapshot.child("text").getValue().toString());
-                                decryptedMessages.add(positionMessages, decryptedMessage);
-                                Log.e(TAG, "-> " + decryptedMessage + " Position: " + positionMessages);
-                                if (positionMessages == dataSnapshot.getChildrenCount() - 1){
-                                    updateFireBaseRecyclerAdapter();
-                                }
-                                positionMessages++;
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-
-                            }
-                        });
-                    }
-                } else {
-                    Log.i(TAG, "Messages already loaded");
-                }
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        }); */
         databaseReferenceLastMessages.addChildEventListener(new ChildEventListener() {
+            //DecryptOnBackground decryptOnBackground = new DecryptOnBackground();
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
                 Log.v(TAG, "Child Added: " + s + " :: " + dataSnapshot.toString());
                 //if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
-                    Log.i(TAG, "Number of Messages: " + dataSnapshot.getChildrenCount());
-                    for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
-                        if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
-                            decryptedMessages.add(null);
-                            //Log.i(TAG, "Number of Messages: " + decryptedMessages.size());
-                        }
+                Log.i(TAG, "Number of Messages: " + dataSnapshot.getChildrenCount());
+                for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
+                    if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
+                        decryptedMessages.add(null);
+                        //Log.i(TAG, "Number of Messages: " + decryptedMessages.size());
                     }
+                }
 
                 Log.v(TAG, "Child: " + dataSnapshot.child("decryptedText").getValue());
-                decryptedMessages.add(positionMessages, dataSnapshot.child("decryptedText").getValue().toString());
-                if (positionMessages == dataSnapshot.getChildrenCount() - 1){
-                    updateFireBaseRecyclerAdapter();
-                }
+
+                decryptedMessage = secureMessage.decrypt(dataSnapshot.child("text").getValue().toString());
+
+                decryptedMessages.add(positionMessages, decryptedMessage);
+                    /*if (positionMessages == 0){
+                        updateFireBaseRecyclerAdapter();
+                    } else if (positionMessages >2) {
+                        mFirebaseAdapter.notifyDataSetChanged();
+                    }*/
+                updateFireBaseRecyclerAdapter();
                 positionMessages++;
-
-                    //for (DataSnapshot data : dataSnapshot.getChildren()) {
-                        //Log.v(TAG, "Child: " + data.child("decryptedText").toString());
-
-                        //decryptOnBackground = new DecryptOnBackground();
-
-                        /*databaseReferenceLastMessages.child(data.getKey())
-                                .addListenerForSingleValueEvent(new ValueEventListener() {
-                            @Override
-                            public void onDataChange(DataSnapshot dataSnapshot) {
-                                Log.v(TAG, "Child: " + dataSnapshot.toString());
-                               decryptedMessage = secureMessage.decrypt(dataSnapshot.child("text").getValue().toString());
-                                decryptedMessages.add(positionMessages, decryptedMessage);
-                                Log.e(TAG, "-> " + decryptedMessage + " Position: " + positionMessages);
-                                if (positionMessages == dataSnapshot.getChildrenCount() - 1){
-                                    updateFireBaseRecyclerAdapter();
-                                }
-                                positionMessages++;
-                            }
-
-                            @Override
-                            public void onCancelled(DatabaseError databaseError) {
-
-                            }
-                        });*/
-                    //}
-                /*} else {
-                    Log.i(TAG, "Messages already loaded");
-                } */
-
             }
 
             @Override
@@ -655,14 +590,6 @@ public class ChatActivity extends AppCompatActivity implements
 
             }
         });
-        /*Handler handlerUpdateRecycler = new Handler();
-        Runnable runnableUpdateRecycler = new Runnable() {
-            @Override
-            public void run() {
-                updateFireBaseRecyclerAdapter();
-            }
-        };
-        handlerUpdateRecycler.postDelayed(runnableUpdateRecycler, 1500); */
     }
 
     private void updateFireBaseRecyclerAdapter(){
@@ -723,7 +650,14 @@ public class ChatActivity extends AppCompatActivity implements
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
 
                 System.out.println("SIZE -------> " + positionMessages);
-                int positionToLoadMessage = position + (positionMessages - MESSAGE_LIMIT);
+
+                int positionToLoadMessage;
+                if (positionMessages - MESSAGE_LIMIT >= 0) {
+                    positionToLoadMessage = position + (positionMessages - MESSAGE_LIMIT);
+                } else {
+                    positionToLoadMessage = position;
+                }
+
                 viewHolder.messageTextView.setText(decryptedMessages.get(positionToLoadMessage));
                 viewHolder.messengerTextView.setText(messengerText);
 
@@ -783,34 +717,79 @@ public class ChatActivity extends AppCompatActivity implements
 
     }
 
-    /*class DecryptOnBackground extends AsyncTask <String, Void, String>{
-        //MessageViewHolder v;
-        //String c;
-        //int p;
+    class DecryptOnBackground extends AsyncTask<Void, Void, Void> {
 
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
+            mProgressBar.setVisibility(View.VISIBLE);
+            Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
         }
 
         @Override
-        protected String doInBackground(String ... params) {
+        protected Void doInBackground(Void ... params) {
+            positionMessages = 0;
+            //decryptedMessages.clear();
+            //mProgressBar.setVisibility(View.VISIBLE);
 
+            databaseReferenceLastMessages.addChildEventListener(new ChildEventListener() {
+                //DecryptOnBackground decryptOnBackground = new DecryptOnBackground();
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
+                    Log.v(TAG, "Child Added: " + s + " :: " + dataSnapshot.toString());
+                    //if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
+                    Log.i(TAG, "Number of Messages: " + dataSnapshot.getChildrenCount());
+                    for (int i = 0; i < dataSnapshot.getChildrenCount(); i++) {
+                        if (decryptedMessages.size() < dataSnapshot.getChildrenCount()) {
+                            decryptedMessages.add(null);
+                            //Log.i(TAG, "Number of Messages: " + decryptedMessages.size());
+                        }
+                    }
 
-            //v = params[0].messageViewHolder;
-            //c = params[0].chatMessageModel;
-            //p = params[0].position;
+                    Log.v(TAG, "Child: " + dataSnapshot.child("decryptedText").getValue());
 
-            //decryptedMessage = secureMessage.decrypt(params[0]);    //<--
+                    decryptedMessage = secureMessage.decrypt(dataSnapshot.child("text").getValue().toString());
 
-            return secureMessage.decrypt(params[0]);
+                    decryptedMessages.add(positionMessages, decryptedMessage);
+                    /*if (positionMessages == 0){
+                        updateFireBaseRecyclerAdapter();
+                    } else if (positionMessages >2) {
+                        mFirebaseAdapter.notifyDataSetChanged();
+                    }*/
+                    updateFireBaseRecyclerAdapter();
+                    positionMessages++;
+                }
+
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+
+                }
+
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+
+                }
+
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
+
+                }
+            });
+
+            return null;
         }
 
         @Override
-        protected void onPostExecute (String result){
-            //v.messageTextView.setText(decryptedMessage);              //<--
+        protected void onPostExecute (Void result){
+            //updateFireBaseRecyclerAdapter();
+            //mFirebaseAdapter.notifyDataSetChanged();
         }
-    } */
+    }
 
     /* private void updateView(){
         Handler handlerUpdateView = new Handler();

@@ -23,24 +23,19 @@ public class ChatMessageModel {
     private String userId;
     private String photoUrl;
     private String timeStamp;
-    private String userChatId;
     private Boolean readIt;
-
-    private SecureMessage secureMessage;
 
     public ChatMessageModel() {
 
     }
 
-    ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId, Boolean readIt, String userChatId) {
+    ChatMessageModel(String text, String name, String photoUrl, String timeStamp, String userId, Boolean readIt) {
         this.text = text;
         this.name = name;
         this.userId = userId;
         this.photoUrl = photoUrl;
         this.timeStamp = timeStamp;
         this.readIt = readIt;
-
-        this.userChatId = userChatId;
 
     }
 
@@ -50,14 +45,6 @@ public class ChatMessageModel {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public String getUserChatId() {
-        return userChatId;
-    }
-
-    public void setUserChatId(String userChatId) {
-        this.userChatId = userChatId;
     }
 
     public String getText() {
@@ -106,14 +93,5 @@ public class ChatMessageModel {
 
     public Boolean getReadIt(){
         return readIt;
-    }
-    public void  setDecryptedText(String textToEncrypt){
-
-    }
-    public String getDecryptedText(){
-        String mKey = FireConnection.getInstance().genHashKey(userChatId);
-        secureMessage = new SecureMessage(mKey);
-
-        return secureMessage.decrypt(getText());
     }
 }
