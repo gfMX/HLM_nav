@@ -72,6 +72,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
@@ -576,15 +577,21 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               final ChatMessageModel chatMessageModel, int position) {
 
-                DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
+                //DecryptParameters decryptParameters = new DecryptParameters(viewHolder, chatMessageModel.getText(), position);
 
                 decryptOnBackground = new DecryptOnBackground();
-                decryptOnBackground.execute(decryptParameters);
+                //decryptOnBackground.execute(decryptParameters);
 
                 //decryptedMessage = secureMessage.decrypt(chatMessageModel.getText());
 
+
                 mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
+                try {
+                    decryptedMessage = decryptOnBackground.execute(chatMessageModel.getText()).get();
+                } catch (InterruptedException | ExecutionException e){
+                    decryptedMessage = "The message cannot be loaded. Sorry";
+                }
                 viewHolder.messageTextView.setText(decryptedMessage);
                 //viewHolder.messageTextView.setText(chatMessageModel.getDecryptedText());
                 viewHolder.messengerTextView.setText(messengerText);
@@ -615,7 +622,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     }
 
-    class DecryptOnBackground extends AsyncTask <DecryptParameters, Void, Void>{
+    class DecryptOnBackground extends AsyncTask <String, Void, String>{
         MessageViewHolder v;
         String c;
         int p;
@@ -626,20 +633,21 @@ public class ChatActivity extends AppCompatActivity implements
         }
 
         @Override
-        protected Void doInBackground(DecryptParameters ... params) {
+        protected String doInBackground(String ... params) {
 
+            /*
             v = params[0].messageViewHolder;
             c = params[0].chatMessageModel;
-            p = params[0].position;
+            p = params[0].position; */
 
-            decryptedMessage = secureMessage.decrypt(c);    //<--
+            //decryptedMessage = secureMessage.decrypt(params[0]);    //<--
 
-            return null;
+            return secureMessage.decrypt(params[0]);
         }
 
         @Override
-        protected void onPostExecute (Void result){
-            v.messageTextView.setText(decryptedMessage);              //<--
+        protected void onPostExecute (String result){
+            //v.messageTextView.setText(decryptedMessage);              //<--
         }
     }
 
