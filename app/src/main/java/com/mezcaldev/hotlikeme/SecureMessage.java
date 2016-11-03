@@ -7,7 +7,6 @@ import android.util.Log;
 import java.security.AlgorithmParameters;
 import java.security.SecureRandom;
 import java.security.spec.KeySpec;
-import java.util.concurrent.ExecutionException;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -108,13 +107,6 @@ class SecureMessage {
     }
 
     String decrypt(String str) {
-
-        try {
-            return new BackgroundDecrypt().execute(str).get();
-        } catch (InterruptedException | ExecutionException e){
-            return "Message not loaded";
-        }
-        /*
         //separate encrypted text from salt and IV
         String text = str.substring(0, (str.length() - 38));
 
@@ -155,7 +147,7 @@ class SecureMessage {
         } catch (Exception e) {
             e.printStackTrace();
             return null;
-        }*/
+        }
     }
 
     class BackgroundDecrypt extends AsyncTask<String, Void, String> {
