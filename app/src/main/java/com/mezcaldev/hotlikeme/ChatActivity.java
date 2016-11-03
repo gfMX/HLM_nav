@@ -195,7 +195,6 @@ public class ChatActivity extends AppCompatActivity implements
         } else {
             mUsername = mFirebaseUser.getDisplayName();
             mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
-
         }
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
@@ -352,7 +351,9 @@ public class ChatActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
-                        mFirebaseAdapter.notifyDataSetChanged();
+                        if (mFirebaseAdapter != null) {
+                            mFirebaseAdapter.notifyDataSetChanged();
+                        }
                     }
                 };
                 waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 300);
@@ -522,6 +523,8 @@ public class ChatActivity extends AppCompatActivity implements
 
                     new DecryptOnBackground().execute();
 
+                } else if (totalMessages == 0){
+                    updateFireBaseRecyclerAdapter();
                 }
                 positionMessages++;
             }
