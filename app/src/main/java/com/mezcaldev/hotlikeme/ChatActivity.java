@@ -82,6 +82,7 @@ import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 
@@ -111,6 +112,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
+    private DecryptOnBackground decryptOnBackground;
     //private String encryptedMessage;
     private String encryptedMessageToSend;
     String decryptedMessage;
@@ -120,11 +122,15 @@ public class ChatActivity extends AppCompatActivity implements
     Handler waitForNewMessageSent;
     Runnable waitForNewMessageSentRunnable;
 
+    //Delays:
+    int bigDelay = ONE_SECOND * 2;
+
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
-    int MESSAGE_LIMIT = 20;
+    int MESSAGE_LIMIT = 40;
+    int MESSAGE_MAX_LOAD = 120;
     int ADD_OLD_MESSAGES = 5;
     int UPDATE_VIEW_DELAY = 500;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
@@ -246,6 +252,7 @@ public class ChatActivity extends AppCompatActivity implements
                 mProgressBar.setVisibility(View.VISIBLE);
 
                 flagBottom = false;
+                //flagRunOnce = false;
                 mLinearLayoutManager.setStackFromEnd(false);
                 updateFireBaseRecyclerAdapter();
                 //preloadDecryptedMessages();
@@ -267,7 +274,7 @@ public class ChatActivity extends AppCompatActivity implements
                         mProgressBar.setVisibility(View.INVISIBLE);
                         mLinearLayoutManager.scrollToPosition(currentMessagePosition);
                     }
-                },2000);
+                }, bigDelay);
 
 
             }
@@ -490,9 +497,23 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     private void preloadDecryptedMessages(){
+        Query preloadMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT + ADD_OLD_MESSAGES);
         positionMessages = 0;
+
         mProgressBar.setVisibility(View.VISIBLE);
         Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
+
+        Handler handlerShowLoadingBar = new Handler();
+        Runnable runnableShowLoadingBar = new Runnable() {
+            @Override
+            public void run() {
+                mProgressBar.setVisibility(View.INVISIBLE);
+                if (mFirebaseAdapter != null) {
+                    mFirebaseAdapter.notifyDataSetChanged();
+                }
+            }
+        };
+        handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, bigDelay * 2);
 
         databaseReferenceLastMessages.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
@@ -519,9 +540,18 @@ public class ChatActivity extends AppCompatActivity implements
 
                 if (positionMessages == totalMessages - 1) {
                     Log.e(TAG, "Updating the adapter on: " + positionMessages + "<---");
-                    updateFireBaseRecyclerAdapter();
 
-                    new DecryptOnBackground().execute();
+                    Handler handlerShowMessages = new Handler();
+                    Runnable runnableShowMessages = new Runnable() {
+                        @Override
+                        public void run() {
+                            updateFireBaseRecyclerAdapter();
+                        }
+                    };
+                    handlerShowMessages.postDelayed(runnableShowMessages, bigDelay);
+
+                    decryptOnBackground = new DecryptOnBackground();
+                    decryptOnBackground.execute();
 
                 } else if (totalMessages == 0){
                     updateFireBaseRecyclerAdapter();
@@ -556,7 +586,7 @@ public class ChatActivity extends AppCompatActivity implements
         if (mFirebaseAdapter != null){
             mFirebaseAdapter.cleanup();
         }
-        mProgressBar.setVisibility(View.VISIBLE);
+        //mProgressBar.setVisibility(View.VISIBLE);
 
         mFirebaseAdapter = new FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder>(
                 ChatMessageModel.class,
@@ -595,7 +625,7 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               final ChatMessageModel chatMessageModel, int position) {
 
-                mProgressBar.setVisibility(ProgressBar.INVISIBLE);
+                //mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
 
                 System.out.println("SIZE -------> " + positionMessages);
@@ -656,7 +686,7 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
-        new DecryptOnBackground().execute();
+        //decryptOnBackground.execute();
 
         Handler reloadView = new Handler();
         reloadView.postDelayed(new Runnable() {
@@ -674,8 +704,8 @@ public class ChatActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            mProgressBar.setVisibility(View.VISIBLE);
-            //Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
+            //mProgressBar.setVisibility(View.VISIBLE);
+            //Toast.makeText(getApplicationContext(), "Decrypting your Messages", Toast.LENGTH_LONG).show();
         }
 
         @Override
@@ -706,7 +736,9 @@ public class ChatActivity extends AppCompatActivity implements
         @Override
         protected void onPostExecute (Void result){
             Log.i(TAG, "Decrypting: Updating Adapter");
-            mFirebaseAdapter.notifyDataSetChanged();
+            if (mFirebaseAdapter != null) {
+                mFirebaseAdapter.notifyDataSetChanged();
+            }
         }
     }
 
@@ -760,6 +792,9 @@ public class ChatActivity extends AppCompatActivity implements
     protected void onDestroy() {
         super.onDestroy();
         chatIsInFront = false;
+        if (decryptOnBackground != null) {
+            decryptOnBackground.cancel(true);
+        }
     }
 
 }
