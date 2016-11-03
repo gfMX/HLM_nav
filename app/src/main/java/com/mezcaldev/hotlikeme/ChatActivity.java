@@ -82,6 +82,7 @@ import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
@@ -103,7 +104,6 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     //Encrypted Message
-    boolean flagBottom = true;
     boolean flagRunOnce = false;
     boolean isInFront;
 
@@ -113,7 +113,6 @@ public class ChatActivity extends AppCompatActivity implements
     protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
     private DecryptOnBackground decryptOnBackground;
-    //private String encryptedMessage;
     private String encryptedMessageToSend;
     String decryptedMessage;
     long totalMessages;
@@ -129,10 +128,12 @@ public class ChatActivity extends AppCompatActivity implements
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
-    int MESSAGE_LIMIT = 30;
-    int ADD_OLD_MESSAGES = 10;
+    private final int DEFAULT_MESSAGE_LIMIT = 20;
+    int MESSAGE_LIMIT = DEFAULT_MESSAGE_LIMIT;
+    private final int DEFAULT_ADD_OLD_MESSAGES = 5;
+    int ADD_OLD_MESSAGES = DEFAULT_ADD_OLD_MESSAGES;
     int UPDATE_VIEW_DELAY = 500;
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
+    public static final int DEFAULT_MSG_LENGTH_LIMIT = 160;
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
     String mUsername;
@@ -184,6 +185,10 @@ public class ChatActivity extends AppCompatActivity implements
         if (bundle.getString("userName")!= null) {
             setTitle(bundle.getString("userName"));
         }
+        if (bundle.getInt("maxMessages") > DEFAULT_MESSAGE_LIMIT && bundle.getInt("oldMessages") > DEFAULT_ADD_OLD_MESSAGES){
+            MESSAGE_LIMIT = bundle.getInt("maxMessages");
+            ADD_OLD_MESSAGES = bundle.getInt("oldMessages");
+        }
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
         mUsername = ANONYMOUS;
@@ -199,8 +204,36 @@ public class ChatActivity extends AppCompatActivity implements
             return;
         } else {
             mUsername = mFirebaseUser.getDisplayName();
-            mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            if (mFirebaseUser.getPhotoUrl() != null) {
+                mPhotoUrl = mFirebaseUser.getPhotoUrl().toString();
+            } else {
+                mPhotoUrl = null;
+            }
         }
+
+        // Initialize Firebase
+        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+
+        // Define Firebase Remote Config Settings.
+        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
+                new FirebaseRemoteConfigSettings.Builder()
+                        .setDeveloperModeEnabled(true)
+                        .build();
+
+        // Define default config values. Defaults are used when fetched config values are not
+        // available. Eg: if an error occurred fetching values from the server.
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put("friendly_msg_length", 160);
+        defaultConfigMap.put("messages_limit", 20);
+        defaultConfigMap.put("load_old_messages", 5);
+
+        // Apply config settings and default values.
+        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
+        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+
+        // Fetch remote config.
+        fetchConfig();
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
@@ -252,7 +285,7 @@ public class ChatActivity extends AppCompatActivity implements
 
                 mProgressBar.setVisibility(View.VISIBLE);
 
-                flagBottom = false;
+                //flagBottom = false;
                 //flagRunOnce = false;
                 mLinearLayoutManager.setStackFromEnd(false);
                 updateFireBaseRecyclerAdapter();
@@ -280,35 +313,13 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
-        // Initialize Firebase
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-
-        // Define Firebase Remote Config Settings.
-        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
-                new FirebaseRemoteConfigSettings.Builder()
-                        .setDeveloperModeEnabled(true)
-                        .build();
-
-        // Define default config values. Defaults are used when fetched config values are not
-        // available. Eg: if an error occurred fetching values from the server.
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 160L);
-
-        // Apply config settings and default values.
-        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-
-        // Fetch remote config.
-        fetchConfig();
-
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
                 .getInt(ChatRemotePreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                flagBottom = true;
+                //flagBottom = true;
                 mLinearLayoutManager.setStackFromEnd(true);
                 //mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
                 /*if (mLinearLayoutManager.getItemCount()-1 >= 0){
@@ -416,7 +427,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     // Fetch the config to determine the allowed length of messages.
     public void fetchConfig() {
-        long cacheExpiration = 3600; // 1 hour in seconds
+        long cacheExpiration = ONE_HOUR * 24; // 1 hour in seconds
         // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
         // server. This should not be used in release builds.
         if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
@@ -469,8 +480,12 @@ public class ChatActivity extends AppCompatActivity implements
 
     private void applyRetrievedLengthLimit() {
         Long friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        MESSAGE_LIMIT = (int) mFirebaseRemoteConfig.getLong("messages_limit");
+        ADD_OLD_MESSAGES = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(friendly_msg_length.intValue())});
-        Log.d(TAG, "HLM Message Length is: " + friendly_msg_length);
+        Log.d(TAG, "HLM Message Length is: " + friendly_msg_length
+                + "\nHLM Display Messages: " + MESSAGE_LIMIT
+                + "\nHLM Old Messages: " + ADD_OLD_MESSAGES);
     }
 
     @Override
@@ -500,8 +515,9 @@ public class ChatActivity extends AppCompatActivity implements
                 (InputMethodManager) activity.getSystemService(
                         Activity.INPUT_METHOD_SERVICE);
 
-        inputMethodManager.hideSoftInputFromWindow(
-                activity.getCurrentFocus().getWindowToken(), 0);
+        if (activity.getCurrentFocus() != null) {
+            inputMethodManager.hideSoftInputFromWindow(activity.getCurrentFocus().getWindowToken(), 0);
+        }
 
     }
 
@@ -520,10 +536,6 @@ public class ChatActivity extends AppCompatActivity implements
                 mProgressBar.setVisibility(View.INVISIBLE);
                 if (mFirebaseAdapter != null) {
                     mFirebaseAdapter.notifyDataSetChanged();
-                    /*if (!flagBottom) {
-                        Log.e(TAG, "--> Scrolling to the top");
-                        mMessageRecyclerView.smoothScrollToPosition(0); //<--
-                    } */
                 }
             }
         };
@@ -639,7 +651,6 @@ public class ChatActivity extends AppCompatActivity implements
             protected void populateViewHolder(final MessageViewHolder viewHolder,
                                               final ChatMessageModel chatMessageModel, int position) {
 
-                //mProgressBar.setVisibility(ProgressBar.INVISIBLE);
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
 
                 System.out.println("SIZE -------> " + positionMessages);
@@ -675,6 +686,7 @@ public class ChatActivity extends AppCompatActivity implements
 
                 int friendlyMessageCount = mFirebaseAdapter.getItemCount();
                 int lastVisiblePosition = mLinearLayoutManager.findLastCompletelyVisibleItemPosition();
+
                 // If the recycler view is initially being loaded or the user is at the bottom of the list, scroll
                 // to the bottom of the list to show the newly added message.
                 if (lastVisiblePosition >= -1 ||
@@ -721,20 +733,14 @@ public class ChatActivity extends AppCompatActivity implements
             List<String> messagesToDecrypt = decryptedMessages;
 
             if (!flagRunOnce) {
-                int nMessagess = messagesToDecrypt.size();
-                Log.i(TAG, "--> Decrypting <-- Size: " + nMessagess);
+                int nMessages = messagesToDecrypt.size();
+                Log.i(TAG, "--> Decrypting <-- Size: " + nMessages);
 
-                if (flagBottom) {
-                    for (int i = nMessagess - 1; i >= 0; i--) {
-                        decryptedMessage = secureMessage.decrypt(messagesToDecrypt.get(i));
-                        decryptedMessages.set(i, decryptedMessage);
-                    }
-                } else{
-                    for (int i = 0; i < nMessagess; i++) {
-                        decryptedMessage = secureMessage.decrypt(messagesToDecrypt.get(i));
-                        decryptedMessages.set(i, decryptedMessage);
-                    }
+                for (int i = nMessages - 1; i >= 0; i--) {
+                    decryptedMessage = secureMessage.decrypt(messagesToDecrypt.get(i));
+                    decryptedMessages.set(i, decryptedMessage);
                 }
+
                 flagRunOnce = true;
             } else {
                 Log.i(TAG, "Messages already decrypted");

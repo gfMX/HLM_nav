@@ -1,6 +1,5 @@
 package com.mezcaldev.hotlikeme;
 
-import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Paint;
@@ -32,7 +31,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -70,9 +68,11 @@ public class ChatUserList extends ListFragment {
     //Encrypted Message
     protected String myKey; //= "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
-    //private String decryptedMessage;
 
-    //NotificationManager notificationManager;
+    /*int fireConfigMessageLength;
+    int fireConfigMessageLimit;
+    int fireConfigMessageOld;
+    private FirebaseRemoteConfig mFirebaseRemoteConfig; */
 
     //FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseStorage storage = FirebaseStorage.getInstance();
@@ -192,6 +192,26 @@ public class ChatUserList extends ListFragment {
     }
 
     private void getUsers() {
+
+        // Define Firebase Remote Config Settings.
+        /*FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
+                new FirebaseRemoteConfigSettings.Builder()
+                        .setDeveloperModeEnabled(true)
+                        .build();
+
+        // Define default config values. Defaults are used when fetched config values are not
+        // available. Eg: if an error occurred fetching values from the server.
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put("friendly_msg_length", 160);
+        defaultConfigMap.put("messages_limit", 20);
+        defaultConfigMap.put("load_old_messages", 5);
+
+        // Apply config settings and default values.
+        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
+        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+
+        // Fetch remote config.
+        fetchConfig(); */
 
         mAdapter = new ChatRecyclerAdapter(getContext(), user.getUid(), userProfilePic, userName, userLastMessage, userTimeStamp, userChatID, userLastMessageId, userMessageRead);
         mRecyclerView.setAdapter(mAdapter);
@@ -519,6 +539,43 @@ public class ChatUserList extends ListFragment {
             Log.i(TAG, "¡-------------------------¡");
         }
     }
+
+    // Fetch the config to determine the allowed length of messages.
+    /*public void fetchConfig() {
+        long cacheExpiration = ONE_HOUR * 24; // 1 hour in seconds
+        // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
+        // server. This should not be used in release builds.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            cacheExpiration = 0;
+        }
+        mFirebaseRemoteConfig.fetch(cacheExpiration)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Make the fetched config available via FirebaseRemoteConfig get<type> calls.
+                        mFirebaseRemoteConfig.activateFetched();
+                        applyRetrievedLengthLimit();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // There has been an error fetching the config
+                        Log.w(TAG, "Error fetching config: " + e.getMessage());
+                        applyRetrievedLengthLimit();
+                    }
+                });
+    }
+
+    private void applyRetrievedLengthLimit() {
+        Long friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        fireConfigMessageLimit = (int) mFirebaseRemoteConfig.getLong("messages_limit");
+        fireConfigMessageOld = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
+        fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        Log.d(TAG, "HLM Message Length is: " + fireConfigMessageLength
+                + "\nHLM Display Messages: " + fireConfigMessageLimit
+                + "\nHLM Old Messages: " + fireConfigMessageOld);
+    } */
 
     private void waitForLogin (){
         if (isInLayout()) {
