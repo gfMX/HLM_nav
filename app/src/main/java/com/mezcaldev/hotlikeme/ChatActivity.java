@@ -129,9 +129,8 @@ public class ChatActivity extends AppCompatActivity implements
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
     private static final int REQUEST_INVITE = 1;
-    int MESSAGE_LIMIT = 40;
-    int MESSAGE_MAX_LOAD = 120;
-    int ADD_OLD_MESSAGES = 5;
+    int MESSAGE_LIMIT = 30;
+    int ADD_OLD_MESSAGES = 10;
     int UPDATE_VIEW_DELAY = 500;
     public static final int DEFAULT_MSG_LENGTH_LIMIT = 110;
     public static final String ANONYMOUS = "anonymous";
@@ -212,7 +211,7 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                hideSoftKeyboard(ChatActivity.this);
+                //hideSoftKeyboard(ChatActivity.this);
             }
         });
         mMessageRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
@@ -247,6 +246,8 @@ public class ChatActivity extends AppCompatActivity implements
                 final int currentMessagePosition = mLinearLayoutManager.findFirstCompletelyVisibleItemPosition();
                 MESSAGE_LIMIT += ADD_OLD_MESSAGES;
                 Log.i(TAG, "New Message Limit: " + MESSAGE_LIMIT);
+                Toast.makeText(getApplicationContext(), "Loading Old Messages", Toast.LENGTH_LONG).show();
+
                 recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
                 mProgressBar.setVisibility(View.VISIBLE);
@@ -265,18 +266,17 @@ public class ChatActivity extends AppCompatActivity implements
                             swipeRefreshLayout.setRefreshing(false);
                         }
                     }
-                },750);
+                }, ONE_SECOND);
 
                 Handler handlerShowOldMessages = new Handler();
                 handlerShowOldMessages.postDelayed(new Runnable() {
                     @Override
                     public void run() {
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        mLinearLayoutManager.scrollToPosition(currentMessagePosition);
+                        //mLinearLayoutManager.scrollToPosition(currentMessagePosition);
+                        mMessageRecyclerView.smoothScrollToPosition(currentMessagePosition + (ADD_OLD_MESSAGES/2));
                     }
                 }, bigDelay);
-
-
             }
         });
 
@@ -308,8 +308,12 @@ public class ChatActivity extends AppCompatActivity implements
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                flagBottom = true;
                 mLinearLayoutManager.setStackFromEnd(true);
-                mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
+                //mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
+                /*if (mLinearLayoutManager.getItemCount()-1 >= 0){
+                    mMessageRecyclerView.smoothScrollToPosition(mLinearLayoutManager.getItemCount()-1);
+                } */
             }
 
             @Override
@@ -340,6 +344,11 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public void onClick(View view) {
                 checkNetworkAccess();
+
+                if (mLinearLayoutManager.getItemCount()-1 >= 0){
+                    mMessageRecyclerView.smoothScrollToPosition(mLinearLayoutManager.getItemCount()-1);
+                }
+
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(false);          //Remove after finding the TRUE leak...
                 encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
 
@@ -497,8 +506,9 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     private void preloadDecryptedMessages(){
-        Query preloadMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT + ADD_OLD_MESSAGES);
+        //Query preloadMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
         positionMessages = 0;
+        decryptedMessages.clear();
 
         mProgressBar.setVisibility(View.VISIBLE);
         Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
@@ -510,6 +520,10 @@ public class ChatActivity extends AppCompatActivity implements
                 mProgressBar.setVisibility(View.INVISIBLE);
                 if (mFirebaseAdapter != null) {
                     mFirebaseAdapter.notifyDataSetChanged();
+                    /*if (!flagBottom) {
+                        Log.e(TAG, "--> Scrolling to the top");
+                        mMessageRecyclerView.smoothScrollToPosition(0); //<--
+                    } */
                 }
             }
         };
@@ -651,8 +665,6 @@ public class ChatActivity extends AppCompatActivity implements
             }
         };
 
-        flagBottom = true;
-
         mMessageRecyclerView.setLayoutManager(mLinearLayoutManager);
         mMessageRecyclerView.setAdapter(mFirebaseAdapter);
 
@@ -667,9 +679,10 @@ public class ChatActivity extends AppCompatActivity implements
                 // to the bottom of the list to show the newly added message.
                 if (lastVisiblePosition >= -1 ||
                         (positionStart >= (friendlyMessageCount - 1) && lastVisiblePosition == (positionStart - 1))) {
+
                     mLinearLayoutManager.setStackFromEnd(true);
-                    //mLinearLayoutManager.scrollToPosition(positionStart);
-                    mMessageRecyclerView.scrollToPosition(positionStart);
+                    mLinearLayoutManager.scrollToPosition(positionStart);
+
                     mFirebaseAdapter.notifyDataSetChanged();
                 }
                 Handler handlerSetAsRead = new Handler();
@@ -686,8 +699,6 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
-        //decryptOnBackground.execute();
-
         Handler reloadView = new Handler();
         reloadView.postDelayed(new Runnable() {
             @Override
@@ -696,7 +707,6 @@ public class ChatActivity extends AppCompatActivity implements
                 //new DecryptOnBackground().execute();
             }
         }, UPDATE_VIEW_DELAY);
-
     }
 
     class DecryptOnBackground extends AsyncTask<Void, Void, Void> {
@@ -704,26 +714,26 @@ public class ChatActivity extends AppCompatActivity implements
         @Override
         protected void onPreExecute() {
             super.onPreExecute();
-            //mProgressBar.setVisibility(View.VISIBLE);
-            //Toast.makeText(getApplicationContext(), "Decrypting your Messages", Toast.LENGTH_LONG).show();
         }
 
         @Override
         protected Void doInBackground(Void... params) {
             List<String> messagesToDecrypt = decryptedMessages;
 
-            //positionMessages = 0;
-            //decryptedMessages.clear();
-            //mProgressBar.setVisibility(View.VISIBLE);
             if (!flagRunOnce) {
                 int nMessagess = messagesToDecrypt.size();
                 Log.i(TAG, "--> Decrypting <-- Size: " + nMessagess);
 
-                for (int i = nMessagess - 1; i >= 0; i--) {
-                    //Log.i(TAG, "Decrypting: Message before decrypt: " + messagesToDecrypt.get(i));
-                    decryptedMessage = secureMessage.decrypt(messagesToDecrypt.get(i));
-                    //Log.i(TAG, "Decrypting: Decrypted Message: " + decryptedMessage);
-                    decryptedMessages.set(i, decryptedMessage);
+                if (flagBottom) {
+                    for (int i = nMessagess - 1; i >= 0; i--) {
+                        decryptedMessage = secureMessage.decrypt(messagesToDecrypt.get(i));
+                        decryptedMessages.set(i, decryptedMessage);
+                    }
+                } else{
+                    for (int i = 0; i < nMessagess; i++) {
+                        decryptedMessage = secureMessage.decrypt(messagesToDecrypt.get(i));
+                        decryptedMessages.set(i, decryptedMessage);
+                    }
                 }
                 flagRunOnce = true;
             } else {
