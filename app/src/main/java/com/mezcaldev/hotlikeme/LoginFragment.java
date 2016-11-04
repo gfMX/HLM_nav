@@ -38,7 +38,6 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -50,6 +49,7 @@ import org.json.JSONObject;
 import java.io.File;
 
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
+import static com.mezcaldev.hotlikeme.FireConnection.user;
 
 public class LoginFragment extends Fragment {
 
@@ -94,10 +94,8 @@ public class LoginFragment extends Fragment {
     SharedPreferences.Editor editor;
 
     //Firebase
-    static FirebaseUser user;
     static FirebaseAuth mAuth;
     static FirebaseAuth.AuthStateListener mAuthListener;
-    //static FirebaseDatabase database;
     static DatabaseReference fireRef;
     static FirebaseStorage storage;
     static StorageReference storageRef;
@@ -122,7 +120,6 @@ public class LoginFragment extends Fragment {
         pathProfileImage = pathP.getAbsolutePath();
 
         //Initialize Firebase
-        //databaseGlobal = FirebaseDatabase.getInstance();
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
@@ -145,7 +142,6 @@ public class LoginFragment extends Fragment {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
-        //View view = inflater.inflate(R.layout.fragment_login, container, false);
 
         return inflater.inflate(R.layout.fragment_login, container, false);
     }
@@ -160,7 +156,6 @@ public class LoginFragment extends Fragment {
         fb_welcome_text = (TextView) view.findViewById(R.id.fb_textWelcome);
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
         imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
-        //imageProfileHLM.setRotation(5 * ((float) Math.random() * 2 - 1));
 
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
         btn_start = (Button) view.findViewById(R.id.btn_start);
@@ -182,10 +177,6 @@ public class LoginFragment extends Fragment {
                 accessToken = loginResult.getAccessToken();
                 // App code
                 Log.d(TAG, "FB: onSuccess:" + loginResult);
-                /*Toast.makeText(getActivity(),
-                        getResources().getString(R.string.text_welcome),
-                        Toast.LENGTH_SHORT)
-                        .show();*/
                 handleFacebookAccessToken(accessToken);
             }
             @Override
@@ -372,6 +363,7 @@ public class LoginFragment extends Fragment {
             imageProfileHLM.setClickable(true);
             if (user.getPhotoUrl() != null && getContext() != null) {
                 //Glide do better RAM Optimization:
+                //Glide.clear(imageProfileHLM);  // <-- Last Addition
                 Glide
                         .with(getContext())
                         .load(user.getPhotoUrl())
@@ -482,6 +474,14 @@ public class LoginFragment extends Fragment {
         super.onResume();
         accessTokenTracker.startTracking();
         profileTracker.startTracking();
+        // <-- Last Addition
+        /*if (user != null && imageProfileHLM != null) {
+            Glide
+                    .with(getContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(imageProfileHLM);
+        } */
     }
 
     @Override

@@ -14,13 +14,11 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.OnProgressListener;
@@ -93,7 +91,7 @@ public class ImageSaver {
     }
 
     //Upload Image to Firebase
-    public void iUploadProfileImageToFirebase(String path, FirebaseUser user){
+    public void iUploadProfileImageToFirebase(String path, final FirebaseUser user){
         UploadTask uploadTask;
 
         Uri file = Uri.fromFile(new File(path));
@@ -120,14 +118,14 @@ public class ImageSaver {
             @Override
             public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
                 Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                FirebaseUser userToUpdate = FirebaseAuth.getInstance().getCurrentUser();
+                //FirebaseUser userToUpdate = FirebaseAuth.getInstance().getCurrentUser();
 
                 UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
                         .setPhotoUri(downloadUrl)
                         .build();
 
-                if (userToUpdate != null) {
-                    userToUpdate.updateProfile(profileUpdates)
+                //if (userToUpdate != null) {
+                    user.updateProfile(profileUpdates)
                             .addOnCompleteListener(new OnCompleteListener<Void>() {
                                 @Override
                                 public void onComplete(@NonNull Task<Void> task) {
@@ -136,7 +134,7 @@ public class ImageSaver {
                                     }
                                 }
                             });
-                }
+                //}
                 Log.v(TAG,"Image uploaded to Firebase");
             }
         });

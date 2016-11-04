@@ -57,8 +57,6 @@ import com.firebase.ui.database.FirebaseRecyclerAdapter;
 import com.google.android.gms.appinvite.AppInviteInvitation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
@@ -68,24 +66,22 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.Query;
 import com.google.firebase.database.ValueEventListener;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 import de.hdodenhof.circleimageview.CircleImageView;
 
-import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOld;
 
 public class ChatActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
@@ -127,13 +123,15 @@ public class ChatActivity extends AppCompatActivity implements
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
+
+    int UPDATE_VIEW_DELAY = 500;
     private static final int REQUEST_INVITE = 1;
     private final int DEFAULT_MESSAGE_LIMIT = 20;
     int MESSAGE_LIMIT = DEFAULT_MESSAGE_LIMIT;
     private final int DEFAULT_ADD_OLD_MESSAGES = 5;
     int ADD_OLD_MESSAGES = DEFAULT_ADD_OLD_MESSAGES;
-    int UPDATE_VIEW_DELAY = 500;
-    public static final int DEFAULT_MSG_LENGTH_LIMIT = 160;
+    private static final int DEFAULT_MSG_LENGTH_LIMIT = 160;
+    int MSG_LENGTH_LIMIT = DEFAULT_MSG_LENGTH_LIMIT;
     public static final String ANONYMOUS = "anonymous";
     private static final String MESSAGE_SENT_EVENT = "message_sent";
     String mUsername;
@@ -152,9 +150,9 @@ public class ChatActivity extends AppCompatActivity implements
     private DatabaseReference databaseReferenceLastMessages;
     FirebaseAuth mFirebaseAuth;
     FirebaseUser mFirebaseUser;
-    private FirebaseAnalytics mFirebaseAnalytics;
+    //private FirebaseAnalytics mFirebaseAnalytics;
     private EditText mMessageEditText;
-    private FirebaseRemoteConfig mFirebaseRemoteConfig;
+    //private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -185,9 +183,10 @@ public class ChatActivity extends AppCompatActivity implements
         if (bundle.getString("userName")!= null) {
             setTitle(bundle.getString("userName"));
         }
-        if (bundle.getInt("maxMessages") > DEFAULT_MESSAGE_LIMIT && bundle.getInt("oldMessages") > DEFAULT_ADD_OLD_MESSAGES){
-            MESSAGE_LIMIT = bundle.getInt("maxMessages");
-            ADD_OLD_MESSAGES = bundle.getInt("oldMessages");
+        if (fireConfigMessageLimit > 0 && fireConfigMessageOld > 0 && fireConfigMessageLength > 0){
+            MESSAGE_LIMIT = fireConfigMessageLimit;
+            ADD_OLD_MESSAGES = fireConfigMessageOld;
+            MSG_LENGTH_LIMIT = fireConfigMessageLength;
         }
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -212,10 +211,10 @@ public class ChatActivity extends AppCompatActivity implements
         }
 
         // Initialize Firebase
-        mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        //mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
+        //mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
 
-        // Define Firebase Remote Config Settings.
+        /*// Define Firebase Remote Config Settings.
         FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
                 new FirebaseRemoteConfigSettings.Builder()
                         .setDeveloperModeEnabled(true)
@@ -233,7 +232,7 @@ public class ChatActivity extends AppCompatActivity implements
         mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
 
         // Fetch remote config.
-        fetchConfig();
+        fetchConfig(); */
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
@@ -315,7 +314,7 @@ public class ChatActivity extends AppCompatActivity implements
 
         mMessageEditText = (EditText) findViewById(R.id.messageEditText);
         mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(mSharedPreferences
-                .getInt(ChatRemotePreferences.FRIENDLY_MSG_LENGTH, DEFAULT_MSG_LENGTH_LIMIT))});
+                .getInt(ChatRemotePreferences.FRIENDLY_MSG_LENGTH, MSG_LENGTH_LIMIT))});
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
@@ -370,7 +369,7 @@ public class ChatActivity extends AppCompatActivity implements
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
 
                 mMessageEditText.setText("");
-                mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
+                //mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
 
                 // Go to last message
                 waitForNewMessageSent = new Handler();
@@ -407,7 +406,7 @@ public class ChatActivity extends AppCompatActivity implements
                 sendInvitation();
                 return true;
             case R.id.fresh_config_menu:
-                fetchConfig();
+                //fetchConfig();
                 return true;
             case android.R.id.home:
                 onBackPressed();
@@ -423,33 +422,6 @@ public class ChatActivity extends AppCompatActivity implements
                 .setCallToActionText(getString(R.string.invitation_cta))
                 .build();
         startActivityForResult(intent, REQUEST_INVITE);
-    }
-
-    // Fetch the config to determine the allowed length of messages.
-    public void fetchConfig() {
-        long cacheExpiration = ONE_HOUR * 24; // 1 hour in seconds
-        // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
-        // server. This should not be used in release builds.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
-            cacheExpiration = 0;
-        }
-        mFirebaseRemoteConfig.fetch(cacheExpiration)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // Make the fetched config available via FirebaseRemoteConfig get<type> calls.
-                        mFirebaseRemoteConfig.activateFetched();
-                        applyRetrievedLengthLimit();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // There has been an error fetching the config
-                        Log.w(TAG, "Error fetching config: " + e.getMessage());
-                        applyRetrievedLengthLimit();
-                    }
-                });
     }
 
     @Override
@@ -470,22 +442,12 @@ public class ChatActivity extends AppCompatActivity implements
                 // Use Firebase Measurement to log that invitation was not sent
                 Bundle payload = new Bundle();
                 payload.putString(FirebaseAnalytics.Param.VALUE, "inv_not_sent");
-                mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, payload);
+                //mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, payload);
 
                 // Sending failed or it was canceled, show failure message to the user
                 Log.d(TAG, "Failed to send invitation.");
             }
         }
-    }
-
-    private void applyRetrievedLengthLimit() {
-        Long friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
-        MESSAGE_LIMIT = (int) mFirebaseRemoteConfig.getLong("messages_limit");
-        ADD_OLD_MESSAGES = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
-        mMessageEditText.setFilters(new InputFilter[]{new InputFilter.LengthFilter(friendly_msg_length.intValue())});
-        Log.d(TAG, "HLM Message Length is: " + friendly_msg_length
-                + "\nHLM Display Messages: " + MESSAGE_LIMIT
-                + "\nHLM Old Messages: " + ADD_OLD_MESSAGES);
     }
 
     @Override
@@ -653,7 +615,7 @@ public class ChatActivity extends AppCompatActivity implements
 
                 String messengerText = dateFormatter(chatMessageModel.getTimeStamp());
 
-                System.out.println("SIZE -------> " + positionMessages);
+                //System.out.println("SIZE -------> " + positionMessages);
 
                 int positionToLoadMessage;
                 if (positionMessages - MESSAGE_LIMIT >= 0) {

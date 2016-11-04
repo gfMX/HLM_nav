@@ -34,12 +34,14 @@ public class FireConnection {
     static FirebaseUser user;
     private FirebaseAuth mAuth;
     private FirebaseAuth.AuthStateListener mAuthListener;
-    //SharedPreferences sharedPreferences;
     static FirebaseDatabase databaseGlobal;
 
-    //Facebook Settings
-    //static boolean fbTokenStatus;
-    //private AccessToken accessToken;
+    //Remote Config from Firebase
+    static int fireConfigMessageLength;
+    static int fireConfigMessageLimit;
+    static int fireConfigMessageOld;
+    static long friendly_msg_length;
+    static int fireConfigDecIteration = 2000;
 
     //Location mCurrentLocation;
     static Boolean weLike = false;
@@ -48,8 +50,6 @@ public class FireConnection {
     private Integer maxUserDistance;
     private Boolean mRequestingLocationUpdates;
 
-
-    //private Boolean flagOneTime = false;
     private int numChildren;
     static List<String> usersList = new ArrayList<>();
     static List<Integer> randomUserList = new ArrayList<>();
@@ -79,6 +79,7 @@ public class FireConnection {
                     }
                     // User is signed in
                     Log.d(TAG, "User credentials granted: " + user.getUid());
+
                 } else {
                     // User is signed out
                     Log.d(TAG, "User not logged.");
@@ -89,8 +90,6 @@ public class FireConnection {
                 // Check if FaceBook Token is valid, if not Sign Out from FireBase
             }
         };
-
-        //getFbToken();
 
         mAuth = FirebaseAuth.getInstance();
         mAuth.addAuthStateListener(mAuthListener);
@@ -106,8 +105,6 @@ public class FireConnection {
             gender = sharedPreferences.getString("looking_for", "both");
             maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "1000"));
             mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
-            //SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(mContext);
-
 
             final DatabaseReference databaseReferenceUriProfile = databaseGlobal.getReference().child("groups").child(gender);
             final DatabaseReference databaseReferenceLocation = databaseGlobal.getReference().child("users");
@@ -117,7 +114,6 @@ public class FireConnection {
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     numChildren = (int) dataSnapshot.getChildrenCount();
                     Log.i(TAG, "Number of users: " + numChildren);
-                    //genUserRandomCollection(numChildren);
 
                     for (DataSnapshot data: dataSnapshot.getChildren()){
                         final String dataKey = data.getKey();
@@ -151,7 +147,6 @@ public class FireConnection {
 
                                                     System.out.println("User " + dataKey + " reachable!");
                                                     usersList.add(dataKey);
-
                                                 }
                                             }
                                         }
@@ -181,7 +176,7 @@ public class FireConnection {
             for (int i = 0; i < nUsers; i++) {
                 randomUserList.add(i);
             }
-            Log.i(TAG, "Original User List: " + randomUserList);
+            //Log.i(TAG, "Original User List: " + randomUserList);
             Collections.shuffle(randomUserList);
             Log.i(TAG, "Shuffled User List: " + randomUserList);
         } else{
@@ -192,9 +187,8 @@ public class FireConnection {
 
     String genHashKey(String myFutureKey){
         
-        Log.i(TAG, "-------> KEY For Decryption: " + myFutureKey);
+        //Log.i(TAG, "-------> KEY For Decryption: " + myFutureKey);
         myFutureKey = new StringBuilder(myFutureKey.replace("chat_", "")).reverse().toString();
-
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
             md.update(myFutureKey.getBytes());
@@ -206,14 +200,11 @@ public class FireConnection {
             for (int i = 0; i < byteData.length; i++) {
                 sb.append(Integer.toString((byteData[i] & 0xff) + 0x100, 16).substring(1));
             }
-
-            Log.i(TAG, "-------> HASHKey: " + sb.toString());
-
+            //Log.i(TAG, "-------> HASHKey: " + sb.toString());
             return sb.toString();
 
         } catch (NoSuchAlgorithmException e){
             e.printStackTrace();
-
             return "null";
         }
     }

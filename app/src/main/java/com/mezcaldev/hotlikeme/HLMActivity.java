@@ -56,23 +56,35 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.DateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_MINUTE;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIteration;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOld;
+import static com.mezcaldev.hotlikeme.FireConnection.friendly_msg_length;
 
 public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
 
-    private static final String TAG = "Location";
+    private static final String TAG = "HLM Main";
     //FirebaseUser HLM_CURRENT_USER;
     int HLM_PAGES;
     int HLM_CURRENT_PAGE;
@@ -131,6 +143,7 @@ public class HLMActivity extends AppCompatActivity implements
     //Firebase Initialization
     FirebaseUser user;
     FirebaseAuth mAuth;
+    FirebaseRemoteConfig mFirebaseRemoteConfig;
     FirebaseAuth.AuthStateListener mAuthListener;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
@@ -235,11 +248,30 @@ public class HLMActivity extends AppCompatActivity implements
             }
         });
 
+        //FireBase Remote Config
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
+                new FirebaseRemoteConfigSettings.Builder()
+                        .setDeveloperModeEnabled(false)
+                        .build();
+
+        // Define default config values. Defaults are used when fetched config values are not
+        // available. Eg: if an error occurred fetching values from the server.
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put("friendly_msg_length", 160);
+        defaultConfigMap.put("messages_limit", 20);
+        defaultConfigMap.put("load_old_messages", 5);
+
+        // Apply config settings and default values.
+        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
+        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+
         checkNetworkAccess();
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
 
+        fetchConfig();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -423,6 +455,46 @@ public class HLMActivity extends AppCompatActivity implements
         }
     }
 
+    // Fetch the config to determine the allowed length of messages.
+    private void fetchConfig() {
+        Log.i(TAG, "Getting remote Config");
+        long cacheExpiration = ONE_HOUR * 12;
+        // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
+        // server. This should not be used in release builds.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            cacheExpiration = 0;
+        }
+        mFirebaseRemoteConfig.fetch(cacheExpiration)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Make the fetched config available via FirebaseRemoteConfig get<type> calls.
+                        mFirebaseRemoteConfig.activateFetched();
+                        applyRetrievedLengthLimit();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // There has been an error fetching the config
+                        Log.w(TAG, "Error fetching config: " + e.getMessage());
+                        applyRetrievedLengthLimit();
+                    }
+                });
+    }
+
+    private void applyRetrievedLengthLimit() {
+        friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        fireConfigMessageLimit = (int) mFirebaseRemoteConfig.getLong("messages_limit");
+        fireConfigMessageOld = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
+        fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        fireConfigDecIteration = (int) mFirebaseRemoteConfig.getLong("iteration_count");
+        Log.d(TAG, "HLM Message Length is: " + fireConfigMessageLength
+                + "\nHLM Display Messages: " + fireConfigMessageLimit
+                + "\nHLM Old Messages: " + fireConfigMessageOld
+                + "\nHLM Iteration Count: " + fireConfigDecIteration);
+    }
+
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -444,6 +516,7 @@ public class HLMActivity extends AppCompatActivity implements
 
     private void userConnected(){
         if (user != null) {
+            //Glide.clear(drawerUserImage);  // <-- Last Addition
             Glide
                     .with(this.getApplicationContext())
                     .load(user.getPhotoUrl())
@@ -477,9 +550,8 @@ public class HLMActivity extends AppCompatActivity implements
                 .addOnConnectionFailedListener(this)
                 .addApi(LocationServices.API)
                 .build();
-        //if (user != null) {
+
                 createLocationRequest();
-        //}
     }
 
     @Override
@@ -790,6 +862,17 @@ public class HLMActivity extends AppCompatActivity implements
             stopLocationUpdates();
         }
         checkNetworkAccess();
+
+        // <-- Last Addition
+        /*if (user != null && drawerUserImage != null) {
+            //Glide.clear(drawerUserImage);
+            Glide
+                    .with(this.getApplicationContext())
+                    .load(user.getPhotoUrl())
+                    .centerCrop()
+                    .into(drawerUserImage);
+            drawerUserAlias.setText(user.getDisplayName());
+        } */
     }
     @Override
     protected void onPause() {

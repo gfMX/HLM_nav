@@ -17,11 +17,12 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.google.firebase.auth.FirebaseUser;
 
 import java.io.File;
 import java.io.InputStream;
 import java.net.URL;
+
+import static com.mezcaldev.hotlikeme.FireConnection.user;
 
 public class imageSelected extends DialogFragment {
     static final String TAG = "Saving the Image: ";
@@ -29,7 +30,7 @@ public class imageSelected extends DialogFragment {
     static Uri uriImage;
 
     File localStorage;
-    FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
+    //FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
 
     Button btn_ok;
     Button btn_cancel;
@@ -104,7 +105,7 @@ public class imageSelected extends DialogFragment {
                             );
                             saveImage.iUploadProfileImageToFirebase(
                                     localStorage.getAbsolutePath(),
-                                    firebaseUser
+                                    user
                             );
                         }
                         Log.v(TAG, "Everything Ok in here! We got the Image");

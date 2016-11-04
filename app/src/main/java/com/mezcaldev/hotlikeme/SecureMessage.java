@@ -16,6 +16,8 @@ import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.SecretKeySpec;
 
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIteration;
+
 /**
  * PASSWORD BASED AES256 Encryption/Decryption
  *
@@ -36,7 +38,7 @@ class SecureMessage {
     final String TAG = "SecureMessage";
     private static Cipher eCipher;
     private static byte[] salt = new byte[8];
-    private static int iterationCount = 2000;
+    private static int iterationCount = fireConfigDecIteration;
     private static String pass;
     private static byte[] iv;
     private SecretKey secret;
