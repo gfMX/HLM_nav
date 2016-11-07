@@ -46,6 +46,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ProgressBar;
@@ -81,7 +82,11 @@ import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimitDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOld;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOldDefault;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessagesMax;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessagesMaxDefault;
 
 public class ChatActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener {
@@ -106,7 +111,7 @@ public class ChatActivity extends AppCompatActivity implements
     int positionMessages;
     List<String> decryptedMessages = new ArrayList<>();
 
-    protected String myKey; // = "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
+    protected String myKey;
     private SecureMessage secureMessage;
     private DecryptOnBackground decryptOnBackground;
     private String encryptedMessageToSend;
@@ -126,14 +131,14 @@ public class ChatActivity extends AppCompatActivity implements
 
     int UPDATE_VIEW_DELAY = 500;
     private static final int REQUEST_INVITE = 1;
-    private final int DEFAULT_MESSAGE_LIMIT = 20;
-    int MESSAGE_LIMIT = DEFAULT_MESSAGE_LIMIT;
-    private final int DEFAULT_ADD_OLD_MESSAGES = 5;
-    int ADD_OLD_MESSAGES = DEFAULT_ADD_OLD_MESSAGES;
-    private static final int DEFAULT_MSG_LENGTH_LIMIT = 160;
-    int MSG_LENGTH_LIMIT = DEFAULT_MSG_LENGTH_LIMIT;
+
+    int MESSAGE_LIMIT = fireConfigMessageLimitDefault;
+    int ADD_OLD_MESSAGES = fireConfigMessageOldDefault;
+    int MSG_LENGTH_LIMIT = fireConfigMessageLimitDefault;
+    int MAX_MESSAGES_DECRYPTED = fireConfigMessagesMaxDefault;
+
     public static final String ANONYMOUS = "anonymous";
-    private static final String MESSAGE_SENT_EVENT = "message_sent";
+    //private static final String MESSAGE_SENT_EVENT = "message_sent";
     String mUsername;
     String mUserChatId;
     String mPhotoUrl;
@@ -150,18 +155,16 @@ public class ChatActivity extends AppCompatActivity implements
     private DatabaseReference databaseReferenceLastMessages;
     FirebaseAuth mFirebaseAuth;
     FirebaseUser mFirebaseUser;
-    //private FirebaseAnalytics mFirebaseAnalytics;
     private EditText mMessageEditText;
-    //private FirebaseRemoteConfig mFirebaseRemoteConfig;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_chat_hlm);
 
-        /*getWindow().setFlags(
+        getWindow().setFlags(
                 WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                WindowManager.LayoutParams.FLAG_FULLSCREEN);*/
+                WindowManager.LayoutParams.FLAG_FULLSCREEN);
 
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
@@ -183,10 +186,17 @@ public class ChatActivity extends AppCompatActivity implements
         if (bundle.getString("userName")!= null) {
             setTitle(bundle.getString("userName"));
         }
-        if (fireConfigMessageLimit > 0 && fireConfigMessageOld > 0 && fireConfigMessageLength > 0){
+        if (fireConfigMessageLimit > 0) {
             MESSAGE_LIMIT = fireConfigMessageLimit;
+        }
+        if (fireConfigMessageOld > 0) {
             ADD_OLD_MESSAGES = fireConfigMessageOld;
+        }
+        if (fireConfigMessageLength > 0) {
             MSG_LENGTH_LIMIT = fireConfigMessageLength;
+        }
+        if (fireConfigMessagesMax > 0) {
+            MAX_MESSAGES_DECRYPTED = fireConfigMessagesMax;
         }
 
         mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -209,30 +219,6 @@ public class ChatActivity extends AppCompatActivity implements
                 mPhotoUrl = null;
             }
         }
-
-        // Initialize Firebase
-        //mFirebaseAnalytics = FirebaseAnalytics.getInstance(this);
-        //mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-
-        /*// Define Firebase Remote Config Settings.
-        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
-                new FirebaseRemoteConfigSettings.Builder()
-                        .setDeveloperModeEnabled(true)
-                        .build();
-
-        // Define default config values. Defaults are used when fetched config values are not
-        // available. Eg: if an error occurred fetching values from the server.
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 160);
-        defaultConfigMap.put("messages_limit", 20);
-        defaultConfigMap.put("load_old_messages", 5);
-
-        // Apply config settings and default values.
-        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-
-        // Fetch remote config.
-        fetchConfig(); */
 
         mProgressBar = (ProgressBar) findViewById(R.id.progressBar);
         fab_send = (FloatingActionButton) findViewById(R.id.fab_send);
@@ -283,9 +269,6 @@ public class ChatActivity extends AppCompatActivity implements
                 recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
 
                 mProgressBar.setVisibility(View.VISIBLE);
-
-                //flagBottom = false;
-                //flagRunOnce = false;
                 mLinearLayoutManager.setStackFromEnd(false);
                 updateFireBaseRecyclerAdapter();
                 //preloadDecryptedMessages();
@@ -305,7 +288,6 @@ public class ChatActivity extends AppCompatActivity implements
                     @Override
                     public void run() {
                         mProgressBar.setVisibility(View.INVISIBLE);
-                        //mLinearLayoutManager.scrollToPosition(currentMessagePosition);
                         mMessageRecyclerView.smoothScrollToPosition(currentMessagePosition + (ADD_OLD_MESSAGES/2));
                     }
                 }, bigDelay);
@@ -318,12 +300,7 @@ public class ChatActivity extends AppCompatActivity implements
         mMessageEditText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-                //flagBottom = true;
                 mLinearLayoutManager.setStackFromEnd(true);
-                //mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
-                /*if (mLinearLayoutManager.getItemCount()-1 >= 0){
-                    mMessageRecyclerView.smoothScrollToPosition(mLinearLayoutManager.getItemCount()-1);
-                } */
             }
 
             @Override
@@ -369,7 +346,6 @@ public class ChatActivity extends AppCompatActivity implements
                 mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
 
                 mMessageEditText.setText("");
-                //mFirebaseAnalytics.logEvent(MESSAGE_SENT_EVENT, null);
 
                 // Go to last message
                 waitForNewMessageSent = new Handler();
@@ -402,6 +378,11 @@ public class ChatActivity extends AppCompatActivity implements
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
+            case R.id.action_reloadChat:
+                if (mFirebaseAdapter != null){
+                    mFirebaseAdapter.notifyDataSetChanged();
+                }
+                return true;
             case R.id.invite_menu:
                 sendInvitation();
                 return true;
@@ -484,7 +465,7 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     private void preloadDecryptedMessages(){
-        //Query preloadMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
+        Query preloadMessages = databaseReferenceLastMessages.limitToLast(MAX_MESSAGES_DECRYPTED);
         positionMessages = 0;
         decryptedMessages.clear();
 
@@ -503,7 +484,7 @@ public class ChatActivity extends AppCompatActivity implements
         };
         handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, bigDelay * 2);
 
-        databaseReferenceLastMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+        preloadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 totalMessages = dataSnapshot.getChildrenCount();
@@ -516,7 +497,7 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
-        databaseReferenceLastMessages.addChildEventListener(new ChildEventListener() {
+        preloadMessages.addChildEventListener(new ChildEventListener() {
             @Override
             public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
@@ -719,6 +700,25 @@ public class ChatActivity extends AppCompatActivity implements
             }
         }
     }
+
+    /*public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        //savedInstanceState.clear();
+
+        savedInstanceState.putStringArrayList("decrypted_messages", (ArrayList<String>) decryptedMessages);
+        savedInstanceState.putBoolean("run_once", flagRunOnce);
+        Log.i(TAG, "Saved stat: " + savedInstanceState);
+    }
+
+    @Override
+    protected void onRestoreInstanceState(Bundle savedInstanceState) {
+        super.onRestoreInstanceState(savedInstanceState);
+        if (savedInstanceState.getStringArrayList("decrypted_messages") != null) {
+            flagRunOnce = savedInstanceState.getBoolean("run_once", flagRunOnce);
+            decryptedMessages = savedInstanceState.getStringArrayList("decrypted_messages");
+            Log.v(TAG, "Saved Instance State: " + savedInstanceState);
+        }
+    } */
 
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager

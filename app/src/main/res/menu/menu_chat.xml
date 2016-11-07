@@ -2,6 +2,13 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto">
     <item
+        android:id="@+id/action_reloadChat"
+        android:title="@string/action_delete"
+        android:icon="@drawable/ic_sync_white_24dp"
+        android:visible="true"
+        app:showAsAction="ifRoom"
+        />
+    <item
         android:id="@+id/fresh_config_menu"
         android:title="@string/fresh_config"
         app:showAsAction="never"/>

@@ -76,9 +76,15 @@ import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_MINUTE;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIteration;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIterationDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLengthDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimitDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOld;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOldDefault;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessagesMax;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessagesMaxDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.friendly_msg_length;
 
 public class HLMActivity extends AppCompatActivity implements
@@ -258,9 +264,11 @@ public class HLMActivity extends AppCompatActivity implements
         // Define default config values. Defaults are used when fetched config values are not
         // available. Eg: if an error occurred fetching values from the server.
         Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", 160);
-        defaultConfigMap.put("messages_limit", 20);
-        defaultConfigMap.put("load_old_messages", 5);
+        defaultConfigMap.put("friendly_msg_length", fireConfigMessageLengthDefault);
+        defaultConfigMap.put("messages_limit", fireConfigMessageLimitDefault);
+        defaultConfigMap.put("load_old_messages", fireConfigMessageOldDefault);
+        defaultConfigMap.put("iteration_count", fireConfigDecIterationDefault);
+        defaultConfigMap.put("max_messages", fireConfigMessagesMaxDefault);
 
         // Apply config settings and default values.
         mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
@@ -363,11 +371,6 @@ public class HLMActivity extends AppCompatActivity implements
 
         private ScreenSlidePagerAdapter(FragmentManager fragmentManager) {
             super(fragmentManager);
-            /*fm = fragmentManager;
-            fragments = new Fragment[HLM_PAGES_MAX];
-            fragments[0] = new LoginFragment();
-            fragments[1] = new HLMUsers();
-            fragments[2] = new ChatUserList(); */
         }
 
         @Override
@@ -391,7 +394,6 @@ public class HLMActivity extends AppCompatActivity implements
         @Override
         public void destroyItem(ViewGroup container, int position, Object object) {
             super.destroyItem(container, position, object);
-            //fm.beginTransaction().remove(fragments[position]).commit();
         }
     }
 
@@ -488,11 +490,14 @@ public class HLMActivity extends AppCompatActivity implements
         fireConfigMessageLimit = (int) mFirebaseRemoteConfig.getLong("messages_limit");
         fireConfigMessageOld = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
         fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        fireConfigMessagesMax = (int) mFirebaseRemoteConfig.getLong("max_messages");
         fireConfigDecIteration = (int) mFirebaseRemoteConfig.getLong("iteration_count");
         Log.d(TAG, "HLM Message Length is: " + fireConfigMessageLength
                 + "\nHLM Display Messages: " + fireConfigMessageLimit
                 + "\nHLM Old Messages: " + fireConfigMessageOld
-                + "\nHLM Iteration Count: " + fireConfigDecIteration);
+                + "\nHLM Max Messages: " + fireConfigMessagesMax
+                + "\nHLM Iteration Count: " + fireConfigDecIteration
+        );
     }
 
     private boolean isNetworkAvailable() {
@@ -753,10 +758,12 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     public void onSaveInstanceState(Bundle savedInstanceState) {
+        super.onSaveInstanceState(savedInstanceState);
+        savedInstanceState.clear();
+
         HLM_CURRENT_PAGE = mPager.getCurrentItem();
 
-        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY,
-                mRequestingLocationUpdates);
+        savedInstanceState.putBoolean(REQUESTING_LOCATION_UPDATES_KEY, mRequestingLocationUpdates);
         savedInstanceState.putParcelable(LOCATION_KEY, mCurrentLocation);
         savedInstanceState.putString(LAST_UPDATED_TIME_STRING_KEY, mLastUpdateTime);
         savedInstanceState.putInt(NUMBER_OF_PAGES, HLM_PAGES);
@@ -765,7 +772,8 @@ public class HLMActivity extends AppCompatActivity implements
         Log.v(TAG, "Data Saved: State Recovery");
         Log.v(TAG, "-------------------------------");
         Log.i(TAG,"State: " + savedInstanceState);
-        super.onSaveInstanceState(savedInstanceState);
+
+
     }
 
     @Override
@@ -864,15 +872,15 @@ public class HLMActivity extends AppCompatActivity implements
         checkNetworkAccess();
 
         // <-- Last Addition
-        /*if (user != null && drawerUserImage != null) {
-            //Glide.clear(drawerUserImage);
+        if (user != null && drawerUserImage != null) {
+            Glide.clear(drawerUserImage);
             Glide
                     .with(this.getApplicationContext())
                     .load(user.getPhotoUrl())
                     .centerCrop()
                     .into(drawerUserImage);
             drawerUserAlias.setText(user.getDisplayName());
-        } */
+        }
     }
     @Override
     protected void onPause() {

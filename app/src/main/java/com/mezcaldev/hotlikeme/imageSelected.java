@@ -2,6 +2,7 @@ package com.mezcaldev.hotlikeme;
 
 
 import android.app.DialogFragment;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -24,7 +25,7 @@ import java.net.URL;
 
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 
-public class imageSelected extends DialogFragment {
+public class ImageSelected extends DialogFragment {
     static final String TAG = "Saving the Image: ";
     static String imageProfileFileName = LoginFragment.imageProfileFileName;
     static Uri uriImage;
@@ -35,9 +36,9 @@ public class imageSelected extends DialogFragment {
     Button btn_ok;
     Button btn_cancel;
 
-    static imageSelected newInstance(Uri uri) {
+    static ImageSelected newInstance(Uri uri) {
         uriImage = uri;
-        return new imageSelected();
+        return new ImageSelected();
     }
 
     @Override
@@ -121,7 +122,8 @@ public class imageSelected extends DialogFragment {
                 @Override
                 public void run() {
                     getDialog().dismiss();
-                    //startActivity(new Intent(getActivity(), HLMActivity.class));
+                    startActivity(new Intent(getActivity(), HLMActivity.class));
+                    getActivity().finish();
                 }
             }, 2500);
         }

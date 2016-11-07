@@ -469,6 +469,7 @@ public class LoginFragment extends Fragment {
         super.onResume();
         accessTokenTracker.startTracking();
         profileTracker.startTracking();
+        updateUI();
         // <-- Last Addition
         /*if (user != null && imageProfileHLM != null) {
             Glide

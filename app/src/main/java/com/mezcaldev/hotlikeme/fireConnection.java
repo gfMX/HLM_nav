@@ -37,11 +37,18 @@ public class FireConnection {
     static FirebaseDatabase databaseGlobal;
 
     //Remote Config from Firebase
+    static final int fireConfigDecIterationDefault = 2000;
+    static final int fireConfigMessageOldDefault = 5;
+    static final int fireConfigMessageLengthDefault = 160;
+    static final int fireConfigMessageLimitDefault = 20;
+    static final int  fireConfigMessagesMaxDefault = 60;
+
+    static int fireConfigMessagesMax;
     static int fireConfigMessageLength;
     static int fireConfigMessageLimit;
     static int fireConfigMessageOld;
     static long friendly_msg_length;
-    static int fireConfigDecIteration = 2000;
+    static int fireConfigDecIteration = fireConfigDecIterationDefault;
 
     //Location mCurrentLocation;
     static Boolean weLike = false;

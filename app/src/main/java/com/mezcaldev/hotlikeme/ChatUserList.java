@@ -69,11 +69,6 @@ public class ChatUserList extends ListFragment {
     protected String myKey; //= "iojdsf290skdjaf823IU8R3SAD9023UJSFAD82934jsfakl";
     private SecureMessage secureMessage;
 
-    /*int fireConfigMessageLength;
-    int fireConfigMessageLimit;
-    int fireConfigMessageOld;
-    private FirebaseRemoteConfig mFirebaseRemoteConfig; */
-
     //FirebaseDatabase database = FirebaseDatabase.getInstance();
     FirebaseStorage storage = FirebaseStorage.getInstance();
     final StorageReference storageReference = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
@@ -119,29 +114,8 @@ public class ChatUserList extends ListFragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        //database.setPersistenceEnabled(true);
-
         cleanVars();
-        /*
-        if (user!= null){
-            getUsers();
-        } else {
-            //startActivity(new Intent(getActivity(), MainActivity.class));
-            user = FireConnection.getInstance().getUser();
-            databaseGlobal = FirebaseDatabase.getInstance();
 
-            Handler waitHandler = new Handler();
-            Runnable waitRunnable = new Runnable() {
-                @Override
-                public void run() {
-                    getUsers();
-                }
-            };
-
-            waitHandler.postDelayed(waitRunnable, 500);
-        } */
-
-        //secureMessage = new SecureMessage(getApplicationContext(), myKey);
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -201,11 +175,12 @@ public class ChatUserList extends ListFragment {
 
         ItemTouchHelper.SimpleCallback simpleCallback = new ItemTouchHelper.SimpleCallback(ItemTouchHelper.UP | ItemTouchHelper.DOWN,
                 ItemTouchHelper.LEFT | ItemTouchHelper.RIGHT) {
+
             public boolean onMove(RecyclerView recyclerView,
                                   RecyclerView.ViewHolder viewHolder, RecyclerView.ViewHolder target) {
                 final int fromPos = viewHolder.getAdapterPosition();
                 //final int toPos = target.getAdapterPosition();
-                // move item in `fromPos` to `toPos` in adapter.
+
                 System.out.println("Delete here: " + fromPos);
                 Toast.makeText(getContext(), "Disconnect from user?", Toast.LENGTH_LONG).show();
                 return true;// true if moved, false otherwise
