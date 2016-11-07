@@ -65,7 +65,6 @@ public class LoginFragment extends Fragment {
     Runnable runnable;
     Integer minDelayTime = 100;
     Integer delayTime = 250;
-    Boolean oneTime = false;
 
     //Facebook
     LoginButton loginButton;
@@ -130,12 +129,8 @@ public class LoginFragment extends Fragment {
             fireRef = databaseGlobal.getReference();
         }
         mAuth = FirebaseAuth.getInstance();
-
-
+        
         user = mAuth.getCurrentUser();
-        if ( user != null){
-            oneTime = true;
-        }
 
     }
 
