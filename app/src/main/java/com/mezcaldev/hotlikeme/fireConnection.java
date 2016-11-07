@@ -41,7 +41,7 @@ public class FireConnection {
     static final int fireConfigMessageOldDefault = 5;
     static final int fireConfigMessageLengthDefault = 160;
     static final int fireConfigMessageLimitDefault = 20;
-    static final int  fireConfigMessagesMaxDefault = 60;
+    static final int  fireConfigMessagesMaxDefault = 40;
 
     static int fireConfigMessagesMax;
     static int fireConfigMessageLength;

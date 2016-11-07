@@ -76,7 +76,6 @@ import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_MINUTE;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIteration;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIterationDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLengthDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
@@ -267,7 +266,6 @@ public class HLMActivity extends AppCompatActivity implements
         defaultConfigMap.put("friendly_msg_length", fireConfigMessageLengthDefault);
         defaultConfigMap.put("messages_limit", fireConfigMessageLimitDefault);
         defaultConfigMap.put("load_old_messages", fireConfigMessageOldDefault);
-        defaultConfigMap.put("iteration_count", fireConfigDecIterationDefault);
         defaultConfigMap.put("max_messages", fireConfigMessagesMaxDefault);
 
         // Apply config settings and default values.
@@ -289,15 +287,18 @@ public class HLMActivity extends AppCompatActivity implements
     }
     @Override
     public boolean onOptionsItemSelected(MenuItem item){
-        int id = item.getItemId();
+        switch (item.getItemId()) {
+            case R.id.action_profile_settings:
+                mPager.setCurrentItem(PAGE_LOGIN);
+                return true;
 
-        if (id == R.id.action_profile_settings) {
-            mPager.setCurrentItem(PAGE_LOGIN);
-            return true;
-        }
-        if (id == R.id.action_chat){
-            mPager.setCurrentItem(PAGE_CHAT);
-            return true;
+            case R.id.action_chat:
+                mPager.setCurrentItem(PAGE_CHAT);
+                return true;
+
+            case R.id.fresh_config_menu:
+                fetchConfig();
+                return true;
         }
 
         return super.onOptionsItemSelected(item);
@@ -348,10 +349,10 @@ public class HLMActivity extends AppCompatActivity implements
         } else if (id == R.id.nav_chat) {
             mPager.setCurrentItem(PAGE_CHAT);
 
-        } /*else if (id == R.id.nav_profile) {
+        } else if (id == R.id.nav_profile) {
             mPager.setCurrentItem(PAGE_LOGIN);
 
-        }*/ else if (id == R.id.nav_settings) {
+        } else if (id == R.id.nav_settings) {
             if (user != null) {
                 startActivity(new Intent(this, HLMSettings.class));
             }
@@ -487,11 +488,12 @@ public class HLMActivity extends AppCompatActivity implements
 
     private void applyRetrievedLengthLimit() {
         friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
+
+        fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
         fireConfigMessageLimit = (int) mFirebaseRemoteConfig.getLong("messages_limit");
         fireConfigMessageOld = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
-        fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
-        fireConfigMessagesMax = (int) mFirebaseRemoteConfig.getLong("max_messages");
         fireConfigDecIteration = (int) mFirebaseRemoteConfig.getLong("iteration_count");
+        fireConfigMessagesMax = (int) mFirebaseRemoteConfig.getLong("max_messages");
         Log.d(TAG, "HLM Message Length is: " + fireConfigMessageLength
                 + "\nHLM Display Messages: " + fireConfigMessageLimit
                 + "\nHLM Old Messages: " + fireConfigMessageOld

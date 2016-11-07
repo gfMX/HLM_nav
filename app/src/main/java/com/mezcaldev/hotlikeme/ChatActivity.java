@@ -386,9 +386,6 @@ public class ChatActivity extends AppCompatActivity implements
             case R.id.invite_menu:
                 sendInvitation();
                 return true;
-            case R.id.fresh_config_menu:
-                //fetchConfig();
-                return true;
             case android.R.id.home:
                 onBackPressed();
                 return true;
