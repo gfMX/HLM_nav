@@ -73,6 +73,22 @@
             android:title="@string/pref_title_discovery_distance" />
     </PreferenceCategory>
 
+    <PreferenceCategory
+        android:title="@string/app_name">
+        <ListPreference
+            android:defaultValue="None"
+            android:entries="@array/pref_animation_titles"
+            android:entryValues="@array/pref_animation_values"
+            android:key="app_page_transform"
+            android:negativeButtonText="@null"
+            android:positiveButtonText="@null"
+            android:title="@string/pref_title_page_transform" />
+
+    </PreferenceCategory>
+    <PreferenceCategory>
+
+    </PreferenceCategory>
+
     <!--
     <PreferenceCategory
         android:title="@string/pref_discovery_notifications">

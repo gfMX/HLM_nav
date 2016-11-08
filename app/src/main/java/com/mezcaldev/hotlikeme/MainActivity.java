@@ -22,10 +22,10 @@ import android.view.WindowManager;
 import com.facebook.AccessToken;
 import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
+import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
 
 public class MainActivity extends AppCompatActivity {
@@ -37,7 +37,6 @@ public class MainActivity extends AppCompatActivity {
     int HLM_PAGES = 3;
     Snackbar snackNetworkRequired;
     Context mContext;
-    FirebaseUser user;
     FireConnection fireConnection;
     SharedPreferences sharedPreferences;
 

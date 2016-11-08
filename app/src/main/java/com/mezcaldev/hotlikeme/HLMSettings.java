@@ -211,6 +211,7 @@ public class HLMSettings extends AppCompatPreferenceActivity {
 
             bindPreferenceSummaryToValue(findPreference("sync_frequency"));
             bindPreferenceSummaryToValue(findPreference("sync_distance"));
+            bindPreferenceSummaryToValue(findPreference("app_page_transform"));
 
             //bindPreferenceSummaryToValue(findPreference("notifications_new_discovery_ringtone"));
         }

@@ -5,6 +5,8 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -12,12 +14,16 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
+import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -37,6 +43,9 @@ public class FireConnection {
     static FirebaseDatabase databaseGlobal;
 
     //Remote Config from Firebase
+    private boolean flagRunOnce = true;
+    private FirebaseRemoteConfig mFirebaseRemoteConfig;
+
     static final int fireConfigDecIterationDefault = 2000;
     static final int fireConfigMessageOldDefault = 5;
     static final int fireConfigMessageLengthDefault = 160;
@@ -86,6 +95,19 @@ public class FireConnection {
                     }
                     // User is signed in
                     Log.d(TAG, "User credentials granted: " + user.getUid());
+
+                    //Fetch Remote Config from FireBase
+                    Thread thread = new Thread(new Runnable() {
+                        @Override
+                        public void run() {
+                            remoteConfigFromFire();
+                        }
+                    });
+                    if (flagRunOnce) {
+                        thread.start();
+                        flagRunOnce = false;
+                    }
+
 
                 } else {
                     // User is signed out
@@ -175,6 +197,76 @@ public class FireConnection {
         } else {
             Log.i(TAG, "There's no User Logged");
         }
+    }
+
+    //Initialize Remote Config
+
+    private void remoteConfigFromFire(){
+        //FireBase Remote Config
+        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
+        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
+                new FirebaseRemoteConfigSettings.Builder()
+                        .setDeveloperModeEnabled(true)
+                        .build();
+
+        // Define default config values. Defaults are used when fetched config values are not
+        // available. Eg: if an error occurred fetching values from the server.
+        Map<String, Object> defaultConfigMap = new HashMap<>();
+        defaultConfigMap.put("friendly_msg_length", fireConfigMessageLengthDefault);
+        defaultConfigMap.put("messages_limit", fireConfigMessageLimitDefault);
+        defaultConfigMap.put("load_old_messages", fireConfigMessageOldDefault);
+        defaultConfigMap.put("max_messages", fireConfigMessagesMaxDefault);
+        defaultConfigMap.put("iteration_count", fireConfigDecIterationDefault);
+
+        // Apply config settings and default values.
+        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
+        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
+
+        fetchConfig();
+    }
+
+    // Fetch the config to determine the allowed length of messages.
+    private void fetchConfig() {
+        Log.i(TAG, "Getting remote Config");
+        long cacheExpiration = ONE_HOUR * 12;
+        // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
+        // server. This should not be used in release builds.
+        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
+            cacheExpiration = 0;
+        }
+        mFirebaseRemoteConfig.fetch(cacheExpiration)
+                .addOnSuccessListener(new OnSuccessListener<Void>() {
+                    @Override
+                    public void onSuccess(Void aVoid) {
+                        // Make the fetched config available via FirebaseRemoteConfig get<type> calls.
+                        mFirebaseRemoteConfig.activateFetched();
+                        applyRetrievedLengthLimit();
+                    }
+                })
+                .addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        // There has been an error fetching the config
+                        Log.w(TAG, "Error fetching config: " + e.getMessage());
+                        applyRetrievedLengthLimit();
+                    }
+                });
+    }
+
+    private void applyRetrievedLengthLimit() {
+        friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
+
+        fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
+        fireConfigMessageLimit = (int) mFirebaseRemoteConfig.getLong("messages_limit");
+        fireConfigMessageOld = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
+        fireConfigDecIteration = (int) mFirebaseRemoteConfig.getLong("iteration_count");
+        fireConfigMessagesMax = (int) mFirebaseRemoteConfig.getLong("max_messages");
+        Log.d(TAG, "HLM Message Length is: " + fireConfigMessageLength
+                + "\nHLM Display Messages: " + fireConfigMessageLimit
+                + "\nHLM Old Messages: " + fireConfigMessageOld
+                + "\nHLM Max Messages: " + fireConfigMessagesMax
+                + "\nHLM Iteration Count: " + fireConfigDecIteration
+        );
     }
 
     private void genUserRandomCollection(int nUsers){

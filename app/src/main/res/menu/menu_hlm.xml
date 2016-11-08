@@ -17,10 +17,6 @@
         app:showAsAction="ifRoom"
         />
     <item
-        android:id="@+id/fresh_config_menu"
-        android:title="@string/fresh_config"
-        app:showAsAction="never"/>
-    <item
         android:id="@+id/action_help"
         android:title="@string/action_help"
         android:icon="@drawable/ic_settings_24dp"

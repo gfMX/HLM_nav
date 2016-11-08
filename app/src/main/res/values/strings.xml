@@ -118,6 +118,19 @@
     <string name="pref_discovery_ringtone">Sound on Notification</string>
     <string name="pref_discovery_ringtone_silent">Silent</string>
     <string name="pref_title_vibrate_on_discovery">Vibrate on New Discovery</string>
+    <string name="pref_title_page_transform">Animation between Screens</string>
+    <string name="pref_title_page_transform_info">Animation between Screens</string>
+
+    <string-array name="pref_animation_titles">
+        <item>None</item>
+        <item>Zoom and Slide</item>
+        <item>Cards</item>
+    </string-array>
+    <string-array name="pref_animation_values">
+        <item>none</item>
+        <item>zoom1</item>
+        <item>zoom2</item>
+    </string-array>
 
     <!-- Settings for Notifications -->
     <string name="pref_header_notifications">Notifications</string>

@@ -106,6 +106,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Encrypted Message
     boolean flagRunOnce = false;
+    boolean flagMessagesDecrypted = false;
     boolean isInFront;
 
     int positionMessages;
@@ -128,6 +129,9 @@ public class ChatActivity extends AppCompatActivity implements
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
     String MESSAGES_RESUME = "chats_resume";
+
+    Handler handlerUpdateView;
+    Runnable runnableUpdateView;
 
     int UPDATE_VIEW_DELAY = 500;
     private static final int REQUEST_INVITE = 1;
@@ -462,89 +466,83 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     private void preloadDecryptedMessages(){
-        Query preloadMessages = databaseReferenceLastMessages.limitToLast(MAX_MESSAGES_DECRYPTED);
-        positionMessages = 0;
-        decryptedMessages.clear();
+        if (!flagMessagesDecrypted) {
+            Query preloadMessages = databaseReferenceLastMessages.limitToLast(MAX_MESSAGES_DECRYPTED);
+            positionMessages = 0;
+            decryptedMessages.clear();
 
-        mProgressBar.setVisibility(View.VISIBLE);
-        Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
+            mProgressBar.setVisibility(View.VISIBLE);
+            Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
 
-        Handler handlerShowLoadingBar = new Handler();
-        Runnable runnableShowLoadingBar = new Runnable() {
-            @Override
-            public void run() {
-                mProgressBar.setVisibility(View.INVISIBLE);
-                if (mFirebaseAdapter != null) {
-                    mFirebaseAdapter.notifyDataSetChanged();
+            Handler handlerShowLoadingBar = new Handler();
+            Runnable runnableShowLoadingBar = new Runnable() {
+                @Override
+                public void run() {
+                    mProgressBar.setVisibility(View.INVISIBLE);
+                    if (mFirebaseAdapter != null) {
+                        mFirebaseAdapter.notifyDataSetChanged();
+                    }
                 }
-            }
-        };
-        handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, bigDelay * 2);
+            };
+            handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, bigDelay * 2);
 
-        preloadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(DataSnapshot dataSnapshot) {
-                totalMessages = dataSnapshot.getChildrenCount();
-                Log.i(TAG, "Childrens: " + totalMessages);
-            }
-
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
-
-        preloadMessages.addChildEventListener(new ChildEventListener() {
-            @Override
-            public void onChildAdded(DataSnapshot dataSnapshot, String s) {
-
-                if (!flagRunOnce) {
-                    decryptedMessages.add(dataSnapshot.child("text").getValue().toString());
-                } else if (!swipeRefreshLayout.isRefreshing()) {
-                    decryptedMessages.add(secureMessage.decrypt(dataSnapshot.child("text").getValue().toString()));
+            preloadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(DataSnapshot dataSnapshot) {
+                    totalMessages = dataSnapshot.getChildrenCount();
+                    Log.i(TAG, "Childrens: " + totalMessages);
                 }
 
-                if (positionMessages == totalMessages - 1) {
-                    Log.e(TAG, "Updating the adapter on: " + positionMessages + "<---");
+                @Override
+                public void onCancelled(DatabaseError databaseError) {
 
-                    Handler handlerShowMessages = new Handler();
-                    Runnable runnableShowMessages = new Runnable() {
-                        @Override
-                        public void run() {
-                            updateFireBaseRecyclerAdapter();
-                        }
-                    };
-                    handlerShowMessages.postDelayed(runnableShowMessages, bigDelay);
-
-                    decryptOnBackground = new DecryptOnBackground();
-                    decryptOnBackground.execute();
-
-                } else if (totalMessages == 0){
-                    updateFireBaseRecyclerAdapter();
                 }
-                positionMessages++;
-            }
+            });
 
-            @Override
-            public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+            preloadMessages.addChildEventListener(new ChildEventListener() {
+                @Override
+                public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-            }
+                    if (!flagRunOnce) {
+                        decryptedMessages.add(dataSnapshot.child("text").getValue().toString());
+                    } else if (!swipeRefreshLayout.isRefreshing()) {
+                        decryptedMessages.add(secureMessage.decrypt(dataSnapshot.child("text").getValue().toString()));
+                    }
 
-            @Override
-            public void onChildRemoved(DataSnapshot dataSnapshot) {
+                    if (positionMessages == totalMessages - 1) {
+                        Log.e(TAG, "Updating the adapter on: " + positionMessages + "<---");
 
-            }
+                        Handler handlerShowMessages = new Handler();
+                        Runnable runnableShowMessages = new Runnable() {
+                            @Override
+                            public void run() {
+                                updateFireBaseRecyclerAdapter();
+                            }
+                        };
+                        handlerShowMessages.postDelayed(runnableShowMessages, bigDelay);
 
-            @Override
-            public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                        decryptOnBackground = new DecryptOnBackground();
+                        decryptOnBackground.execute();
+                        flagMessagesDecrypted = true;
 
-            }
+                    } else if (totalMessages == 0) {
+                        updateFireBaseRecyclerAdapter();
+                    }
+                    positionMessages++;
+                }
 
-            @Override
-            public void onCancelled(DatabaseError databaseError) {
-
-            }
-        });
+                @Override
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
+                @Override
+                public void onChildRemoved(DataSnapshot dataSnapshot) { }
+                @Override
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) { }
+                @Override
+                public void onCancelled(DatabaseError databaseError) { }
+            });
+        } else {
+            updateFireBaseRecyclerAdapter();
+        }
     }
 
     private void updateFireBaseRecyclerAdapter(){
@@ -552,7 +550,6 @@ public class ChatActivity extends AppCompatActivity implements
         if (mFirebaseAdapter != null){
             mFirebaseAdapter.cleanup();
         }
-        //mProgressBar.setVisibility(View.VISIBLE);
 
         mFirebaseAdapter = new FirebaseRecyclerAdapter<ChatMessageModel, MessageViewHolder>(
                 ChatMessageModel.class,
@@ -651,6 +648,7 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
+
         Handler reloadView = new Handler();
         reloadView.postDelayed(new Runnable() {
             @Override
@@ -698,25 +696,6 @@ public class ChatActivity extends AppCompatActivity implements
         }
     }
 
-    /*public void onSaveInstanceState(Bundle savedInstanceState) {
-        super.onSaveInstanceState(savedInstanceState);
-        //savedInstanceState.clear();
-
-        savedInstanceState.putStringArrayList("decrypted_messages", (ArrayList<String>) decryptedMessages);
-        savedInstanceState.putBoolean("run_once", flagRunOnce);
-        Log.i(TAG, "Saved stat: " + savedInstanceState);
-    }
-
-    @Override
-    protected void onRestoreInstanceState(Bundle savedInstanceState) {
-        super.onRestoreInstanceState(savedInstanceState);
-        if (savedInstanceState.getStringArrayList("decrypted_messages") != null) {
-            flagRunOnce = savedInstanceState.getBoolean("run_once", flagRunOnce);
-            decryptedMessages = savedInstanceState.getStringArrayList("decrypted_messages");
-            Log.v(TAG, "Saved Instance State: " + savedInstanceState);
-        }
-    } */
-
     private boolean isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -735,6 +714,20 @@ public class ChatActivity extends AppCompatActivity implements
             snackNetworkRequired.dismiss();
         }
     }
+
+    private void updateViewWithDelay(int delay){
+        if (mFirebaseAdapter != null){
+            handlerUpdateView = new Handler();
+            runnableUpdateView = new Runnable() {
+                @Override
+                public void run() {
+                    mFirebaseAdapter.notifyDataSetChanged();
+                }
+            };
+            handlerUpdateView.postDelayed(runnableUpdateView, delay);
+        }
+    }
+
     @Override
     protected void onStart() {
         super.onStart();
@@ -746,6 +739,7 @@ public class ChatActivity extends AppCompatActivity implements
         super.onResume();
         chatIsInFront = true;
         checkNetworkAccess();
+        updateViewWithDelay(bigDelay * 2);
     }
     @Override
     protected void onPause(){
@@ -769,6 +763,12 @@ public class ChatActivity extends AppCompatActivity implements
         chatIsInFront = false;
         if (decryptOnBackground != null) {
             decryptOnBackground.cancel(true);
+        }
+        try {
+            handlerUpdateView.removeCallbacks(runnableUpdateView);
+            handlerUpdateView.removeCallbacksAndMessages(null);
+        }catch(NullPointerException e){
+            Log.e(TAG, "No Callbacks to Remove");
         }
     }
 

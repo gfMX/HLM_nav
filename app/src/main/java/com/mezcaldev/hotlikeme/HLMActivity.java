@@ -56,35 +56,18 @@ import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.location.LocationSettingsRequest;
 import com.google.android.gms.location.LocationSettingsResult;
 import com.google.android.gms.location.LocationSettingsStatusCodes;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfig;
-import com.google.firebase.remoteconfig.FirebaseRemoteConfigSettings;
 
 import org.apache.commons.lang3.StringUtils;
 
 import java.text.DateFormat;
 import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
 
-import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_MINUTE;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigDecIteration;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLengthDefault;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimitDefault;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOld;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOldDefault;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessagesMax;
-import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessagesMaxDefault;
-import static com.mezcaldev.hotlikeme.FireConnection.friendly_msg_length;
 
 public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
@@ -101,6 +84,8 @@ public class HLMActivity extends AppCompatActivity implements
     private ViewPager mPager;
     PagerAdapter mPagerAdapter;
     SharedPreferences sharedPreferences;
+    ViewPager.PageTransformer pageTransformer  = null;
+    String stringPageTransformer;
 
     // Notifications:
     boolean isInFront;
@@ -148,7 +133,6 @@ public class HLMActivity extends AppCompatActivity implements
     //Firebase Initialization
     FirebaseUser user;
     FirebaseAuth mAuth;
-    FirebaseRemoteConfig mFirebaseRemoteConfig;
     FirebaseAuth.AuthStateListener mAuthListener;
     final FirebaseDatabase database = FirebaseDatabase.getInstance();
 
@@ -227,12 +211,25 @@ public class HLMActivity extends AppCompatActivity implements
         maxUserDistance = Integer.valueOf(sharedPreferences.getString("sync_distance", "250"));
         minInterval = (Integer.valueOf(sharedPreferences.getString("sync_frequency","1")) * ONE_MINUTE);
         mRequestingLocationUpdates = sharedPreferences.getBoolean("gps_enabled", false);
+        stringPageTransformer = sharedPreferences.getString("app_page_transform", "none");
+
+        switch (stringPageTransformer){
+            case "none":
+                pageTransformer = null;
+                break;
+            case "zoom1":
+                pageTransformer = new ZoomOutPageTransformer();
+                break;
+            case "zoom2":
+                pageTransformer = new CardSlide();
+                break;
+        }
 
         // Instantiate a ViewPager and a PagerAdapter.
         mPager = (ViewPager) findViewById(R.id.pager);
         mPagerAdapter = new ScreenSlidePagerAdapter(getSupportFragmentManager());
         mPager.setAdapter(mPagerAdapter);
-        //mPager.setPageTransformer(true, new ZoomOutPageTransformer());
+        mPager.setPageTransformer(true, pageTransformer);
         mPager.setOnTouchListener(new View.OnTouchListener() {
                                        @Override
                                        public boolean onTouch(View view, MotionEvent event) {
@@ -253,31 +250,11 @@ public class HLMActivity extends AppCompatActivity implements
             }
         });
 
-        //FireBase Remote Config
-        mFirebaseRemoteConfig = FirebaseRemoteConfig.getInstance();
-        FirebaseRemoteConfigSettings firebaseRemoteConfigSettings =
-                new FirebaseRemoteConfigSettings.Builder()
-                        .setDeveloperModeEnabled(false)
-                        .build();
-
-        // Define default config values. Defaults are used when fetched config values are not
-        // available. Eg: if an error occurred fetching values from the server.
-        Map<String, Object> defaultConfigMap = new HashMap<>();
-        defaultConfigMap.put("friendly_msg_length", fireConfigMessageLengthDefault);
-        defaultConfigMap.put("messages_limit", fireConfigMessageLimitDefault);
-        defaultConfigMap.put("load_old_messages", fireConfigMessageOldDefault);
-        defaultConfigMap.put("max_messages", fireConfigMessagesMaxDefault);
-
-        // Apply config settings and default values.
-        mFirebaseRemoteConfig.setConfigSettings(firebaseRemoteConfigSettings);
-        mFirebaseRemoteConfig.setDefaults(defaultConfigMap);
-
         checkNetworkAccess();
 
         buildGoogleApiClient();
         updateValuesFromBundle(savedInstanceState);
 
-        fetchConfig();
     }
     @Override
     public boolean onCreateOptionsMenu(Menu menu){
@@ -294,10 +271,6 @@ public class HLMActivity extends AppCompatActivity implements
 
             case R.id.action_chat:
                 mPager.setCurrentItem(PAGE_CHAT);
-                return true;
-
-            case R.id.fresh_config_menu:
-                fetchConfig();
                 return true;
         }
 
@@ -456,50 +429,6 @@ public class HLMActivity extends AppCompatActivity implements
         if (mNotificationManager != null && mBuilder != null){
             mNotificationManager.cancelAll();
         }
-    }
-
-    // Fetch the config to determine the allowed length of messages.
-    private void fetchConfig() {
-        Log.i(TAG, "Getting remote Config");
-        long cacheExpiration = ONE_HOUR * 12;
-        // If developer mode is enabled reduce cacheExpiration to 0 so that each fetch goes to the
-        // server. This should not be used in release builds.
-        if (mFirebaseRemoteConfig.getInfo().getConfigSettings().isDeveloperModeEnabled()) {
-            cacheExpiration = 0;
-        }
-        mFirebaseRemoteConfig.fetch(cacheExpiration)
-                .addOnSuccessListener(new OnSuccessListener<Void>() {
-                    @Override
-                    public void onSuccess(Void aVoid) {
-                        // Make the fetched config available via FirebaseRemoteConfig get<type> calls.
-                        mFirebaseRemoteConfig.activateFetched();
-                        applyRetrievedLengthLimit();
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        // There has been an error fetching the config
-                        Log.w(TAG, "Error fetching config: " + e.getMessage());
-                        applyRetrievedLengthLimit();
-                    }
-                });
-    }
-
-    private void applyRetrievedLengthLimit() {
-        friendly_msg_length = mFirebaseRemoteConfig.getLong("friendly_msg_length");
-
-        fireConfigMessageLength = (int) mFirebaseRemoteConfig.getLong("friendly_msg_length");
-        fireConfigMessageLimit = (int) mFirebaseRemoteConfig.getLong("messages_limit");
-        fireConfigMessageOld = (int) mFirebaseRemoteConfig.getLong("load_old_messages");
-        fireConfigDecIteration = (int) mFirebaseRemoteConfig.getLong("iteration_count");
-        fireConfigMessagesMax = (int) mFirebaseRemoteConfig.getLong("max_messages");
-        Log.d(TAG, "HLM Message Length is: " + fireConfigMessageLength
-                + "\nHLM Display Messages: " + fireConfigMessageLimit
-                + "\nHLM Old Messages: " + fireConfigMessageOld
-                + "\nHLM Max Messages: " + fireConfigMessagesMax
-                + "\nHLM Iteration Count: " + fireConfigDecIteration
-        );
     }
 
     private boolean isNetworkAvailable() {
@@ -802,7 +731,7 @@ public class HLMActivity extends AppCompatActivity implements
         mGoogleApiClient.connect();
     }
 
-    /*public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
+    public class ZoomOutPageTransformer implements ViewPager.PageTransformer {
         private static final float MIN_SCALE = 0.85f;
         private static final float MIN_ALPHA = 0.5f;
 
@@ -839,7 +768,52 @@ public class HLMActivity extends AppCompatActivity implements
                 view.setAlpha(0);
             }
         }
-    } */
+    }
+
+    public class CardSlide implements ViewPager.PageTransformer {
+        private static final float MIN_SCALE = 0.75f;
+
+        public void transformPage(View page, float position) {
+            float scaleFactor = MIN_SCALE
+                    + (1 - MIN_SCALE) * (1 - Math.abs(position));
+
+            page.setPivotX(page.getWidth() + x);
+            page.setPivotY(page.getHeight()/2 + y);
+            page.setRotation(position * +15f);
+
+            if (position < -1) { // [-Infinity,-1)
+                page.setAlpha(0);
+
+            } else if (position <= 0) { // [-1,0]
+                // Use the default slide transition when moving to the left page
+                page.setTranslationX(0);
+                page.setTranslationY(0);
+                page.setScaleX(1);
+                page.setScaleY(1);
+                page.setAlpha(1 + position);
+
+                page.setTranslationX(-position/2);
+
+            } else if (position <= 1) { // (0,1]
+
+                // Counteract the default slide transition
+                page.setPivotX(page.getWidth() + x);
+                page.setPivotY(page.getHeight()/2 + y);
+                page.setRotation(position * +15f);
+
+                page.setTranslationX(page.getWidth() * -position);
+
+                // Scale the page down (between MIN_SCALE and 1)
+                page.setScaleX(scaleFactor);
+                page.setScaleY(scaleFactor);
+                page.setAlpha(1 - position);
+
+            } else { // (1,+Infinity]
+                // This page is way off-screen to the right.
+                page.setAlpha(0);
+            }
+        }
+    }
 
     @Override
     protected void onStart() {
@@ -848,9 +822,11 @@ public class HLMActivity extends AppCompatActivity implements
         isInFront =true;
 
         mGoogleApiClient.connect();
-        if (user ==null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
+
+        if (user == null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates){
             mGoogleApiClient.disconnect();
         }
+
         checkNetworkAccess();
     }
     @Override
@@ -864,7 +840,9 @@ public class HLMActivity extends AppCompatActivity implements
     protected void onResume(){
         super.onResume();
         isInFront = true;
-        mPagerAdapter.notifyDataSetChanged();
+        if (mPagerAdapter != null) {
+            mPagerAdapter.notifyDataSetChanged();
+        }
 
         if (user != null && mGoogleApiClient.isConnected() && mRequestingLocationUpdates) {
             startLocationUpdates();
