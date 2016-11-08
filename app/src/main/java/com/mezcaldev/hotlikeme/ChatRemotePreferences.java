@@ -19,5 +19,9 @@ public class ChatRemotePreferences {
 
     public static final String INSTANCE_ID_TOKEN_RETRIEVED = "iid_token_retrieved";
     public static final String FRIENDLY_MSG_LENGTH = "friendly_msg_length";
+    public static final String MSG_LIMIT = "messages_limit";
+    public static final String LOAD_OLD_MESSAGES = "load_old_messages";
+    public static final String MAX_DISPLAY_MESSAGES = "fmax_messages";
+    public static final String ITERATION_COUNT = "iteration_count";
 
 }

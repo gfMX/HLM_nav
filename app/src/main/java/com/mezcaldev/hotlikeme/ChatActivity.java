@@ -19,7 +19,6 @@ import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -81,6 +80,7 @@ import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLength;
+import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLengthDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimit;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageLimitDefault;
 import static com.mezcaldev.hotlikeme.FireConnection.fireConfigMessageOld;
@@ -115,7 +115,7 @@ public class ChatActivity extends AppCompatActivity implements
     protected String myKey;
     private SecureMessage secureMessage;
     private DecryptOnBackground decryptOnBackground;
-    private String encryptedMessageToSend;
+    String encryptedMessageToSend;
     String decryptedMessage;
     long totalMessages;
 
@@ -138,7 +138,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     int MESSAGE_LIMIT = fireConfigMessageLimitDefault;
     int ADD_OLD_MESSAGES = fireConfigMessageOldDefault;
-    int MSG_LENGTH_LIMIT = fireConfigMessageLimitDefault;
+    int MSG_LENGTH_LIMIT = fireConfigMessageLengthDefault;
     int MAX_MESSAGES_DECRYPTED = fireConfigMessagesMaxDefault;
 
     public static final String ANONYMOUS = "anonymous";
@@ -229,30 +229,30 @@ public class ChatActivity extends AppCompatActivity implements
         swipeRefreshLayout = (SwipeRefreshLayout) findViewById(R.id.swipeRefreshChat);
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        mMessageRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
+
+        /*mMessageRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
                 super.onScrollStateChanged(recyclerView, newState);
-                //hideSoftKeyboard(ChatActivity.this);
+                hideSoftKeyboard(ChatActivity.this);
             }
-        });
+        }); */
+
+        fab_send.setClickable(false);
+        fab_send.setEnabled(false);
+
         mMessageRecyclerView.addOnItemTouchListener(new RecyclerView.OnItemTouchListener() {
             @Override
             public boolean onInterceptTouchEvent(RecyclerView rv, MotionEvent e) {
                 hideSoftKeyboard(ChatActivity.this);
                 return false;
             }
-
             @Override
             public void onTouchEvent(RecyclerView rv, MotionEvent e) {
                 hideSoftKeyboard(ChatActivity.this);
-
             }
-
             @Override
-            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) {
-
-            }
+            public void onRequestDisallowInterceptTouchEvent(boolean disallowIntercept) { }
         });
 
         mLinearLayoutManager = new LinearLayoutManager(this);
@@ -275,7 +275,6 @@ public class ChatActivity extends AppCompatActivity implements
                 mProgressBar.setVisibility(View.VISIBLE);
                 mLinearLayoutManager.setStackFromEnd(false);
                 updateFireBaseRecyclerAdapter();
-                //preloadDecryptedMessages();
 
                 Handler handlerRefreshSign = new Handler();
                 handlerRefreshSign.postDelayed(new Runnable() {
@@ -317,7 +316,6 @@ public class ChatActivity extends AppCompatActivity implements
                 } else {
                     fab_send.setClickable(false);
                     fab_send.setEnabled(false);
-                    fab_send.setBackgroundColor(Color.GRAY);
                 }
             }
 
@@ -327,10 +325,6 @@ public class ChatActivity extends AppCompatActivity implements
             }
         });
 
-        fab_send.setClickable(false);
-        fab_send.setEnabled(false);
-        fab_send.setBackgroundColor(Color.GRAY);
-
         fab_send.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
@@ -339,30 +333,7 @@ public class ChatActivity extends AppCompatActivity implements
                 if (mLinearLayoutManager.getItemCount()-1 >= 0){
                     mMessageRecyclerView.smoothScrollToPosition(mLinearLayoutManager.getItemCount()-1);
                 }
-
-                mFirebaseDatabaseReference.child(MESSAGES_RESUME).child("readIt").setValue(false);          //Remove after finding the TRUE leak...
-                encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(mMessageEditText.getText().toString());
-
-                ChatMessageModel chatMessageModel = new ChatMessageModel(encryptedMessageToSend, mUsername,
-                        mPhotoUrl, timeStamp(), mFirebaseUser.getUid(), false);
-
-                mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel);
-                mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
-
-                mMessageEditText.setText("");
-
-                // Go to last message
-                waitForNewMessageSent = new Handler();
-                waitForNewMessageSentRunnable = new Runnable() {
-                    @Override
-                    public void run() {
-                        mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount()-1);
-                        if (mFirebaseAdapter != null) {
-                            mFirebaseAdapter.notifyDataSetChanged();
-                        }
-                    }
-                };
-                waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 300);
+                new SendOnBackground().execute(mMessageEditText.getText().toString());
 
             }
         });
@@ -694,6 +665,64 @@ public class ChatActivity extends AppCompatActivity implements
                 mFirebaseAdapter.notifyDataSetChanged();
             }
         }
+    }
+
+    class SendOnBackground extends AsyncTask<String, Void, String>{
+
+        @Override
+        protected void onPreExecute(){
+            super.onPreExecute();
+        }
+
+        @Override
+        protected String doInBackground(String... params) {
+
+            encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(params[0]);
+
+            return encryptedMessageToSend;
+        }
+
+        @Override
+        protected void onPostExecute(String result){
+            Log.i(TAG, "Result: " + result);
+
+            ChatMessageModel chatMessageModel = new ChatMessageModel(
+                    result,
+                    mUsername,
+                    mPhotoUrl,
+                    timeStamp(),
+                    mFirebaseUser.getUid(),
+                    false
+            );
+
+            mFirebaseDatabaseReference.child(MESSAGES_CHILD).push().setValue(chatMessageModel, new DatabaseReference.CompletionListener() {
+                @Override
+                public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                    if (databaseError != null){
+                        Toast.makeText(getApplicationContext(), "Message could not be sent", Toast.LENGTH_LONG).show();
+                        Log.e(TAG, "Encrypted Message NOT Sent");
+                    } else{
+                        Log.i(TAG, "Encrypted Message Sent");
+                        mMessageEditText.setText("");
+                    }
+                }
+            });
+            mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
+
+            // Go to last message
+            waitForNewMessageSent = new Handler();
+            waitForNewMessageSentRunnable = new Runnable() {
+                @Override
+                public void run() {
+                    mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount() - 1);
+                    if (mFirebaseAdapter != null) {
+                        mFirebaseAdapter.notifyDataSetChanged();
+                    }
+                }
+            };
+            waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 250);
+        }
+
     }
 
     private boolean isNetworkAvailable() {

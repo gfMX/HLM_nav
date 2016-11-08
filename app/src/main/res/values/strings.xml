@@ -3,7 +3,7 @@
     <string name="image_selected_title">Image Selected</string>
     <string name="image_container">Container for images on GridView</string>
     <string name="title_activity_hlm">HLMActivity</string>
-    <string name="title_activity_fire_browser">HotLikeMe Images</string>
+    <string name="title_activity_fire_browser">Change your picture</string>
     <string name="title_activity_image_browser">Upload new Images</string>
     <string name="title_activity_pager_hlm">HotLikeMe</string>
     <string name="title_activity_login">Login &amp; Profile Pic</string>

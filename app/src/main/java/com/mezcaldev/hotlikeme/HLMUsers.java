@@ -30,7 +30,6 @@ import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
@@ -110,6 +109,7 @@ public class HLMUsers extends ListFragment {
     String uniqueChatID;
 
     TextView viewUserDescription;
+    Toast toastNoMoreUsers;
     Toast toast1;
     Toast toast2;
 
@@ -157,6 +157,12 @@ public class HLMUsers extends ListFragment {
             FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
             Log.v(TAG, "Users from Singleton Empty");
         }
+
+        toastNoMoreUsers = Toast.makeText(
+                getContext(),
+                "We're sorry, there are no More Users around, check in a few moments...",
+                Toast.LENGTH_LONG
+        );
     }
 
     @Override
@@ -261,7 +267,7 @@ public class HLMUsers extends ListFragment {
                                 };
                                 handlerBeforeNewUser.postDelayed(runnableBeforeNewUser, delayBeforeNewUser);
                             } else {
-                                Toast.makeText(getContext(), "We're sorry, there are no More Users around, check in a few moments...", Toast.LENGTH_LONG).show();
+                                toastNoMoreUsers.show();
                                 Log.i(TAG, "No more users around!");
                             }
                         }
@@ -348,7 +354,9 @@ public class HLMUsers extends ListFragment {
 
         switch (item.getItemId()){
             case R.id.action_reloadUsers:
-                if (usersList.size() > 0) {
+                if (usersList.size() == 1){
+                   toastNoMoreUsers.show();
+                } else if (usersList.size() > 1) {
                     userKey = genNoRepeatedKey(userKey);
                     changeUserKey(userKey);
                 } else {
