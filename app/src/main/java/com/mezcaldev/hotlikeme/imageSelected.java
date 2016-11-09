@@ -36,6 +36,9 @@ public class ImageSelected extends DialogFragment {
     Button btn_ok;
     Button btn_cancel;
 
+    //Time to wait before Launching MainActivity
+    int timerToGo = 2500;
+
     static ImageSelected newInstance(Uri uri) {
         uriImage = uri;
         return new ImageSelected();
@@ -125,7 +128,7 @@ public class ImageSelected extends DialogFragment {
                     startActivity(new Intent(getActivity(), HLMActivity.class));
                     getActivity().finish();
                 }
-            }, 2500);
+            }, timerToGo);
         }
     }
 }
