@@ -10,18 +10,25 @@
             android:id="@+id/nav_chat"
             android:icon="@drawable/ic_chat_white_24dp"
             android:title="@string/drawer_text_chat" />
-        <item
-            android:id="@+id/nav_profile"
-            android:icon="@drawable/ic_account_circle_24dp"
-            android:title="@string/action_settings" />
-        <item
-            android:id="@+id/nav_settings"
-            android:icon="@drawable/ic_menu_manage"
-            android:title="@string/drawer_text_other_settings" />
+        <item android:title="@string/drawer_text_settings">
+            <menu>
+                <group android:checkableBehavior="single">
+                <item
+                    android:id="@+id/nav_profile"
+                    android:icon="@drawable/ic_account_circle_24dp"
+                    android:title="@string/action_profile_pic" />
+                <item
+                    android:id="@+id/nav_settings"
+                    android:icon="@drawable/ic_menu_manage"
+                    android:title="@string/drawer_text_other_settings" />
+                </group>
+            </menu>
+        </item>
     </group>
 
     <item android:title="@string/drawer_text_communicate">
         <menu>
+
             <item
                 android:id="@+id/nav_share"
                 android:icon="@drawable/ic_menu_share"
@@ -30,6 +37,7 @@
                 android:id="@+id/nav_send"
                 android:icon="@drawable/ic_menu_send"
                 android:title="@string/drawer_text_invite" />
+
         </menu>
     </item>
 

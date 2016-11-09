@@ -14,6 +14,7 @@
     <string name="action_fb_logout">Basic Settings and Log out</string>
     <string name="action_profile_settings">Profile Image</string>
     <string name="action_settings">Settings</string>
+    <string name="action_profile_pic">Profile Image</string>
     <string name="action_help">Help</string>
     <string name="action_start_chat">Send a message</string>
 
@@ -65,11 +66,13 @@
 
     <string name="pref_title_localization">Enable GPS Localization</string>
     <string name="pref_localization_description">
-        Let other Users know if you\'re Close to them. Nobody will see your exact position. If Disable, you would not be able to see any near user
+        Let other Users know if you\'re Close to them. Nobody will see your exact position. If Disable,
+        you would not be able to see any near user
     </string>
     <string name="pref_title_sync_frequency">Sync frequency</string>
     <string name="pref_sync_frequency_description">
-        How often do you want to update your actual position and look for new users around you. Longer times, netter battery life, but less updates.
+        How often do you want to update your actual position and look for new users around you.
+        Longer times, netter battery life, but less updates.
     </string>
     <string-array name="pref_sync_frequency_titles">
         <item>1 minutes</item>
@@ -151,12 +154,14 @@
     <string name="text_sign_in">"Welcome to HotLikeMe \n Please log in"</string>
     <string name="text_hlm_start_button">Bla, bla bla&#8230; Let\'s Go!</string>
     <string name="text_cancel_selection">"Bla, bla bla&#8230;"</string>
-    <string name="text_hlm_change_profile_pic">Bla, bla bla&#8230; Change your profile Pic</string>
+    <string name="text_hlm_change_profile_pic">Change your profile Picture</string>
     <string name="text_profile_picture_selected">New Profile Picture selected!</string>
     <string name="text_settings_activity">your display name, synchronization options, and more</string>
     <string name="text_start_HLM">
-        Please choose a few of your images for HotLikeMe. After that, click on your image profile
-        to change it for one of your choice.
+         - Please Upload a few of your images for HotLikeMe.
+        \n- Click the Profile Image to change it for your Own.
+        \n- Navigate Swiping to the Right.
+        \n- Change Other Settings from the Lateral Menu.
     </string>
     <string name="text_uploading">Uploading&#160;</string>
     <string name="text_image_uploaded">Image uploaded</string>
@@ -169,7 +174,8 @@
     <string name="text_deleting_images">Deleting Images&#8230;</string>
     <string name="text_user_name">No one Hot right now</string>
     <string name="text_slide">
-        We are sorry, there are no active Hot Users in your zone, change the Distance on the Settings, or Press Reload Button in a few minutes.
+        We are sorry, there are no active Hot Users in your zone, change the Distance on the Settings,
+        or Press Reload Button in a few minutes.
     </string>
     <string name="text_hlm_users">Profile pics of HotLikeMe Users</string>
     <string name="text_network_access_required">Network not available. Please check your Internet Connection and Try Again</string>
@@ -195,7 +201,8 @@
     <string name="navigation_drawer_close">Close navigation drawer</string>
     <string name="drawer_text_chat">Chat</string>
     <string name="drawer_text_navigate">Navigate</string>
-    <string name="drawer_text_other_settings">Other Settings</string>
+    <string name="drawer_text_settings">Settings</string>
+    <string name="drawer_text_other_settings">Others</string>
     <string name="drawer_text_communicate">Communicate</string>
     <string name="drawer_text_share">Share</string>
     <string name="drawer_text_invite">Invite</string>

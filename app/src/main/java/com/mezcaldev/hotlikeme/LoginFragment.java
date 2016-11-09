@@ -9,11 +9,14 @@ import android.os.Handler;
 import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -38,8 +41,11 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -54,9 +60,8 @@ import static com.mezcaldev.hotlikeme.FireConnection.user;
 public class LoginFragment extends Fragment {
 
     static LoginFragment newInstance() {
-        LoginFragment newFragment = new LoginFragment();
-
-        return newFragment;
+        //LoginFragment newFragment = new LoginFragment();
+        return new LoginFragment(); //newFragment;
     }
 
     private static final String TAG = "Login Details";
@@ -86,16 +91,17 @@ public class LoginFragment extends Fragment {
     private ImageView imageProfileHLM;
     private TextView fb_welcome_text;
     private TextView text_instruct;
+    private EditText editTextDisplayName;
+    private TextView textViewDisplayName;
     private Button btn_image;
-    private Button btn_start;
-    private Button btn_settings;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
     //Firebase
     static FirebaseAuth mAuth;
     static FirebaseAuth.AuthStateListener mAuthListener;
-    static DatabaseReference fireRef;
+    DatabaseReference fireRef;
+    DatabaseReference fireRefAlias;
     static FirebaseStorage storage;
     static StorageReference storageRef;
     Boolean flagImagesOnFirebase = false;
@@ -128,9 +134,11 @@ public class LoginFragment extends Fragment {
             databaseGlobal = FirebaseDatabase.getInstance();
             fireRef = databaseGlobal.getReference();
         }
+
         mAuth = FirebaseAuth.getInstance();
-        
         user = mAuth.getCurrentUser();
+
+        sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
     }
 
@@ -153,9 +161,14 @@ public class LoginFragment extends Fragment {
         imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
 
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
-        btn_start = (Button) view.findViewById(R.id.btn_start);
-        btn_settings = (Button) view.findViewById(R.id.btn_settings);
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
+        textViewDisplayName = (TextView) view.findViewById(R.id.text_display_name_helper);
+        editTextDisplayName = (EditText) view.findViewById(R.id.text_display_name);
+        if (user != null) {
+            editTextDisplayName.setText(sharedPreferences.getString("alias", user.getDisplayName()));
+        } else{
+            editTextDisplayName.setText(null);
+        }
 
         welcomeText = getResources().getString(R.string.text_welcome);
         instructionText = getResources().getString(R.string.text_start_HLM);
@@ -185,6 +198,40 @@ public class LoginFragment extends Fragment {
                 Log.d(TAG, "FB: Error", exception);
             }
         });
+
+        editTextDisplayName.addTextChangedListener(new TextWatcher() {
+            @Override
+            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+
+            }
+
+            @Override
+            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
+                String textDisplayName = charSequence.toString();
+                Log.i(TAG, "Display name: " + textDisplayName);
+                if (user != null){
+                    sharedPreferences.edit().putString("alias", textDisplayName).apply();
+
+                    fireRefAlias = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences").child("alias");
+                    fireRefAlias.setValue(textDisplayName, new DatabaseReference.CompletionListener() {
+                        @Override
+                        public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
+                            if (databaseError == null){
+                                Log.v(TAG, "User Name Changed: " + databaseReference);
+                            } else {
+                                Log.e(TAG, "Name couldn't be changed!" + databaseError);
+                            }
+                        }
+                    });
+
+                }
+            }
+
+            @Override
+            public void afterTextChanged(Editable editable) {
+
+            }
+        });
         
     }
     @Override
@@ -192,12 +239,7 @@ public class LoginFragment extends Fragment {
         super.onActivityCreated(savedInstanceState);
 
         btn_image.setTransformationMethod(null);
-        btn_start.setTransformationMethod(null);
-        btn_settings.setTransformationMethod(null);
-        //Button behavior
         btn_image.setOnClickListener(settingsButtons);
-        btn_start.setOnClickListener(settingsButtons);
-        btn_settings.setOnClickListener(settingsButtons);
 
         //Image Profile Behavior
         imageProfileHLM.setOnClickListener(settingsButtons);
@@ -216,18 +258,6 @@ public class LoginFragment extends Fragment {
                           .show();
 
                   startActivity(new Intent(getActivity(), ImageBrowser.class));
-                  break;
-              case R.id.btn_start:
-                  Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_start_button),
-                          Toast.LENGTH_LONG).show();
-
-                  ((HLMActivity) getActivity()).selectPage(HLMActivity.PAGE_HLM);
-
-                  break;
-              case R.id.btn_settings:
-                  Toast.makeText(getActivity(), getResources().getString(R.string.text_settings_activity),
-                          Toast.LENGTH_LONG).show();
-                  startActivity(new Intent(getActivity(), HLMSettings.class));
                   break;
               case R.id.hlm_image:
 
@@ -309,9 +339,9 @@ public class LoginFragment extends Fragment {
                         }
                     } else {
                         // User signed out
-                        //deleteLocalProfilePic();
                         Log.d(TAG, "Firebase: Signed Out");
                         System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
+                        editTextDisplayName.setText(null);
                     }
                     FireConnection.getInstance().getUser();
                     updateUI();
@@ -349,7 +379,8 @@ public class LoginFragment extends Fragment {
             fb_welcome_text.setText(welcomeText);
 
             loadProfileDetails(minDelayTime);
-
+            editTextDisplayName.setVisibility(View.VISIBLE);
+            textViewDisplayName.setVisibility(View.VISIBLE);
             text_instruct.setText(instructionText);
             profilePic.setVisibility(View.VISIBLE);
             if (accessToken !=null) {
@@ -369,18 +400,17 @@ public class LoginFragment extends Fragment {
                 flagImagesOnFirebase = false;
             }
             btn_image.setVisibility(View.VISIBLE);
-            btn_start.setVisibility(View.VISIBLE);
-            btn_settings.setVisibility(View.VISIBLE);
+
         } else {
             profilePic.setProfileId(null);
             profilePic.setVisibility(View.INVISIBLE);
             imageProfileHLM.setImageResource(R.drawable.ic_account_circle_gray_64dp);
             imageProfileHLM.setClickable(false);
             fb_welcome_text.setText(signInText);
+            editTextDisplayName.setVisibility(View.INVISIBLE);
+            textViewDisplayName.setVisibility(View.INVISIBLE);
             text_instruct.setText(null);
             btn_image.setVisibility(View.GONE);
-            btn_start.setVisibility(View.GONE);
-            btn_settings.setVisibility(View.GONE);
 
             deleteLocalProfilePic();
         }
@@ -408,7 +438,6 @@ public class LoginFragment extends Fragment {
                             gender = response.getJSONObject().get("gender").toString();
                             System.out.println("Gender: " + gender);
                             DatabaseReference databaseReference = databaseGlobal.getReference().child("users").child(user.getUid());
-                            sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
                             editor = sharedPreferences.edit();
                             editor.putString("gender", gender);
                             editor.putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true));
@@ -417,7 +446,17 @@ public class LoginFragment extends Fragment {
                             editor.apply();
 
                             databaseReference.child("preferences").child("gender").setValue(gender);
-                            //databaseReference.child("my_chats").child("HotLikeMe").setValue("one");
+                            databaseReference.child("preferences").child("alias").addValueEventListener(new ValueEventListener() {
+                                @Override
+                                public void onDataChange(DataSnapshot dataSnapshot) {
+                                    editTextDisplayName.setText(dataSnapshot.getValue().toString());
+                                }
+
+                                @Override
+                                public void onCancelled(DatabaseError databaseError) {
+
+                                }
+                            });
 
                             Log.i(TAG, "We got the gender: " + gender);
                         } catch (JSONException e){
@@ -470,14 +509,6 @@ public class LoginFragment extends Fragment {
         accessTokenTracker.startTracking();
         profileTracker.startTracking();
         updateUI();
-        // <-- Last Addition
-        /*if (user != null && imageProfileHLM != null) {
-            Glide
-                    .with(getContext())
-                    .load(user.getPhotoUrl())
-                    .centerCrop()
-                    .into(imageProfileHLM);
-        } */
     }
 
     @Override
