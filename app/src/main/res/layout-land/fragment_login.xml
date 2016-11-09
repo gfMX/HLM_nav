@@ -37,7 +37,9 @@
         android:id="@+id/hlm_image"
         android:layout_width="200dp"
         android:layout_height="200dp"
-        android:layout_margin="15dp"
+        android:layout_marginLeft="15dp"
+        android:layout_marginStart="15dp"
+        android:layout_marginTop="47dp"
         android:src="@drawable/ic_person_black"
         app:civ_border_width="8dp"
         app:civ_border_color="@color/colorWhite"
@@ -56,11 +58,31 @@
         android:layout_centerHorizontal="true"
         style="?android:attr/borderlessButtonStyle"/>
 
+    <Switch
+        android:visibility="gone"
+        android:text="@string/login_switch_visible"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="3dp"
+        android:layout_below="@+id/btn_choose_img"
+        android:layout_alignRight="@+id/switch_nearby"
+        android:layout_alignEnd="@+id/switch_nearby"
+        android:id="@+id/switch_visible" />
+
+    <Switch
+        android:visibility="gone"
+        android:text="@string/login_switch_nearby"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="3dp"
+        android:layout_below="@+id/switch_visible"
+        android:layout_centerHorizontal="true"
+        android:id="@+id/switch_nearby" />
+
     <TextView
         android:visibility="invisible"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:ems="8"
         android:id="@+id/text_display_name_helper"
         android:textAlignment="center"
         android:text="@string/pref_title_display_name"
@@ -74,8 +96,7 @@
         android:inputType="textPersonName"
         android:textAlignment="center"
         android:text="@string/pref_title_display_name"
-        android:ems="10"
-        android:layout_margin="10dp"
+        android:layout_margin="8dp"
         android:layout_above="@+id/btn_choose_img"
         android:layout_centerHorizontal="true"
         android:id="@+id/text_display_name"
@@ -92,10 +113,10 @@
 
     <TextView
         android:layout_width="340dp"
-        android:paddingTop="30dp"
+        android:paddingTop="20dp"
         android:layout_height="wrap_content"
         android:layout_centerHorizontal="true"
         android:id="@+id/text_instruct"
-        android:layout_below="@id/btn_choose_img" />
+        android:layout_below="@id/switch_nearby" />
 
 </RelativeLayout>

@@ -16,8 +16,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.ImageView;
+import android.widget.Switch;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -94,6 +96,8 @@ public class LoginFragment extends Fragment {
     private EditText editTextDisplayName;
     private TextView textViewDisplayName;
     private Button btn_image;
+    Switch switchVisible;
+    Switch switchNearby;
     SharedPreferences sharedPreferences;
     SharedPreferences.Editor editor;
 
@@ -102,6 +106,7 @@ public class LoginFragment extends Fragment {
     static FirebaseAuth.AuthStateListener mAuthListener;
     DatabaseReference fireRef;
     DatabaseReference fireRefAlias;
+    DatabaseReference databaseReference;
     static FirebaseStorage storage;
     static StorageReference storageRef;
     Boolean flagImagesOnFirebase = false;
@@ -160,6 +165,9 @@ public class LoginFragment extends Fragment {
         profilePic = (ProfilePictureView) view.findViewById(R.id.fb_image);
         imageProfileHLM = (ImageView) view.findViewById(R.id.hlm_image);
 
+        switchVisible = (Switch) view.findViewById(R.id.switch_visible);
+        switchNearby = (Switch) view.findViewById(R.id.switch_nearby);
+
         btn_image = (Button) view.findViewById(R.id.btn_choose_img);
         text_instruct = (TextView) view.findViewById(R.id.text_instruct);
         textViewDisplayName = (TextView) view.findViewById(R.id.text_display_name_helper);
@@ -177,6 +185,54 @@ public class LoginFragment extends Fragment {
         loginButton = (LoginButton) view.findViewById(R.id.login_button);
         loginButton.setReadPermissions("email", "public_profile", "user_photos");
         loginButton.setFragment(this);
+
+        //Switches
+        switchVisible.setChecked(sharedPreferences.getBoolean("visible_switch", true));
+        switchVisible.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (user != null) {
+                    fireRefAlias = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences");
+                    databaseReference = databaseGlobal.getReference();
+                    sharedPreferences.edit().putBoolean("visible_switch", b).apply();
+                    fireRefAlias.child("visible").setValue(b);
+                    String thisGender = sharedPreferences.getString("gender", null);
+
+                    if (b && thisGender != null) {
+                        Log.v(TAG, "User Visible");
+                        databaseReference.child("groups").child(thisGender).child(user.getUid()).setValue(true);
+                        databaseReference.child("groups").child("both").child(user.getUid()).setValue(true);
+                    } else if (thisGender != null) {
+                        Log.v(TAG, "User Not Visible");
+                        databaseReference.child("groups").child(thisGender).child(user.getUid()).setValue(null);
+                        databaseReference.child("groups").child("both").child(user.getUid()).setValue(null);
+                    } else{
+                        Log.e(TAG, "Something went Wrong!");
+                    }
+
+                    FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
+
+                }
+
+            }
+        });
+        switchNearby.setChecked(sharedPreferences.getBoolean("gps_enabled", false));
+        switchNearby.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (user != null) {
+                    fireRefAlias = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences");
+                    sharedPreferences.edit().putBoolean("gps_enabled", b).apply();
+                    fireRefAlias.child("gps_enabled").setValue(b);
+
+                    FireConnection.getInstance().getFirebaseUsers(
+                            sharedPreferences,
+                            HLMActivity.mCurrentLocation
+                    );
+
+                }
+            }
+        });
 
         // Callback registration
         loginButton.registerCallback(callbackManager, new FacebookCallback<LoginResult>() {
@@ -210,10 +266,10 @@ public class LoginFragment extends Fragment {
                 String textDisplayName = charSequence.toString();
                 Log.i(TAG, "Display name: " + textDisplayName);
                 if (user != null){
+                    fireRefAlias = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences");
                     sharedPreferences.edit().putString("alias", textDisplayName).apply();
 
-                    fireRefAlias = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences").child("alias");
-                    fireRefAlias.setValue(textDisplayName, new DatabaseReference.CompletionListener() {
+                    fireRefAlias.child("alias").setValue(textDisplayName, new DatabaseReference.CompletionListener() {
                         @Override
                         public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
                             if (databaseError == null){
@@ -341,7 +397,7 @@ public class LoginFragment extends Fragment {
                         // User signed out
                         Log.d(TAG, "Firebase: Signed Out");
                         System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
-                        editTextDisplayName.setText(null);
+                        //editTextDisplayName.setText(null);
                     }
                     FireConnection.getInstance().getUser();
                     updateUI();
@@ -400,6 +456,8 @@ public class LoginFragment extends Fragment {
                 flagImagesOnFirebase = false;
             }
             btn_image.setVisibility(View.VISIBLE);
+            switchVisible.setVisibility(View.VISIBLE);
+            switchNearby.setVisibility(View.VISIBLE);
 
         } else {
             profilePic.setProfileId(null);
@@ -411,6 +469,8 @@ public class LoginFragment extends Fragment {
             textViewDisplayName.setVisibility(View.INVISIBLE);
             text_instruct.setText(null);
             btn_image.setVisibility(View.GONE);
+            switchVisible.setVisibility(View.GONE);
+            switchNearby.setVisibility(View.GONE);
 
             deleteLocalProfilePic();
         }

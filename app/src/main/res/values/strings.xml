@@ -31,6 +31,10 @@
     <string name="btn_ok">Yes!</string>
     <string name="btn_cancel">No!</string>
 
+    <!-- Strings Login & Settings -->
+    <string name="login_switch_visible">Others can see me</string>
+    <string name="login_switch_nearby">Show only users nearby</string>
+
     <!-- Strings related to Settings -->
     <string name="action_delete">Delete Image</string>
 

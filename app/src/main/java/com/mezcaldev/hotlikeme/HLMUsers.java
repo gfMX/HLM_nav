@@ -354,14 +354,7 @@ public class HLMUsers extends ListFragment {
 
         switch (item.getItemId()){
             case R.id.action_reloadUsers:
-                if (usersList.size() == 1){
-                   toastNoMoreUsers.show();
-                } else if (usersList.size() > 1) {
-                    userKey = genNoRepeatedKey(userKey);
-                    changeUserKey(userKey);
-                } else {
-                    Toast.makeText(getContext(), "There are no users around", Toast.LENGTH_SHORT).show();
-                }
+                reloadUsers();
                 return true;
         }
 
@@ -555,6 +548,17 @@ public class HLMUsers extends ListFragment {
         }
     }
 
+    public void reloadUsers(){
+        if (usersList.size() == 1){
+            toastNoMoreUsers.show();
+        } else if (usersList.size() > 1) {
+            userKey = genNoRepeatedKey(userKey);
+            changeUserKey(userKey);
+        } else {
+            Toast.makeText(getContext(), "There are no users around", Toast.LENGTH_SHORT).show();
+        }
+    }
+
     private void waitForUsers(){
         Log.e(TAG, "Waiting users");
         runnableWaitingUsers = new Runnable() {
@@ -657,6 +661,8 @@ public class HLMUsers extends ListFragment {
     @Override
     public void onResume (){
         super.onResume();
+
+        reloadUsers();
     }
     @Override
     public void onDestroy() {
