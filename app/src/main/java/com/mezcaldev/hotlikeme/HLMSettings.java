@@ -124,8 +124,6 @@ public class HLMSettings extends AppCompatPreferenceActivity {
         int id = item.getItemId();
 
         if (id == android.R.id.home) {
-            /*startActivity(new Intent(this, HLMActivity.class));
-            finish();*/
             NavUtils.navigateUpFromSameTask(this);
             return true;
         }

@@ -452,6 +452,7 @@ public class ChatActivity extends AppCompatActivity implements
                     mProgressBar.setVisibility(View.INVISIBLE);
                     if (mFirebaseAdapter != null) {
                         mFirebaseAdapter.notifyDataSetChanged();
+                        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
                     }
                 }
             };
@@ -603,7 +604,9 @@ public class ChatActivity extends AppCompatActivity implements
                     mLinearLayoutManager.setStackFromEnd(true);
                     mLinearLayoutManager.scrollToPosition(positionStart);
 
-                    mFirebaseAdapter.notifyDataSetChanged();
+                    if (mFirebaseAdapter != null) {
+                        mFirebaseAdapter.notifyDataSetChanged();
+                    }
                 }
                 Handler handlerSetAsRead = new Handler();
                 Runnable runnableSetAsRead = new Runnable() {
@@ -704,6 +707,9 @@ public class ChatActivity extends AppCompatActivity implements
                     } else{
                         Log.i(TAG, "Encrypted Message Sent");
                         mMessageEditText.setText("");
+                        if (mFirebaseAdapter != null) {
+                            mFirebaseAdapter.notifyDataSetChanged();
+                        }
                     }
                 }
             });
@@ -720,7 +726,7 @@ public class ChatActivity extends AppCompatActivity implements
                     }
                 }
             };
-            waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, 250);
+            waitForNewMessageSent.postDelayed(waitForNewMessageSentRunnable, UPDATE_VIEW_DELAY);
         }
 
     }

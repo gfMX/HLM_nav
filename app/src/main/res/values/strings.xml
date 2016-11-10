@@ -32,7 +32,7 @@
     <string name="btn_cancel">No!</string>
 
     <!-- Strings Login & Settings -->
-    <string name="login_switch_visible">Others can see me</string>
+    <string name="login_switch_visible">Others users can find me</string>
     <string name="login_switch_nearby">Show only users nearby</string>
 
     <!-- Strings related to Settings -->

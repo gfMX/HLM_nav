@@ -99,12 +99,10 @@ public class LoginFragment extends Fragment {
     Switch switchVisible;
     Switch switchNearby;
     SharedPreferences sharedPreferences;
-    SharedPreferences.Editor editor;
 
     //Firebase
     static FirebaseAuth mAuth;
     static FirebaseAuth.AuthStateListener mAuthListener;
-    DatabaseReference fireRef;
     DatabaseReference fireRefAlias;
     DatabaseReference databaseReference;
     static FirebaseStorage storage;
@@ -133,11 +131,9 @@ public class LoginFragment extends Fragment {
         storage = FirebaseStorage.getInstance();
         storageRef = storage.getReferenceFromUrl("gs://project-6344486298585531617.appspot.com");
 
-        if (databaseGlobal != null) {
-            fireRef = databaseGlobal.getReference();
-        } else {
+        if (databaseGlobal == null)  {
             databaseGlobal = FirebaseDatabase.getInstance();
-            fireRef = databaseGlobal.getReference();
+
         }
 
         mAuth = FirebaseAuth.getInstance();
@@ -387,8 +383,8 @@ public class LoginFragment extends Fragment {
                         Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
                         //Stores references needed by the App on Firebase:
-                        fireRef = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences").child("name");
-                        fireRef.setValue(user.getDisplayName());
+                        //fireRef = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences").child("name");
+                        //fireRef.setValue(user.getDisplayName());
 
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
@@ -444,8 +440,6 @@ public class LoginFragment extends Fragment {
             }
             imageProfileHLM.setClickable(true);
             if (user.getPhotoUrl() != null && getContext() != null) {
-                //Glide do better RAM Optimization:
-                //Glide.clear(imageProfileHLM);  // <-- Last Addition
                 Glide
                         .with(getContext())
                         .load(user.getPhotoUrl())
@@ -498,12 +492,12 @@ public class LoginFragment extends Fragment {
                             gender = response.getJSONObject().get("gender").toString();
                             System.out.println("Gender: " + gender);
                             DatabaseReference databaseReference = databaseGlobal.getReference().child("users").child(user.getUid());
-                            editor = sharedPreferences.edit();
-                            editor.putString("gender", gender);
-                            editor.putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true));
-                            editor.putString("looking_for", sharedPreferences.getString("looking_for", "both"));
-                            editor.putString("alias", sharedPreferences.getString("alias", user.getDisplayName()));
-                            editor.apply();
+                            sharedPreferences.edit()
+                                    .putString("gender", gender)
+                                    .putBoolean("visible_switch", sharedPreferences.getBoolean("visible_switch", true))
+                                    .putString("looking_for", sharedPreferences.getString("looking_for", "both"))
+                                    .putString("alias", sharedPreferences.getString("alias", user.getDisplayName()))
+                                    .apply();
 
                             databaseReference.child("preferences").child("gender").setValue(gender);
                             databaseReference.child("preferences").child("alias").addValueEventListener(new ValueEventListener() {
