@@ -105,7 +105,6 @@ public class ChatActivity extends AppCompatActivity implements
     }
 
     //Encrypted Message
-    boolean flagRunOnce = false;
     boolean flagMessagesDecrypted = false;
     boolean isInFront;
 
@@ -119,12 +118,14 @@ public class ChatActivity extends AppCompatActivity implements
     String decryptedMessage;
     long totalMessages;
 
-
     Handler waitForNewMessageSent;
     Runnable waitForNewMessageSentRunnable;
+    Handler handlerShowLoadingBar;
+    Runnable runnableShowLoadingBar;
 
     //Delays:
     int bigDelay = ONE_SECOND * 2;
+    int secondBigDelay = (int) (ONE_SECOND * 5);
 
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
@@ -230,13 +231,6 @@ public class ChatActivity extends AppCompatActivity implements
         mMessageRecyclerView = (RecyclerView) findViewById(R.id.messageRecyclerView);
         mMessageRecyclerView.setLayoutManager(new LinearLayoutManager(this));
 
-        /*mMessageRecyclerView.addOnScrollListener(new RecyclerView.OnScrollListener() {
-            @Override
-            public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
-                super.onScrollStateChanged(recyclerView, newState);
-                hideSoftKeyboard(ChatActivity.this);
-            }
-        }); */
 
         fab_send.setClickable(false);
         fab_send.setEnabled(false);
@@ -445,8 +439,8 @@ public class ChatActivity extends AppCompatActivity implements
             mProgressBar.setVisibility(View.VISIBLE);
             Toast.makeText(getApplicationContext(), "Loading Messages", Toast.LENGTH_LONG).show();
 
-            Handler handlerShowLoadingBar = new Handler();
-            Runnable runnableShowLoadingBar = new Runnable() {
+            handlerShowLoadingBar = new Handler();
+            runnableShowLoadingBar = new Runnable() {
                 @Override
                 public void run() {
                     mProgressBar.setVisibility(View.INVISIBLE);
@@ -456,12 +450,15 @@ public class ChatActivity extends AppCompatActivity implements
                     }
                 }
             };
-            handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, bigDelay * 2);
+            handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, secondBigDelay);
 
             preloadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(DataSnapshot dataSnapshot) {
                     totalMessages = dataSnapshot.getChildrenCount();
+                    if (totalMessages == 0){
+                        flagMessagesDecrypted = true;
+                    }
                     Log.i(TAG, "Childrens: " + totalMessages);
                 }
 
@@ -475,10 +472,12 @@ public class ChatActivity extends AppCompatActivity implements
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
 
-                    if (!flagRunOnce) {
+                    if (!flagMessagesDecrypted) {
                         decryptedMessages.add(dataSnapshot.child("text").getValue().toString());
+                        Log.i(TAG, "Saving Encrypted Message");
                     } else if (!swipeRefreshLayout.isRefreshing()) {
                         decryptedMessages.add(secureMessage.decrypt(dataSnapshot.child("text").getValue().toString()));
+                        Log.i(TAG, "Saving Decrypted Message");
                     }
 
                     if (positionMessages == totalMessages - 1) {
@@ -495,20 +494,28 @@ public class ChatActivity extends AppCompatActivity implements
 
                         decryptOnBackground = new DecryptOnBackground();
                         decryptOnBackground.execute();
-                        flagMessagesDecrypted = true;
+
+                        //flagMessagesDecrypted = true;
 
                     } else if (totalMessages == 0) {
                         updateFireBaseRecyclerAdapter();
                     }
+                    //flagMessagesDecrypted = true;
                     positionMessages++;
                 }
 
                 @Override
-                public void onChildChanged(DataSnapshot dataSnapshot, String s) { }
+                public void onChildChanged(DataSnapshot dataSnapshot, String s) {
+                    updateViewWithDelay(50);
+                }
                 @Override
-                public void onChildRemoved(DataSnapshot dataSnapshot) { }
+                public void onChildRemoved(DataSnapshot dataSnapshot) {
+                    updateViewWithDelay(50);
+                }
                 @Override
-                public void onChildMoved(DataSnapshot dataSnapshot, String s) { }
+                public void onChildMoved(DataSnapshot dataSnapshot, String s) {
+                    updateViewWithDelay(50);
+                }
                 @Override
                 public void onCancelled(DatabaseError databaseError) { }
             });
@@ -628,7 +635,6 @@ public class ChatActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 mFirebaseAdapter.notifyDataSetChanged();
-                //new DecryptOnBackground().execute();
             }
         }, UPDATE_VIEW_DELAY);
     }
@@ -644,7 +650,7 @@ public class ChatActivity extends AppCompatActivity implements
         protected Void doInBackground(Void... params) {
             List<String> messagesToDecrypt = decryptedMessages;
 
-            if (!flagRunOnce) {
+            if (!flagMessagesDecrypted) {
                 int nMessages = messagesToDecrypt.size();
                 Log.i(TAG, "--> Decrypting <-- Size: " + nMessages);
 
@@ -653,7 +659,7 @@ public class ChatActivity extends AppCompatActivity implements
                     decryptedMessages.set(i, decryptedMessage);
                 }
 
-                flagRunOnce = true;
+                flagMessagesDecrypted = true;
             } else {
                 Log.i(TAG, "Messages already decrypted");
             }
@@ -666,11 +672,12 @@ public class ChatActivity extends AppCompatActivity implements
             Log.i(TAG, "Decrypting: Updating Adapter");
             if (mFirebaseAdapter != null) {
                 mFirebaseAdapter.notifyDataSetChanged();
+                mMessageRecyclerView.setAdapter(mFirebaseAdapter);
             }
         }
     }
 
-    class SendOnBackground extends AsyncTask<String, Void, String>{
+    class SendOnBackground extends AsyncTask<String, Void, Void>{
 
         @Override
         protected void onPreExecute(){
@@ -678,19 +685,12 @@ public class ChatActivity extends AppCompatActivity implements
         }
 
         @Override
-        protected String doInBackground(String... params) {
+        protected Void doInBackground(String... params) {
 
             encryptedMessageToSend = secureMessage.EncryptToFinalTransferText(params[0]);
 
-            return encryptedMessageToSend;
-        }
-
-        @Override
-        protected void onPostExecute(String result){
-            Log.i(TAG, "Result: " + result);
-
             ChatMessageModel chatMessageModel = new ChatMessageModel(
-                    result,
+                    encryptedMessageToSend,
                     mUsername,
                     mPhotoUrl,
                     timeStamp(),
@@ -715,6 +715,11 @@ public class ChatActivity extends AppCompatActivity implements
             });
             mFirebaseDatabaseReference.child(MESSAGES_RESUME).setValue(chatMessageModel);
 
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(Void result){
             // Go to last message
             waitForNewMessageSent = new Handler();
             waitForNewMessageSentRunnable = new Runnable() {
@@ -723,6 +728,7 @@ public class ChatActivity extends AppCompatActivity implements
                     mLinearLayoutManager.scrollToPosition(mLinearLayoutManager.getItemCount() - 1);
                     if (mFirebaseAdapter != null) {
                         mFirebaseAdapter.notifyDataSetChanged();
+                        mMessageRecyclerView.setAdapter(mFirebaseAdapter);
                     }
                 }
             };
@@ -804,6 +810,12 @@ public class ChatActivity extends AppCompatActivity implements
             handlerUpdateView.removeCallbacksAndMessages(null);
         }catch(NullPointerException e){
             Log.e(TAG, "No Callbacks to Remove");
+        }
+        try {
+            handlerShowLoadingBar.removeCallbacks(runnableShowLoadingBar);
+            handlerShowLoadingBar.removeCallbacksAndMessages(null);
+        } catch (NullPointerException e){
+            Log.e(TAG, "No callbacks to Remove");
         }
     }
 

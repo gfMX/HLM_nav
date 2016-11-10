@@ -206,7 +206,10 @@ public class LoginFragment extends Fragment {
                         Log.e(TAG, "Something went Wrong!");
                     }
 
-                    FireConnection.getInstance().getFirebaseUsers(sharedPreferences, HLMActivity.mCurrentLocation);
+                    FireConnection.getInstance().getFirebaseUsers(
+                            sharedPreferences,
+                            HLMActivity.mCurrentLocation)
+                    ;
 
                 }
 
@@ -225,7 +228,7 @@ public class LoginFragment extends Fragment {
                             sharedPreferences,
                             HLMActivity.mCurrentLocation
                     );
-
+                    Log.v(TAG, "Location from HLM: " + HLMActivity.mCurrentLocation);
                 }
             }
         });
