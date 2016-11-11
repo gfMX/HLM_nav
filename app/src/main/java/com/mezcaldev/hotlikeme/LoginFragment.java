@@ -192,19 +192,8 @@ public class LoginFragment extends Fragment {
                     databaseReference = databaseGlobal.getReference();
                     sharedPreferences.edit().putBoolean("visible_switch", b).apply();
                     fireRefAlias.child("visible").setValue(b);
-                    String thisGender = sharedPreferences.getString("gender", null);
 
-                    if (b && thisGender != null) {
-                        Log.v(TAG, "User Visible");
-                        databaseReference.child("groups").child(thisGender).child(user.getUid()).setValue(true);
-                        databaseReference.child("groups").child("both").child(user.getUid()).setValue(true);
-                    } else if (thisGender != null) {
-                        Log.v(TAG, "User Not Visible");
-                        databaseReference.child("groups").child(thisGender).child(user.getUid()).setValue(null);
-                        databaseReference.child("groups").child("both").child(user.getUid()).setValue(null);
-                    } else{
-                        Log.e(TAG, "Something went Wrong!");
-                    }
+                    checkIfUserIsVisible();
 
                     FireConnection.getInstance().getFirebaseUsers(
                             sharedPreferences,
@@ -337,15 +326,18 @@ public class LoginFragment extends Fragment {
                 protected void onCurrentAccessTokenChanged(
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
-                    // Set the access token using.
-                    // currentAccessToken when it's loaded or set.
-                    //If the User is logged in, display the options for the user.
+
                     if (currentAccessToken == null){
                         Toast.makeText(getActivity(),
                                 getResources().getString(R.string.text_see_you_soon),
                                 Toast.LENGTH_SHORT).show();
 
                         FirebaseAuth.getInstance().signOut();
+                        if (sharedPreferences != null) {
+                            sharedPreferences.edit().clear().apply();
+                            Log.v(TAG, "Shared Preferences Cleared!");
+                        }
+
                         Log.i(TAG, "Firebase: " + FirebaseAuth.getInstance().toString());
 
                     } else {
@@ -385,10 +377,6 @@ public class LoginFragment extends Fragment {
                         //User sign in
                         Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
-                        //Stores references needed by the App on Firebase:
-                        //fireRef = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences").child("name");
-                        //fireRef.setValue(user.getDisplayName());
-
                         if (accessToken!=null) {
                             loadProfileDetails(delayTime);
                         }
@@ -396,7 +384,6 @@ public class LoginFragment extends Fragment {
                         // User signed out
                         Log.d(TAG, "Firebase: Signed Out");
                         System.out.println("Singleton user: " + FireConnection.getInstance().getUser());
-                        //editTextDisplayName.setText(null);
                     }
                     FireConnection.getInstance().getUser();
                     updateUI();
@@ -502,11 +489,17 @@ public class LoginFragment extends Fragment {
                                     .putString("alias", sharedPreferences.getString("alias", user.getDisplayName()))
                                     .apply();
 
+                            checkIfUserIsVisible();
+
                             databaseReference.child("preferences").child("gender").setValue(gender);
+                            databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getString("alias", user.getDisplayName()));
+                            databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getBoolean("visible_switch", true));
                             databaseReference.child("preferences").child("alias").addValueEventListener(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
-                                    editTextDisplayName.setText(dataSnapshot.getValue().toString());
+                                    if (dataSnapshot != null) {
+                                        editTextDisplayName.setText(dataSnapshot.getValue().toString());
+                                    }
                                 }
 
                                 @Override
@@ -526,6 +519,24 @@ public class LoginFragment extends Fragment {
         parameters.putString("fields", "gender");
         request.setParameters(parameters);
         request.executeAsync();
+    }
+
+    private void checkIfUserIsVisible (){
+        boolean visible = sharedPreferences.getBoolean("visible_switch", true);
+        String thisGender = sharedPreferences.getString("gender", null);
+        if (user != null){
+            if (visible && thisGender != null) {
+                Log.v(TAG, "User Visible");
+                databaseReference.child("groups").child(thisGender).child(user.getUid()).setValue(true);
+                databaseReference.child("groups").child("both").child(user.getUid()).setValue(true);
+            } else if (thisGender != null) {
+                Log.v(TAG, "User Not Visible");
+                databaseReference.child("groups").child(thisGender).child(user.getUid()).setValue(null);
+                databaseReference.child("groups").child("both").child(user.getUid()).setValue(null);
+            } else{
+                Log.e(TAG, "Something went Wrong!");
+            }
+        }
     }
 
     private boolean deleteLocalProfilePic(){

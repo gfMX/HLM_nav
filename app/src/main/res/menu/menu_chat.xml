@@ -8,7 +8,4 @@
         android:visible="true"
         app:showAsAction="ifRoom"
         />
-    <item
-        android:id="@+id/invite_menu"
-        android:title="@string/invite_menu_label"/>
 </menu>

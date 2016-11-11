@@ -64,6 +64,7 @@
 
     <string name="pref_title_description">A little description about you:</string>
     <string name="pref_default_description">Tell others about you, and your interests.</string>
+    <string name="pref_default_missing_description">We\'re sorry, We have no description for this User.</string>
 
     <!-- Example settings for Data & Sync -->
     <string name="pref_header_data_sync">Sync &amp; Localization</string>

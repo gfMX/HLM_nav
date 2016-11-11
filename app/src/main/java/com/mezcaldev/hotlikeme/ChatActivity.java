@@ -54,10 +54,8 @@ import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
 import com.firebase.ui.database.FirebaseRecyclerAdapter;
-import com.google.android.gms.appinvite.AppInviteInvitation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
-import com.google.firebase.analytics.FirebaseAnalytics;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -125,7 +123,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Delays:
     int bigDelay = ONE_SECOND * 2;
-    int secondBigDelay = (int) (ONE_SECOND * 5);
+    int secondBigDelay = (int) (ONE_SECOND * 1.5);
 
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";
@@ -135,7 +133,6 @@ public class ChatActivity extends AppCompatActivity implements
     Runnable runnableUpdateView;
 
     int UPDATE_VIEW_DELAY = 500;
-    private static final int REQUEST_INVITE = 1;
 
     int MESSAGE_LIMIT = fireConfigMessageLimitDefault;
     int ADD_OLD_MESSAGES = fireConfigMessageOldDefault;
@@ -160,6 +157,7 @@ public class ChatActivity extends AppCompatActivity implements
     private DatabaseReference databaseReferenceLastMessages;
     FirebaseAuth mFirebaseAuth;
     FirebaseUser mFirebaseUser;
+    Query preloadMessages;
     private EditText mMessageEditText;
 
     @Override
@@ -254,7 +252,26 @@ public class ChatActivity extends AppCompatActivity implements
 
         mFirebaseDatabaseReference = databaseGlobal.getReference();
         databaseReferenceLastMessages = mFirebaseDatabaseReference.child(MESSAGES_CHILD);
+
         recentMessages = databaseReferenceLastMessages.limitToLast(MESSAGE_LIMIT);
+        preloadMessages = databaseReferenceLastMessages.limitToLast(MAX_MESSAGES_DECRYPTED);
+
+        preloadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(DataSnapshot dataSnapshot) {
+                totalMessages = dataSnapshot.getChildrenCount();
+                if (totalMessages == 0){
+                    flagMessagesDecrypted = true;
+                    Log.v(TAG, "Zero Message to decrypt!");
+                }
+                Log.i(TAG, "Childrens: " + totalMessages);
+            }
+
+            @Override
+            public void onCancelled(DatabaseError databaseError) {
+
+            }
+        });
 
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
@@ -334,7 +351,13 @@ public class ChatActivity extends AppCompatActivity implements
 
         //Check if Network is available
         checkNetworkAccess();
-        preloadDecryptedMessages();
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                preloadDecryptedMessages();
+            }
+        }, 200);
     }
 
     @Override
@@ -350,50 +373,14 @@ public class ChatActivity extends AppCompatActivity implements
             case R.id.action_reloadChat:
                 if (mFirebaseAdapter != null){
                     mFirebaseAdapter.notifyDataSetChanged();
+                    mMessageRecyclerView.setAdapter(mFirebaseAdapter);
                 }
-                return true;
-            case R.id.invite_menu:
-                sendInvitation();
                 return true;
             case android.R.id.home:
                 onBackPressed();
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
-        }
-    }
-
-    private void sendInvitation() {
-        Intent intent = new AppInviteInvitation.IntentBuilder(getString(R.string.invitation_title))
-                .setMessage(getString(R.string.invitation_message))
-                .setCallToActionText(getString(R.string.invitation_cta))
-                .build();
-        startActivityForResult(intent, REQUEST_INVITE);
-    }
-
-    @Override
-    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        Log.d(TAG, "onActivityResult: requestCode=" + requestCode + ", resultCode=" + resultCode);
-
-        if (requestCode == REQUEST_INVITE) {
-            if (resultCode == RESULT_OK) {
-                // Use Firebase Measurement to log that invitation was sent.
-                Bundle payload = new Bundle();
-                payload.putString(FirebaseAnalytics.Param.VALUE, "inv_sent");
-
-                // Check how many invitations were sent and log.
-                String[] ids = AppInviteInvitation.getInvitationIds(resultCode, data);
-                Log.d(TAG, "Invitations sent: " + ids.length);
-            } else {
-                // Use Firebase Measurement to log that invitation was not sent
-                Bundle payload = new Bundle();
-                payload.putString(FirebaseAnalytics.Param.VALUE, "inv_not_sent");
-                //mFirebaseAnalytics.logEvent(FirebaseAnalytics.Event.SHARE, payload);
-
-                // Sending failed or it was canceled, show failure message to the user
-                Log.d(TAG, "Failed to send invitation.");
-            }
         }
     }
 
@@ -432,7 +419,6 @@ public class ChatActivity extends AppCompatActivity implements
 
     private void preloadDecryptedMessages(){
         if (!flagMessagesDecrypted) {
-            Query preloadMessages = databaseReferenceLastMessages.limitToLast(MAX_MESSAGES_DECRYPTED);
             positionMessages = 0;
             decryptedMessages.clear();
 
@@ -452,22 +438,6 @@ public class ChatActivity extends AppCompatActivity implements
             };
             handlerShowLoadingBar.postDelayed(runnableShowLoadingBar, secondBigDelay);
 
-            preloadMessages.addListenerForSingleValueEvent(new ValueEventListener() {
-                @Override
-                public void onDataChange(DataSnapshot dataSnapshot) {
-                    totalMessages = dataSnapshot.getChildrenCount();
-                    if (totalMessages == 0){
-                        flagMessagesDecrypted = true;
-                    }
-                    Log.i(TAG, "Childrens: " + totalMessages);
-                }
-
-                @Override
-                public void onCancelled(DatabaseError databaseError) {
-
-                }
-            });
-
             preloadMessages.addChildEventListener(new ChildEventListener() {
                 @Override
                 public void onChildAdded(DataSnapshot dataSnapshot, String s) {
@@ -480,6 +450,7 @@ public class ChatActivity extends AppCompatActivity implements
                         Log.i(TAG, "Saving Decrypted Message");
                     }
 
+                    Log.i(TAG, "Position: " + positionMessages + " Total Messages: " + totalMessages);
                     if (positionMessages == totalMessages - 1) {
                         Log.e(TAG, "Updating the adapter on: " + positionMessages + "<---");
 
@@ -659,7 +630,7 @@ public class ChatActivity extends AppCompatActivity implements
                     decryptedMessages.set(i, decryptedMessage);
                 }
 
-                flagMessagesDecrypted = true;
+
             } else {
                 Log.i(TAG, "Messages already decrypted");
             }
@@ -669,6 +640,8 @@ public class ChatActivity extends AppCompatActivity implements
 
         @Override
         protected void onPostExecute (Void result){
+            flagMessagesDecrypted = true;
+
             Log.i(TAG, "Decrypting: Updating Adapter");
             if (mFirebaseAdapter != null) {
                 mFirebaseAdapter.notifyDataSetChanged();

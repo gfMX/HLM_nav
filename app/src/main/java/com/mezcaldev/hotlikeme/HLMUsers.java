@@ -370,8 +370,15 @@ public class HLMUsers extends ListFragment {
                 String userData = dataSnapshot.getValue().toString();
                 Log.v(TAG, "User data: " + userData);
 
+                String textUserDescription;
+                if (dataSnapshot.child("description").getValue() != null){
+                    textUserDescription = dataSnapshot.child("description").getValue().toString();
+                } else{
+                    textUserDescription = getResources().getString(R.string.pref_default_missing_description);
+                }
+
                 viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
-                viewUserDescription.setText(dataSnapshot.child("description").getValue().toString());
+                viewUserDescription.setText(textUserDescription);
             }
 
             @Override
@@ -397,7 +404,8 @@ public class HLMUsers extends ListFragment {
                 }).addOnFailureListener(new OnFailureListener() {
             @Override
             public void onFailure(@NonNull Exception e) {
-                e.printStackTrace();
+                Log.e(TAG, "No image found for that User!");
+                viewUserImage.setImageResource(R.drawable.ic_person_gray);
             }
         });
     }

@@ -45,6 +45,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.appinvite.AppInviteInvitation;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.common.api.PendingResult;
@@ -68,6 +69,11 @@ import java.util.Date;
 
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_MINUTE;
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
+import static com.mezcaldev.hotlikeme.R.id.nav_chat;
+import static com.mezcaldev.hotlikeme.R.id.nav_hlm;
+import static com.mezcaldev.hotlikeme.R.id.nav_profile;
+import static com.mezcaldev.hotlikeme.R.id.nav_send;
+import static com.mezcaldev.hotlikeme.R.id.nav_settings;
 
 public class HLMActivity extends AppCompatActivity implements
         GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener, NavigationView.OnNavigationItemSelectedListener {
@@ -115,6 +121,7 @@ public class HLMActivity extends AppCompatActivity implements
     String mOldTime;
     String mOldDay;
     final int REQUEST_CHECK_SETTINGS = 2543;
+    private static final int REQUEST_INVITE = 1;
 
     //Saved State
     protected final static String REQUESTING_LOCATION_UPDATES_KEY = "requesting-location-updates-key";
@@ -250,6 +257,10 @@ public class HLMActivity extends AppCompatActivity implements
             }
         });
 
+        snackNetworkRequired = Snackbar.make(this.findViewById(R.id.HLMCoordinatorLayout),
+                getResources().getString(R.string.text_network_access_required),
+                Snackbar.LENGTH_INDEFINITE);
+
         checkNetworkAccess();
 
         buildGoogleApiClient();
@@ -314,26 +325,24 @@ public class HLMActivity extends AppCompatActivity implements
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         DrawerLayout drawer = (DrawerLayout) findViewById(R.id.drawer_layout);
         // Handle navigation view item clicks here.
-        int id = item.getItemId();
-
-        if (id == R.id.nav_hlm) {
-            mPager.setCurrentItem(PAGE_HLM);
-
-        } else if (id == R.id.nav_chat) {
-            mPager.setCurrentItem(PAGE_CHAT);
-
-        } else if (id == R.id.nav_profile) {
-            mPager.setCurrentItem(PAGE_LOGIN);
-
-        } else if (id == R.id.nav_settings) {
-            if (user != null) {
-                startActivity(new Intent(this, HLMSettings.class));
+        if (user != null) {
+            switch (item.getItemId()){
+                case nav_hlm:
+                    mPager.setCurrentItem(PAGE_HLM);
+                    break;
+                case nav_chat:
+                    mPager.setCurrentItem(PAGE_CHAT);
+                    break;
+                case nav_profile:
+                    mPager.setCurrentItem(PAGE_LOGIN);
+                    break;
+                case nav_settings:
+                    startActivity(new Intent(this, HLMSettings.class));
+                    break;
+                case nav_send:
+                    sendInvitation();
+                    break;
             }
-
-        } else if (id == R.id.nav_share) {
-
-        } else if (id == R.id.nav_send) {
-
         }
         if (drawer != null) {
             drawer.closeDrawer(GravityCompat.START);
@@ -439,14 +448,12 @@ public class HLMActivity extends AppCompatActivity implements
     }
 
     private void checkNetworkAccess (){
-        snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
-                getResources().getString(R.string.text_network_access_required),
-                Snackbar.LENGTH_INDEFINITE);
-
-        if (!isNetworkAvailable()) {
-            snackNetworkRequired.show();
-        } else if (snackNetworkRequired.isShown()) {
-            snackNetworkRequired.dismiss();
+        if (this.findViewById(R.id.HLMCoordinatorLayout) != null) {
+            if (!isNetworkAvailable()) {
+                snackNetworkRequired.show();
+            } else if (snackNetworkRequired.isShown()) {
+                snackNetworkRequired.dismiss();
+            }
         }
     }
 
@@ -729,6 +736,14 @@ public class HLMActivity extends AppCompatActivity implements
     @Override
     public void onConnectionSuspended(int cause) {
         mGoogleApiClient.connect();
+    }
+
+    private void sendInvitation() {
+        Intent intent = new AppInviteInvitation.IntentBuilder(getString(R.string.invitation_title))
+                .setMessage(getString(R.string.invitation_message))
+                .setCallToActionText(getString(R.string.invitation_cta))
+                .build();
+        startActivityForResult(intent, REQUEST_INVITE);
     }
 
     public class ZoomOutPageTransformer implements ViewPager.PageTransformer {

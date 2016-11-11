@@ -24,6 +24,7 @@ import com.facebook.FacebookSdk;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
@@ -33,7 +34,7 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "Start";
     Intent intent;
     Handler handler;
-    int delayTime = 1000 * 2;
+    int delayTime = ONE_SECOND * 2;
     int HLM_PAGES = 3;
     Snackbar snackNetworkRequired;
     Context mContext;
@@ -42,7 +43,6 @@ public class MainActivity extends AppCompatActivity {
 
     //FaceBook
     AccessToken accessToken;
-    boolean fbTokenStatus;
 
     public MainActivity (){
 
@@ -80,7 +80,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void checkAccess (){
-        snackNetworkRequired = Snackbar.make(this.getWindow().getDecorView(),
+        snackNetworkRequired = Snackbar.make(this.findViewById(R.id.MainHLMCoordinator),
                 getResources().getString(R.string.text_network_access_required),
                 Snackbar.LENGTH_INDEFINITE);
 
@@ -99,7 +99,6 @@ public class MainActivity extends AppCompatActivity {
                 public void run() {
                     user = fireConnection.getUser();
                     FireConnection.getInstance().getFirebaseUsers(sharedPreferences, getLocation());
-                    //FireConnection.getInstance().genUserRandomCollection();
 
                     Bundle bundle = new Bundle();
 
@@ -126,13 +125,10 @@ public class MainActivity extends AppCompatActivity {
         if (accessToken == null) {
             FirebaseAuth.getInstance().signOut();
             Log.e(TAG, "Login out from FireBase, missing Token from FaceBook");
-            fbTokenStatus = false;
 
         } else {
             Log.i(TAG, "Valid Token: " + accessToken);
-            fbTokenStatus = true;
         }
-        //return fbTokenStatus;
     }
 
     private boolean isNetworkAvailable() {

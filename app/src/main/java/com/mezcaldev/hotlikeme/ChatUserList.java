@@ -43,6 +43,7 @@ import java.util.List;
 import java.util.Locale;
 
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_HOUR;
+import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
 import static com.mezcaldev.hotlikeme.FireConnection.chatIsInFront;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
@@ -87,7 +88,7 @@ public class ChatUserList extends ListFragment {
     int delayTimeForWaiting = 500;
     Handler handler;
     Runnable runnable;
-    int delayTime = 2500;
+    int delayTimeBeforDeleteUser = (int) (ONE_SECOND * 3);
     Boolean undoFlag = false;
 
     RecyclerView mRecyclerView;
@@ -158,6 +159,7 @@ public class ChatUserList extends ListFragment {
         }
     }
 
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         //int id = item.getItemId();
@@ -192,7 +194,7 @@ public class ChatUserList extends ListFragment {
                     final int position = viewHolder.getAdapterPosition();
                     System.out.println("Delete here: " + position);
                     System.out.println("User: " + userName.get(position) + " Key: " + userKey.get(position));
-                    Snackbar snackbar = Snackbar.make(getActivity().getWindow().getDecorView(), "Disconnected from User", Snackbar.LENGTH_LONG)
+                    Snackbar snackbar = Snackbar.make( getActivity().findViewById(R.id.ChatCoordinator), "Disconnected from User", Snackbar.LENGTH_LONG)
                             .setAction("UNDO", new View.OnClickListener() {
                                 @Override
                                 public void onClick(View v) {
@@ -244,7 +246,7 @@ public class ChatUserList extends ListFragment {
                         }
                     };
 
-                    handler.postDelayed(runnable, delayTime);
+                    handler.postDelayed(runnable, delayTimeBeforDeleteUser);
                 }
             }
 
@@ -289,6 +291,7 @@ public class ChatUserList extends ListFragment {
             @Override
             public void onDataChange(DataSnapshot dataSnapshot) {
                 cleanVars();
+                //totalUsersOnList = dataSnapshot.getChildrenCount();
 
                 for (DataSnapshot data : dataSnapshot.getChildren()) {
 
@@ -317,9 +320,25 @@ public class ChatUserList extends ListFragment {
 
 
     }
+
     private void getData(long size){
         oneFlag = true;
         newMessageCount = 0;
+
+        if (size == 0 && isVisible()){
+            Snackbar.make(
+                    getActivity().findViewById(R.id.ChatCoordinator),
+                    "When you and another User indicate you Wish to be in Contact, It will appear on this ChatList",
+                    Snackbar.LENGTH_INDEFINITE)
+                    .setAction("OK", new View.OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+
+                        }
+                    })
+                    .show();
+        }
+
         Log.d(TAG, "Looking data for: " + userKey);
         //int size = userKey.size();
         databaseReferenceUsers = databaseGlobal.getReference().child("users");
@@ -452,37 +471,39 @@ public class ChatUserList extends ListFragment {
                 }
             };
 
-            Log.d(TAG, "Looking data for: " + userKey.get(position));
+            if (userKey.get(position) != null) {
+                Log.d(TAG, "Looking data for: " + userKey.get(position));
 
-            databaseReferenceUsers.child(userKey.get(position))
-                    .child("preferences").child("alias")
-                    .addValueEventListener(valueEventListenerUsers);
+                databaseReferenceUsers.child(userKey.get(position))
+                        .child("preferences").child("alias")
+                        .addValueEventListener(valueEventListenerUsers);
 
-            storageReference.child(userKey.get(position))
-                    .child("profile_pic")
-                    .child("profile_im.jpg")
-                    .getDownloadUrl()
-                    .addOnSuccessListener(new OnSuccessListener<Uri>() {
-                @Override
-                public void onSuccess(Uri uri) {
-                    //Log.d(TAG, "Pic URL: " + uri);
-                    userProfilePic.set(position, uri);
+                storageReference.child(userKey.get(position))
+                        .child("profile_pic")
+                        .child("profile_im.jpg")
+                        .getDownloadUrl()
+                        .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                //Log.d(TAG, "Pic URL: " + uri);
+                                userProfilePic.set(position, uri);
 
-                    notifyDataChanged();
-                    Log.d(TAG, "Pic URL: " + userProfilePic);
-                }
-            }).addOnFailureListener(new OnFailureListener() {
-                @Override
-                public void onFailure(@NonNull Exception e) {
-                    //Log.d(TAG, "Pic Not Available");
-                    userProfilePic.set(position, null);
-                    notifyDataChanged();
-                }
-            });
+                                notifyDataChanged();
+                                Log.d(TAG, "Pic URL: " + userProfilePic);
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        //Log.d(TAG, "Pic Not Available");
+                        userProfilePic.set(position, null);
+                        notifyDataChanged();
+                    }
+                });
 
-            databaseReferenceLastMessage
-                    .child(userChatID.get(position))
-                    .addValueEventListener(valueEventListenerLastMessage);
+                databaseReferenceLastMessage
+                        .child(userChatID.get(position))
+                        .addValueEventListener(valueEventListenerLastMessage);
+            }
 
         }
         if (swipeRefreshLayout.isRefreshing()){
