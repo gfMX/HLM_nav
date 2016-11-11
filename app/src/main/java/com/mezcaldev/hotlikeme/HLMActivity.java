@@ -465,7 +465,7 @@ public class HLMActivity extends AppCompatActivity implements
                     .load(user.getPhotoUrl())
                     .centerCrop()
                     .into(drawerUserImage);
-            drawerUserAlias.setText(user.getDisplayName());
+            drawerUserAlias.setText(sharedPreferences.getString("alias", user.getDisplayName()));
         } else {
             drawerUserImage.setImageResource(R.drawable.ic_account_circle_24dp);
             drawerUserAlias.setText(R.string.app_name);

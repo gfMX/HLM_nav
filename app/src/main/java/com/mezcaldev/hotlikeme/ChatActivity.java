@@ -123,7 +123,7 @@ public class ChatActivity extends AppCompatActivity implements
 
     //Delays:
     int bigDelay = ONE_SECOND * 2;
-    int secondBigDelay = (int) (ONE_SECOND * 1.5);
+    int secondBigDelay = (int) (ONE_SECOND * 2);
 
     private static final String TAG = "HLM Chat";
     String MESSAGES_CHILD = "messages";

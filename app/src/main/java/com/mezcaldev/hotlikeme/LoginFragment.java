@@ -489,16 +489,17 @@ public class LoginFragment extends Fragment {
                                     .putString("alias", sharedPreferences.getString("alias", user.getDisplayName()))
                                     .apply();
 
-                            checkIfUserIsVisible();
+                            //checkIfUserIsVisible();
 
                             databaseReference.child("preferences").child("gender").setValue(gender);
                             databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getString("alias", user.getDisplayName()));
                             databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getBoolean("visible_switch", true));
-                            databaseReference.child("preferences").child("alias").addValueEventListener(new ValueEventListener() {
+                            databaseReference.child("preferences").child("alias").addListenerForSingleValueEvent(new ValueEventListener() {
                                 @Override
                                 public void onDataChange(DataSnapshot dataSnapshot) {
                                     if (dataSnapshot != null) {
                                         editTextDisplayName.setText(dataSnapshot.getValue().toString());
+                                        sharedPreferences.edit().putString("alias", sharedPreferences.getString("alias", dataSnapshot.getValue().toString())).apply();
                                     }
                                 }
 
