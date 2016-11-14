@@ -50,7 +50,7 @@ import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.weLike;
 
 public class ChatUserList extends ListFragment {
-    final static String TAG = "Chat";
+    final static String TAG = "Chat User List";
 
     static ChatUserList newInstance() {
         //ChatUserList newFragment = new ChatUserList();
@@ -472,7 +472,7 @@ public class ChatUserList extends ListFragment {
             };
 
             if (userKey.get(position) != null) {
-                Log.d(TAG, "Looking data for: " + userKey.get(position));
+                //Log.d(TAG, "Looking data for: " + userKey.get(position));
 
                 databaseReferenceUsers.child(userKey.get(position))
                         .child("preferences").child("alias")
@@ -489,7 +489,7 @@ public class ChatUserList extends ListFragment {
                                 userProfilePic.set(position, uri);
 
                                 notifyDataChanged();
-                                Log.d(TAG, "Pic URL: " + userProfilePic);
+                                //Log.d(TAG, "Pic URL: " + userProfilePic);
                             }
                         }).addOnFailureListener(new OnFailureListener() {
                     @Override

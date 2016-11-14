@@ -123,8 +123,8 @@ public class MainActivity extends AppCompatActivity {
         Log.i(TAG, "Current Access Token from FaceBook: " + accessToken);
 
         if (accessToken == null) {
-            FirebaseAuth.getInstance().signOut();
-            Log.e(TAG, "Login out from FireBase, missing Token from FaceBook");
+            //FirebaseAuth.getInstance().signOut();
+            Log.e(TAG, "Missing Token from FaceBook");
 
         } else {
             Log.i(TAG, "Valid Token: " + accessToken);
