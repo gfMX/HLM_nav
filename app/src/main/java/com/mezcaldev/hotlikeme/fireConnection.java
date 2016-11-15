@@ -5,6 +5,7 @@ import android.location.Location;
 import android.support.annotation.NonNull;
 import android.util.Log;
 
+import com.facebook.AccessToken;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
@@ -35,6 +36,9 @@ public class FireConnection {
 
     //Flags to Activities / Fragments on Front
     static boolean chatIsInFront = false;
+
+    //Facebook Access Token
+    static AccessToken accessToken;
 
     //Firebase Settings
     static FirebaseUser user;

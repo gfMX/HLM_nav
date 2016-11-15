@@ -25,6 +25,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.FirebaseDatabase;
 
 import static com.mezcaldev.hotlikeme.FireConnection.ONE_SECOND;
+import static com.mezcaldev.hotlikeme.FireConnection.accessToken;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 import static com.mezcaldev.hotlikeme.FireConnection.usersList;
@@ -40,9 +41,6 @@ public class MainActivity extends AppCompatActivity {
     Context mContext;
     FireConnection fireConnection;
     SharedPreferences sharedPreferences;
-
-    //FaceBook
-    AccessToken accessToken;
 
     public MainActivity (){
 
@@ -128,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
 
         } else {
             Log.i(TAG, "Valid Token: " + accessToken);
+
         }
     }
 

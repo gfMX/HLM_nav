@@ -154,14 +154,14 @@
     <string name="text_welcome_again">Welcome back!</string>
     <string name="text_see_you_soon">See you soon!</string>
     <string name="text_choose_images">Please choose a few Images for Hot Like Me!</string>
-    <string name="text_first_select_images">Please, first Choose a few images for HotLikeMe</string>
+    <string name="text_first_select_images">Please, first upload a few images for HotLikeMe.</string>
     <string name="text_no_images_selected">No images selected, please select at least one.</string>
     <string name="text_sign_in">"Welcome to HotLikeMe \n Please log in"</string>
     <string name="text_hlm_start_button">Bla, bla bla&#8230; Let\'s Go!</string>
     <string name="text_cancel_selection">"Bla, bla bla&#8230;"</string>
     <string name="text_hlm_change_profile_pic">Change your profile Picture</string>
     <string name="text_profile_picture_selected">New Profile Picture selected!</string>
-    <string name="text_settings_activity">your display name, synchronization options, and more</string>
+    <string name="text_settings_activity">your display name, synchronization options, and more.</string>
     <string name="text_start_HLM">
          - Please Upload a few of your images for HotLikeMe.
         \n- Click the Profile Image to change it for your Own.
@@ -186,6 +186,7 @@
     <string name="text_network_access_required">Network not available. Please check your Internet Connection and Try Again</string>
     <string name="text_app_introduction">Here you will find New Friends, New Relations, New Experiences</string>
     <string name="text_enable_gps_snack">"To see only users close to you, enable GPS on Settings or Here."</string>
+    <string name="text_log_into_facebook_again">"Your Facebook Session has expired, Please Log into Facebook Again."</string>
 
     <!-- HLM Chat Strings -->
     <string name="welcome_msg">HotLikeMe: Welcome to the Chat!</string>

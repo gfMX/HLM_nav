@@ -56,6 +56,7 @@ import org.json.JSONObject;
 
 import java.io.File;
 
+import static com.mezcaldev.hotlikeme.FireConnection.accessToken;
 import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 
@@ -76,7 +77,6 @@ public class LoginFragment extends Fragment {
     //Facebook
     LoginButton loginButton;
     CallbackManager callbackManager;
-    static AccessToken accessToken;
     static AccessTokenTracker accessTokenTracker;
     static Profile profile;
     static ProfileTracker profileTracker;
@@ -278,6 +278,7 @@ public class LoginFragment extends Fragment {
         });
         
     }
+
     @Override
     public void onActivityCreated(Bundle savedInstanceState) {
         super.onActivityCreated(savedInstanceState);
@@ -295,24 +296,31 @@ public class LoginFragment extends Fragment {
     private View.OnClickListener settingsButtons = new View.OnClickListener(){
       public void onClick (View v){
           switch (v.getId()) {
+
               case R.id.btn_choose_img:
                   Toast.makeText(getActivity(),
                           getResources().getString(R.string.text_choose_images),
                           Toast.LENGTH_LONG)
                           .show();
 
-                  startActivity(new Intent(getActivity(), ImageBrowser.class));
+                  if (accessToken != null && !accessToken.isExpired()) {
+                      startActivity(new Intent(getActivity(), ImageBrowser.class));
+                  } else {
+                      Toast.makeText(getActivity(), getResources().getString(R.string.text_log_into_facebook_again), Toast.LENGTH_LONG).show();
+                  }
                   break;
-              case R.id.hlm_image:
 
+              case R.id.hlm_image:
                   if (flagImagesOnFirebase) {
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_hlm_change_profile_pic),
                               Toast.LENGTH_LONG).show();
-
                       startActivity(new Intent(getActivity(), FireBrowserActivity.class));
                   } else {
                       Toast.makeText(getActivity(), getResources().getString(R.string.text_first_select_images),
                               Toast.LENGTH_LONG).show();
+                      if (accessToken != null && !accessToken.isExpired()) {
+                          startActivity(new Intent(getActivity(), ImageBrowser.class));
+                      }
                   }
                   break;
           }
@@ -326,6 +334,8 @@ public class LoginFragment extends Fragment {
                 protected void onCurrentAccessTokenChanged(
                         AccessToken oldAccessToken,
                         AccessToken currentAccessToken) {
+
+                    accessToken = currentAccessToken;
 
                     if (currentAccessToken == null){
                         Toast.makeText(getActivity(),
@@ -345,6 +355,7 @@ public class LoginFragment extends Fragment {
                                 getResources().getString(R.string.text_welcome_again),
                                 Toast.LENGTH_SHORT).show();
                     }
+
                     updateUI();
                 }
             };
@@ -377,7 +388,7 @@ public class LoginFragment extends Fragment {
                         //User sign in
                         Log.d(TAG, "Firebase: Signed In: " + user.getUid());
 
-                        if (accessToken!=null) {
+                        if (accessToken != null) {
                             loadProfileDetails(delayTime);
                         }
                     } else {
