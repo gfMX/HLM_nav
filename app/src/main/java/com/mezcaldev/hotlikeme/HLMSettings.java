@@ -133,9 +133,6 @@ public class HLMSettings extends AppCompatPreferenceActivity {
 
     protected void updateFireSettings(){
         if (sharedPreferences.getAll() != null){
-            databaseReference.child("/preferences/alias/")
-                    .setValue(sharedPreferences.getString("alias", "None"));
-
             databaseReference.child("/preferences/description/")
                     .setValue(sharedPreferences.getString("description", "None"));
             databaseReference.child("/preferences/looking_for/")
@@ -180,7 +177,6 @@ public class HLMSettings extends AppCompatPreferenceActivity {
             // updated to reflect the new value, per the Android Design
             // guidelines.
 
-            bindPreferenceSummaryToValue(findPreference("alias"));
             bindPreferenceSummaryToValue(findPreference("looking_for"));
             bindPreferenceSummaryToValue(findPreference("description"));
 

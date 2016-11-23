@@ -45,7 +45,6 @@ import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.auth.UserProfileChangeRequest;
-import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.storage.FirebaseStorage;
@@ -254,36 +253,23 @@ public class LoginFragment extends Fragment {
                 String textDisplayName = charSequence.toString();
                 Log.i(TAG, "Display name: " + textDisplayName);
                 if (user != null){
-                    fireRefAlias = databaseGlobal.getReference().child("users").child(user.getUid()).child("preferences");
                     sharedPreferences.edit().putString("alias", textDisplayName).apply();
 
-                    fireRefAlias.child("alias").setValue(textDisplayName, new DatabaseReference.CompletionListener() {
-                        @Override
-                        public void onComplete(DatabaseError databaseError, DatabaseReference databaseReference) {
-                            if (databaseError == null){
-                                Log.v(TAG, "User Name Changed: " + databaseReference);
-                            } else {
-                                Log.e(TAG, "Name couldn't be changed!" + databaseError);
-                            }
-                        }
-                    });
-                }
-
-                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
-
-                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setDisplayName(textDisplayName)
-                        .build();
-
-                user.updateProfile(profileUpdates)
-                        .addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    Log.d(TAG, "User profile updated.");
+                    //Update Profile on FireBase: Display Name
+                    FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+                    UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                            .setDisplayName(textDisplayName)
+                            .build();
+                    user.updateProfile(profileUpdates)
+                            .addOnCompleteListener(new OnCompleteListener<Void>() {
+                                @Override
+                                public void onComplete(@NonNull Task<Void> task) {
+                                    if (task.isSuccessful()) {
+                                        Log.d(TAG, "User profile updated.");
+                                    }
                                 }
-                            }
-                        });
+                            });
+                }
             }
 
             @Override
@@ -516,7 +502,6 @@ public class LoginFragment extends Fragment {
                                     .apply();
 
                             databaseReference.child("preferences").child("gender").setValue(gender);
-                            databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getString("alias", user.getDisplayName()));
                             databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getBoolean("visible_switch", true));
 
                             Log.i(TAG, "We got the gender: " + gender);

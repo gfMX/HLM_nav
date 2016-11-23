@@ -12,13 +12,14 @@
         <EditTextPreference
             android:capitalize="words"
             android:dependency="visible_switch"
-            android:defaultValue="@string/pref_default_display_name"
-            android:inputType="textCapWords"
-            android:key="alias"
-            android:maxLines="1"
+            android:defaultValue="@string/pref_default_description"
+            android:inputType="textMultiLine"
+            android:key="description"
+            android:maxLines="6"
+            android:lines="4"
             android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/pref_title_display_name" />
+            android:gravity="left|top"
+            android:title="@string/pref_title_description" />
 
         <ListPreference
             android:defaultValue="Both"
@@ -28,18 +29,6 @@
             android:negativeButtonText="@null"
             android:positiveButtonText="@null"
             android:title="@string/pref_title_looking_for" />
-
-        <EditTextPreference
-            android:capitalize="words"
-            android:dependency="visible_switch"
-            android:defaultValue="@string/pref_default_description"
-            android:inputType="textMultiLine"
-            android:key="description"
-            android:maxLines="6"
-            android:lines="4"
-            android:selectAllOnFocus="true"
-            android:gravity="left|top"
-            android:title="@string/pref_title_description" />
     </PreferenceCategory>
 
 
