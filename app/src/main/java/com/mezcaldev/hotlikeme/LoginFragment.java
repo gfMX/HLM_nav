@@ -43,11 +43,11 @@ import com.google.firebase.auth.AuthCredential;
 import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FacebookAuthProvider;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
@@ -267,8 +267,23 @@ public class LoginFragment extends Fragment {
                             }
                         }
                     });
-
                 }
+
+                FirebaseUser user = FirebaseAuth.getInstance().getCurrentUser();
+
+                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                        .setDisplayName(textDisplayName)
+                        .build();
+
+                user.updateProfile(profileUpdates)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d(TAG, "User profile updated.");
+                                }
+                            }
+                        });
             }
 
             @Override
@@ -500,25 +515,9 @@ public class LoginFragment extends Fragment {
                                     .putString("alias", sharedPreferences.getString("alias", user.getDisplayName()))
                                     .apply();
 
-                            //checkIfUserIsVisible();
-
                             databaseReference.child("preferences").child("gender").setValue(gender);
                             databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getString("alias", user.getDisplayName()));
                             databaseReference.child("preferences").child("gender").setValue(sharedPreferences.getBoolean("visible_switch", true));
-                            databaseReference.child("preferences").child("alias").addListenerForSingleValueEvent(new ValueEventListener() {
-                                @Override
-                                public void onDataChange(DataSnapshot dataSnapshot) {
-                                    if (dataSnapshot != null) {
-                                        editTextDisplayName.setText(dataSnapshot.getValue().toString());
-                                        sharedPreferences.edit().putString("alias", sharedPreferences.getString("alias", dataSnapshot.getValue().toString())).apply();
-                                    }
-                                }
-
-                                @Override
-                                public void onCancelled(DatabaseError databaseError) {
-
-                                }
-                            });
 
                             Log.i(TAG, "We got the gender: " + gender);
                         } catch (JSONException e){
