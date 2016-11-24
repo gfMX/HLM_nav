@@ -132,12 +132,12 @@
     <string-array name="pref_animation_titles">
         <item>None</item>
         <item>Zoom and Slide</item>
-        <item>Cards</item>
+        <!--<item>Cards</item> -->
     </string-array>
     <string-array name="pref_animation_values">
         <item>none</item>
         <item>zoom1</item>
-        <item>zoom2</item>
+        <!--<item>zoom2</item> -->
     </string-array>
 
     <!-- Settings for Notifications -->

@@ -9,17 +9,6 @@
             android:summary="@string/pref_description_social_recommendations"
             android:title="@string/pref_title_social_recommendations" />
 
-        <EditTextPreference
-            android:capitalize="words"
-            android:dependency="visible_switch"
-            android:defaultValue="@string/pref_default_display_name"
-            android:inputType="textCapWords"
-            android:key="alias"
-            android:maxLines="1"
-            android:selectAllOnFocus="true"
-            android:singleLine="true"
-            android:title="@string/pref_title_display_name" />
-
         <ListPreference
             android:defaultValue="Both"
             android:entries="@array/pref_looking_for_titles"
