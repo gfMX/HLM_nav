@@ -3,11 +3,10 @@ package com.mezcaldev.hotlikeme;
 
 import android.app.DialogFragment;
 import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
+import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,17 +17,23 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.auth.UserProfileChangeRequest;
+import com.google.firebase.database.DatabaseReference;
 
 import java.io.File;
-import java.io.InputStream;
-import java.net.URL;
 
+import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 import static com.mezcaldev.hotlikeme.FireConnection.user;
 
 public class ImageSelected extends DialogFragment {
     static final String TAG = "Saving the Image: ";
     static String imageProfileFileName = LoginFragment.imageProfileFileName;
     static Uri uriImage;
+    static String imageKey;
 
     File localStorage;
     //FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
@@ -39,8 +44,9 @@ public class ImageSelected extends DialogFragment {
     //Time to wait before Launching MainActivity
     int timerToGo = 2500;
 
-    static ImageSelected newInstance(Uri uri) {
+    static ImageSelected newInstance(Uri uri, String key) {
         uriImage = uri;
+        imageKey = key;
         return new ImageSelected();
     }
 
@@ -74,7 +80,7 @@ public class ImageSelected extends DialogFragment {
         public void onClick (View v){
             switch (v.getId()){
                 case R.id.btn_ok_image:
-                    createBitmap(uriImage);
+                    saveNewProfileImage(uriImage);
                     Snackbar.make(v,
                             getResources().getString(R.string.text_profile_picture_selected),
                             Snackbar.LENGTH_LONG)
@@ -90,6 +96,47 @@ public class ImageSelected extends DialogFragment {
             }
         }
     };
+    private void saveNewProfileImage (final Uri uri){
+        if (uri != null) {
+
+            DatabaseReference databaseReference = databaseGlobal.getReference()
+                    .child("users")
+                    .child(user.getUid())
+                    .child("preferences");
+
+            databaseReference.child("profile_pic_url").setValue(uri);
+            //databaseReference.child("profile_pic_storage").setValue(null);
+
+            FirebaseUser userToUpdate = FirebaseAuth.getInstance().getCurrentUser();
+            UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
+                    .setPhotoUri(uri)
+                    .build();
+
+            if (userToUpdate != null) {
+                userToUpdate.updateProfile(profileUpdates)
+                        .addOnCompleteListener(new OnCompleteListener<Void>() {
+                            @Override
+                            public void onComplete(@NonNull Task<Void> task) {
+                                if (task.isSuccessful()) {
+                                    Log.d(TAG, "User profile updated.");
+                                }
+                            }
+                        });
+            }
+
+
+            final Handler handler = new Handler();
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run() {
+                    getDialog().dismiss();
+                    startActivity(new Intent(getActivity(), HLMActivity.class));
+                    getActivity().finish();
+                }
+            }, timerToGo);
+        }
+    }
+    /*
     private void createBitmap (final Uri uri){
         if (uri != null) {
             Thread thread = new Thread(new Runnable() {
@@ -131,4 +178,5 @@ public class ImageSelected extends DialogFragment {
             }, timerToGo);
         }
     }
+    */
 }

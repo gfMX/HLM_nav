@@ -145,7 +145,9 @@ public class FireBrowserFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             public void onItemClick(AdapterView<?> parent, View v, int position, long id) {
                 Uri imageUri = Uri.parse(imImages.get(position));
-                showSelectedImage(imageUri);
+                String imageKey = imageKeyList.get(position);
+
+                showSelectedImage(imageUri, imageKey);
             }
         });
 
@@ -379,8 +381,8 @@ public class FireBrowserFragment extends Fragment {
         });
     }
 
-    private void showSelectedImage(Uri urImage){
-        DialogFragment newFragment = ImageSelected.newInstance(urImage);
+    private void showSelectedImage(Uri urImage, String key){
+        DialogFragment newFragment = ImageSelected.newInstance(urImage, key);
         newFragment.setStyle(DialogFragment.STYLE_NO_TITLE, 0);
         newFragment.show(getActivity().getFragmentManager(), "Image");
     }

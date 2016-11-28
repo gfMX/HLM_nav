@@ -373,7 +373,7 @@ public class HLMUsers extends ListFragment {
                 String textUserDescription;
                 if (dataSnapshot.child("description").getValue() != null){
                     textUserDescription = dataSnapshot.child("description").getValue().toString();
-                } else{
+                } else {
                     textUserDescription = getResources().getString(R.string.pref_default_missing_description);
                 }
 
