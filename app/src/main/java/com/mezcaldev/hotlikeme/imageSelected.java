@@ -80,7 +80,7 @@ public class ImageSelected extends DialogFragment {
         public void onClick (View v){
             switch (v.getId()){
                 case R.id.btn_ok_image:
-                    saveNewProfileImage(uriImage);
+                    saveNewProfileImage(uriImage, imageKey);
                     Snackbar.make(v,
                             getResources().getString(R.string.text_profile_picture_selected),
                             Snackbar.LENGTH_LONG)
@@ -96,7 +96,7 @@ public class ImageSelected extends DialogFragment {
             }
         }
     };
-    private void saveNewProfileImage (final Uri uri){
+    private void saveNewProfileImage (final Uri uri, String key){
         if (uri != null) {
 
             DatabaseReference databaseReference = databaseGlobal.getReference()
@@ -105,7 +105,7 @@ public class ImageSelected extends DialogFragment {
                     .child("preferences");
 
             databaseReference.child("profile_pic_url").setValue(uri);
-            //databaseReference.child("profile_pic_storage").setValue(null);
+            databaseReference.child("profile_pic_storage").setValue(key);
 
             FirebaseUser userToUpdate = FirebaseAuth.getInstance().getCurrentUser();
             UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()

@@ -79,6 +79,8 @@ public class HLMUsers extends ListFragment {
 
     TextView viewUserAlias;
     ImageView viewUserImage;
+    String imageProfileKey;
+    Uri imageProfileUri;
     RatingBar ratingBar;
     FloatingActionButton fabMessage;
 
@@ -376,6 +378,17 @@ public class HLMUsers extends ListFragment {
                 } else {
                     textUserDescription = getResources().getString(R.string.pref_default_missing_description);
                 }
+                if (dataSnapshot.child("profile_pic_storage").getValue() != null){
+                    imageProfileKey = dataSnapshot.child("profile_pic_storage").getValue().toString();
+                    Log.i(TAG, "-> Image key: " + imageProfileKey);
+                } else {
+                    Log.e(TAG, "Profile Pic Key Not Found");
+                }
+                if (dataSnapshot.child("profile_pic_url").getValue() != null) {
+                    imageProfileUri = Uri.parse(dataSnapshot.child("profile_pic_url").getValue().toString());
+                } else {
+                    Log.e(TAG, "Profile Pic URI Not Found");
+                }
 
                 viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
                 viewUserDescription.setText(textUserDescription);
@@ -389,7 +402,8 @@ public class HLMUsers extends ListFragment {
 
         databaseReferenceUserDetails.addListenerForSingleValueEvent(valueEventListenerGetUserDetails);
 
-        storageRef.child(key).child("/profile_pic/").child("profile_im.jpg").getDownloadUrl()
+        Log.i(TAG, "Image key: " + imageProfileKey);
+        storageRef.child(key).child("images").child("image_" + imageProfileKey + ".jpg").getDownloadUrl()
                 .addOnSuccessListener(new OnSuccessListener<Uri>() {
                     @Override
                     public void onSuccess(Uri uri) {
