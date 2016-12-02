@@ -2,20 +2,14 @@ package com.mezcaldev.hotlikeme;
 
 import android.app.NotificationManager;
 import android.content.Context;
-import android.content.ContextWrapper;
 import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
-import android.net.Uri;
 import android.support.annotation.NonNull;
 import android.support.v4.app.NotificationCompat;
 import android.util.Log;
 
-import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.OnSuccessListener;
-import com.google.android.gms.tasks.Task;
 import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -26,10 +20,6 @@ import com.google.firebase.storage.StorageReference;
 import com.google.firebase.storage.UploadTask;
 
 import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.MalformedURLException;
@@ -46,14 +36,10 @@ import static com.mezcaldev.hotlikeme.FireConnection.databaseGlobal;
 public class ImageSaver {
 
     private final String TAG = "Image record: ";
-    final Integer compressRatio = 70;
+    private final Integer compressRatio = 70;
 
-    String pathImages = "/images/";
-    String pathThumbs = "/images/thumbs/";
-
-    //Profile Image
-    int reqWidth = 180;
-    int reqHeight = 180;
+    private String pathImages = "/images/";
+    private String pathThumbs = "/images/thumbs/";
 
     final FirebaseUser firebaseUser = FireConnection.getInstance().getUser();
     //final FirebaseDatabase database = FirebaseDatabase.getInstance();
@@ -62,82 +48,6 @@ public class ImageSaver {
 
     public ImageSaver() {
 
-    }
-
-    //Save Image
-    public String iSaveToInternalStorage(Bitmap bitmapImage, String imageName, Context context){
-        File directory = new ContextWrapper(context).getDir("imageDir", Context.MODE_PRIVATE);
-        File imPath=new File(directory,imageName);
-        FileOutputStream fOut;
-
-        try {
-            fOut = new FileOutputStream(imPath);
-            // Use the compress method on the BitMap object to write image to the OutputStream
-            bitmapImage.compress(Bitmap.CompressFormat.JPEG, compressRatio, fOut);
-            fOut.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        Log.i(TAG,"Image found at: " + directory.getAbsolutePath());
-        return directory.getAbsolutePath();
-    }
-
-    //Load Image
-    public Bitmap iLoadImageFromStorage(String path, String imageName) {
-
-            File file = new File(path, imageName);
-            return decodeSampledBitmapFromStream(file, reqWidth, reqHeight);
-
-    }
-
-    //Upload Image to Firebase
-    public void iUploadProfileImageToFirebase(String path, final FirebaseUser user){
-        UploadTask uploadTask;
-
-        Uri file = Uri.fromFile(new File(path));
-        StorageReference upImageRef = storageRef.child(user.getUid() + "/profile_pic/" + file.getLastPathSegment());
-        uploadTask = upImageRef.putFile(file);
-
-        // Register observers to listen for when the download is done or if it fails
-        uploadTask.addOnProgressListener(new OnProgressListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onProgress(UploadTask.TaskSnapshot taskSnapshot) {
-                double progress = (100.0 * taskSnapshot.getBytesTransferred()) / taskSnapshot.getTotalByteCount();
-                System.out.println("Upload is " + progress + "% done");
-            }
-
-        }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception exception) {
-                // Handle unsuccessful uploads
-                exception.printStackTrace();
-
-            }
-
-        }).addOnSuccessListener(new OnSuccessListener<UploadTask.TaskSnapshot>() {
-            @Override
-            public void onSuccess(UploadTask.TaskSnapshot taskSnapshot) {
-                Uri downloadUrl = taskSnapshot.getDownloadUrl();
-                //FirebaseUser userToUpdate = FirebaseAuth.getInstance().getCurrentUser();
-
-                UserProfileChangeRequest profileUpdates = new UserProfileChangeRequest.Builder()
-                        .setPhotoUri(downloadUrl)
-                        .build();
-
-                //if (userToUpdate != null) {
-                    user.updateProfile(profileUpdates)
-                            .addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d(TAG, "User profile updated.");
-                                    }
-                                }
-                            });
-                //}
-                Log.v(TAG,"Image uploaded to Firebase");
-            }
-        });
     }
 
     public void uploadToFirebase (List<String> listImages,
@@ -329,76 +239,6 @@ public class ImageSaver {
                     }
                 }
         );
-    }
-    private static int calculateInSampleSize(
-            BitmapFactory.Options options, int reqWidth, int reqHeight) {
-        // Raw height and width of image
-        final int height = options.outHeight;
-        final int width = options.outWidth;
-        int inSampleSize = 1;
-
-        if (height > reqHeight || width > reqWidth) {
-
-            final int halfHeight = height / 2;
-            final int halfWidth = width / 2;
-
-            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
-            // height and width larger than the requested height and width.
-            while ((halfHeight / inSampleSize) >= reqHeight
-                    && (halfWidth / inSampleSize) >= reqWidth) {
-                inSampleSize *= 2;
-            }
-        }
-
-        return inSampleSize;
-    }
-
-    public Bitmap decodeSampledBitmap(byte[] bytes, int reqWidth, int reqHeight) {
-
-        // First decode with inJustDecodeBounds=true to check dimensions
-        final BitmapFactory.Options options = new BitmapFactory.Options();
-        options.inJustDecodeBounds = true;
-        BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-
-        // Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-        // Decode bitmap with inSampleSize set
-        options.inJustDecodeBounds = false;
-        return BitmapFactory.decodeByteArray(bytes, 0, bytes.length, options);
-    }
-
-    public Bitmap decodeSampledBitmapFromStream(File file, int reqWidth, int reqHeight) {
-        Bitmap bitmap = null;
-        try {
-            FileInputStream fis = new FileInputStream(file);
-
-            // First decode with inJustDecodeBounds=true to check dimensions
-            final BitmapFactory.Options options = new BitmapFactory.Options();
-            options.inJustDecodeBounds = true;
-            decodeStream(fis, null, options);
-            try {
-                fis.close();
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-
-            // Calculate inSampleSize
-            options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
-
-            fis = new FileInputStream(file);
-            // Decode bitmap with inSampleSize set
-            options.inJustDecodeBounds = false;
-            bitmap = BitmapFactory.decodeStream(fis, null, options);
-            try {
-                fis.close();
-            } catch (IOException e){
-                e.printStackTrace();
-            }
-        } catch (FileNotFoundException e){
-            e.printStackTrace();
-        }
-        return bitmap;
     }
 
 }
