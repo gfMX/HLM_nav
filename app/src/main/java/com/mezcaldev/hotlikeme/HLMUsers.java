@@ -363,7 +363,7 @@ public class HLMUsers extends ListFragment {
         return super.onOptionsItemSelected(item);
     }
 
-    private void getUserDetails(String key) {
+    private void getUserDetails(final String key) {
         databaseReferenceUserDetails = databaseGlobal.getReference().child("users").child(key).child("preferences");
 
         valueEventListenerGetUserDetails = new ValueEventListener() {
@@ -390,6 +390,27 @@ public class HLMUsers extends ListFragment {
                     Log.e(TAG, "Profile Pic URI Not Found");
                 }
 
+                Log.i(TAG, "Image key: " + imageProfileKey);
+                storageRef.child(key).child("images").child("image_" + imageProfileKey + ".jpg").getDownloadUrl()
+                        .addOnSuccessListener(new OnSuccessListener<Uri>() {
+                            @Override
+                            public void onSuccess(Uri uri) {
+                                Glide
+                                        .with(getContext())
+                                        .load(uri)
+                                        .fitCenter()
+                                        .into(viewUserImage);
+
+                                viewUserImage.setRotation(4 * ((float) random() * 2 - 1));
+                            }
+                        }).addOnFailureListener(new OnFailureListener() {
+                    @Override
+                    public void onFailure(@NonNull Exception e) {
+                        Log.e(TAG, "No image found for that User!");
+                        viewUserImage.setImageResource(R.drawable.ic_person_gray);
+                    }
+                });
+
                 viewUserAlias.setText(dataSnapshot.child("alias").getValue().toString());
                 viewUserDescription.setText(textUserDescription);
             }
@@ -401,27 +422,6 @@ public class HLMUsers extends ListFragment {
         };
 
         databaseReferenceUserDetails.addListenerForSingleValueEvent(valueEventListenerGetUserDetails);
-
-        Log.i(TAG, "Image key: " + imageProfileKey);
-        storageRef.child(key).child("images").child("image_" + imageProfileKey + ".jpg").getDownloadUrl()
-                .addOnSuccessListener(new OnSuccessListener<Uri>() {
-                    @Override
-                    public void onSuccess(Uri uri) {
-                        Glide
-                                .with(getContext())
-                                .load(uri)
-                                .fitCenter()
-                                .into(viewUserImage);
-
-                        viewUserImage.setRotation(4 * ((float) random() * 2 - 1));
-                    }
-                }).addOnFailureListener(new OnFailureListener() {
-            @Override
-            public void onFailure(@NonNull Exception e) {
-                Log.e(TAG, "No image found for that User!");
-                viewUserImage.setImageResource(R.drawable.ic_person_gray);
-            }
-        });
     }
 
     private void userRating(final String key) {
